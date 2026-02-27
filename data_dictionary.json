@@ -1,0 +1,276 @@
+
+{
+  "system_name": "HRIS Platform",
+  "version": "1.1",
+  "modules": [
+    {
+      "name": "Core HR",
+      "description": "Employee profiles and basic information management.",
+      "tables": [
+        {
+          "table_name": "employees",
+          "description": "Master record for all employees.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "System UUID" },
+            { "name": "employee_id", "type": "VARCHAR(20)", "key": "UK", "description": "Company issued ID (e.g. 0192823)" },
+            { "name": "first_name", "type": "VARCHAR(100)", "key": "", "description": "" },
+            { "name": "last_name", "type": "VARCHAR(100)", "key": "", "description": "" },
+            { "name": "email_company", "type": "VARCHAR(100)", "key": "", "description": "Corporate email" },
+            { "name": "email_personal", "type": "VARCHAR(100)", "key": "", "description": "Personal email" },
+            { "name": "phone", "type": "VARCHAR(20)", "key": "", "description": "" },
+            { "name": "avatar_url", "type": "TEXT", "key": "", "description": "URL to profile image" },
+            { "name": "status", "type": "ENUM", "key": "", "description": "'Active', 'Inactive', 'Probationary'" },
+            { "name": "department_id", "type": "VARCHAR(50)", "key": "FK", "description": "Ref: org_units.id" },
+            { "name": "position_id", "type": "VARCHAR(50)", "key": "FK", "description": "Ref: positions.id" },
+            { "name": "rank_id", "type": "VARCHAR(50)", "key": "FK", "description": "Ref: ranks.id" },
+            { "name": "date_hired", "type": "DATE", "key": "", "description": "" },
+            { "name": "job_type", "type": "VARCHAR(50)", "key": "", "description": "Full-Time, Contract, Intern" }
+          ],
+          "dummy_data": [
+            { "id": "emp-1", "employee_id": "0192823", "first_name": "James", "last_name": "Cordon", "email_company": "james@company.com", "role": "IT Developer Intern", "department_id": "dept-1", "status": "Active" },
+            { "id": "emp-2", "employee_id": "0785652", "first_name": "Louis", "last_name": "Panganiban", "email_company": "louis@company.com", "role": "Senior Developer", "department_id": "dept-1", "status": "Inactive" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Organization Structure",
+      "description": "Hierarchy, positions, and ranking systems.",
+      "tables": [
+        {
+          "table_name": "org_units",
+          "description": "Recursive tree for Company -> Division -> Department -> Team.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "name", "type": "VARCHAR(100)", "key": "", "description": "e.g. 'IT Department'" },
+            { "name": "type", "type": "VARCHAR(50)", "key": "", "description": "'Division', 'Department', 'Team'" },
+            { "name": "parent_id", "type": "VARCHAR(50)", "key": "FK", "description": "Ref: org_units.id (Self)" }
+          ],
+          "dummy_data": [
+            { "id": "root", "name": "Nexus Corp", "type": "Corporation", "parent_id": null },
+            { "id": "div-1", "name": "Engineering", "type": "Division", "parent_id": "root" },
+            { "id": "dept-1", "name": "Platform Team", "type": "Team", "parent_id": "div-1" }
+          ]
+        },
+        {
+          "table_name": "positions",
+          "description": "Job titles defined within specific org units.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "title", "type": "VARCHAR(100)", "key": "", "description": "e.g. 'Senior Backend Eng'" },
+            { "name": "org_unit_id", "type": "VARCHAR(50)", "key": "FK", "description": "Ref: org_units.id" },
+            { "name": "rank_id", "type": "VARCHAR(50)", "key": "FK", "description": "Ref: ranks.id" },
+            { "name": "salary_grade_id", "type": "VARCHAR(50)", "key": "FK", "description": "Ref: salary_grades.id" },
+            { "name": "default_base_pay", "type": "DECIMAL(10,2)", "key": "", "description": "Override or default amount" }
+          ],
+          "dummy_data": [
+            { "id": "p1", "title": "VP of Engineering", "org_unit_id": "div-1", "default_base_pay": 120000 },
+            { "id": "p2", "title": "Senior Backend Eng", "org_unit_id": "dept-1", "default_base_pay": 65000 }
+          ]
+        },
+        {
+          "table_name": "ranks",
+          "description": "Standardized hierarchy levels.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "name", "type": "VARCHAR(50)", "key": "", "description": "e.g. 'Junior', 'Manager'" },
+            { "name": "level", "type": "INT", "key": "", "description": "Hierarchy order (1-N)" },
+            { "name": "salary_grade_id", "type": "VARCHAR(50)", "key": "FK", "description": "Default grade for this rank" }
+          ],
+          "dummy_data": [
+            { "id": "rank-1", "name": "Junior", "level": 1 },
+            { "id": "rank-2", "name": "Senior", "level": 2 }
+          ]
+        },
+        {
+          "table_name": "salary_grades",
+          "description": "Pay bands and standardized rates.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "code", "type": "VARCHAR(20)", "key": "", "description": "e.g. 'SG-10'" },
+            { "name": "name", "type": "VARCHAR(100)", "key": "", "description": "e.g. 'Entry Level'" },
+            { "name": "min_salary", "type": "DECIMAL(10,2)", "key": "", "description": "" },
+            { "name": "max_salary", "type": "DECIMAL(10,2)", "key": "", "description": "" }
+          ],
+          "dummy_data": [
+            { "id": "sg-1", "code": "SG-10", "name": "Entry Level", "min_salary": 25000, "max_salary": 35000 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payroll & Compensation",
+      "description": "Salary calculation, earnings, deductions, and disbursement records.",
+      "tables": [
+        {
+          "table_name": "pay_components",
+          "description": "Individual line items on a payslip.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "name", "type": "VARCHAR(100)", "key": "", "description": "e.g. 'Rice Subsidy'" },
+            { "name": "type", "type": "ENUM", "key": "", "description": "'Earning', 'Deduction'" },
+            { "name": "is_taxable", "type": "BOOLEAN", "key": "", "description": "" },
+            { "name": "value_type", "type": "ENUM", "key": "", "description": "'Fixed', 'Formula', 'Table'" },
+            { "name": "fixed_value", "type": "DECIMAL(10,2)", "key": "", "description": "Used if value_type is Fixed" }
+          ],
+          "dummy_data": [
+            { "id": "pc-1", "name": "Rice Subsidy", "type": "Earning", "fixed_value": 2000, "is_taxable": false },
+            { "id": "pc-3", "name": "SSS Contribution", "type": "Deduction", "fixed_value": 1350, "is_taxable": false }
+          ]
+        },
+        {
+          "table_name": "pay_templates",
+          "description": "Collections of pay components assigned to groups.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "name", "type": "VARCHAR(100)", "key": "", "description": "" },
+            { "name": "target_type", "type": "ENUM", "key": "", "description": "'Global', 'Rank', 'Position', 'Employee'" },
+            { "name": "target_id", "type": "VARCHAR(50)", "key": "FK", "description": "ID of the target entity" },
+            { "name": "components", "type": "JSON", "key": "", "description": "Array of pay_component_ids" }
+          ],
+          "dummy_data": [
+            { "id": "pt-1", "name": "Regular Employee Standard", "target_type": "Global", "components": ["pc-1", "pc-3"] }
+          ]
+        },
+        {
+          "table_name": "pay_schedules",
+          "description": "Defines payroll frequency and cutoff dates.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "frequency", "type": "ENUM", "key": "", "description": "'Weekly', 'Semi-Monthly', 'Monthly'" },
+            { "name": "first_cutoff_day", "type": "INT", "key": "", "description": "Day of month (e.g. 15)" },
+            { "name": "first_pay_day", "type": "INT", "key": "", "description": "Day of month (e.g. 30)" }
+          ],
+          "dummy_data": [
+            { "id": "1", "name": "Regular Employees", "frequency": "Semi-Monthly", "first_cutoff_day": 10, "first_pay_day": 15 }
+          ]
+        },
+        {
+          "table_name": "payroll_register",
+          "description": "Computed payroll for a specific period (Preliminary/Final).",
+          "columns": [
+             { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "Record ID" },
+             { "name": "employee_id", "type": "VARCHAR(50)", "key": "FK", "description": "" },
+             { "name": "net_pay", "type": "DECIMAL(10,2)", "key": "", "description": "Final take home pay" },
+             { "name": "bank_name", "type": "VARCHAR(50)", "key": "", "description": "Bank for disbursement" },
+             { "name": "account_number", "type": "VARCHAR(50)", "key": "", "description": "Account number for FBAT" },
+             { "name": "status", "type": "ENUM", "key": "", "description": "'Pending', 'Disbursed', 'Failed'" },
+             { "name": "attendance_status", "type": "ENUM", "key": "", "description": "'Complete', 'Incomplete'" }
+          ],
+          "dummy_data": [
+             { "id": "pr-1", "employee_id": "emp-1", "net_pay": 12500.00, "bank_name": "GCash", "account_number": "0917-123-4567", "status": "Disbursed" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Time & Attendance",
+      "description": "Shifts, DTRs, Leaves, and Holidays.",
+      "tables": [
+        {
+          "table_name": "shifts",
+          "description": "Work schedules.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "name", "type": "VARCHAR(100)", "key": "", "description": "" },
+            { "name": "start_time", "type": "TIME", "key": "", "description": "e.g. '08:00'" },
+            { "name": "end_time", "type": "TIME", "key": "", "description": "e.g. '17:00'" },
+            { "name": "work_days", "type": "JSON", "key": "", "description": "Array of strings ['Mon', 'Tue'...]" }
+          ],
+          "dummy_data": [
+            { "id": "1", "name": "Standard Shift 8", "start_time": "08:00", "end_time": "17:00", "work_days": ["Mon", "Tue", "Wed", "Thu", "Fri"] }
+          ]
+        },
+        {
+          "table_name": "attendance_logs",
+          "description": "Daily Time Records (DTR).",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "employee_id", "type": "VARCHAR(50)", "key": "FK", "description": "" },
+            { "name": "date", "type": "DATE", "key": "", "description": "" },
+            { "name": "time_in", "type": "TIMESTAMP", "key": "", "description": "" },
+            { "name": "time_out", "type": "TIMESTAMP", "key": "", "description": "" },
+            { "name": "status", "type": "ENUM", "key": "", "description": "'Present', 'Late', 'Absent', 'On Leave'" },
+            { "name": "source", "type": "ENUM", "key": "", "description": "'Biometrics', 'ODTR', 'System'" }
+          ],
+          "dummy_data": [
+            { "id": "att-1", "employee_id": "emp-1", "date": "2025-08-09", "time_in": "08:01:00 AM", "status": "Verified" }
+          ]
+        },
+        {
+          "table_name": "leave_policies",
+          "description": "Types of leaves and their limits.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "name", "type": "VARCHAR(50)", "key": "", "description": "e.g. 'Vacation Leave'" },
+            { "name": "max_days", "type": "INT", "key": "", "description": "Annual allocation" }
+          ],
+          "dummy_data": [
+            { "id": "1", "name": "Vacation Leave", "max_days": 15 }
+          ]
+        },
+        {
+          "table_name": "holidays",
+          "description": "Calendar holidays.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "name", "type": "VARCHAR(100)", "key": "", "description": "" },
+            { "name": "date", "type": "DATE", "key": "", "description": "" },
+            { "name": "type", "type": "ENUM", "key": "", "description": "'Regular', 'Special Non-Working'" }
+          ],
+          "dummy_data": [
+            { "id": "1", "name": "National Heroes Day", "date": "2026-08-25", "type": "Regular" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "System & Security",
+      "description": "Authentication, Authorization, and Auditing.",
+      "tables": [
+        {
+          "table_name": "users",
+          "description": "Login accounts.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "email", "type": "VARCHAR(100)", "key": "UK", "description": "" },
+            { "name": "role", "type": "VARCHAR(50)", "key": "", "description": "'Superadmin', 'HR Admin', etc." },
+            { "name": "employee_id", "type": "VARCHAR(50)", "key": "FK", "description": "Link to employee profile" },
+            { "name": "status", "type": "ENUM", "key": "", "description": "'Active', 'Locked'" }
+          ],
+          "dummy_data": [
+            { "id": "usr-1", "email": "sarah@company.com", "role": "HR Admin", "employee_id": "emp-1" }
+          ]
+        },
+        {
+          "table_name": "approval_workflows",
+          "description": "Configures who approves what.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "name", "type": "VARCHAR(100)", "key": "", "description": "e.g. 'IT Leave Request'" },
+            { "name": "feature", "type": "VARCHAR(50)", "key": "", "description": "'Leave', 'Overtime'" },
+            { "name": "steps", "type": "JSON", "key": "", "description": "Ordered array of approver roles/ids" }
+          ],
+          "dummy_data": [
+            { "id": "1", "name": "IT Leave Request", "feature": "Leave Management" }
+          ]
+        },
+        {
+          "table_name": "audit_logs",
+          "description": "Immutable system activity log.",
+          "columns": [
+            { "name": "id", "type": "VARCHAR(50)", "key": "PK", "description": "" },
+            { "name": "timestamp", "type": "DATETIME", "key": "", "description": "" },
+            { "name": "actor_id", "type": "VARCHAR(50)", "key": "FK", "description": "" },
+            { "name": "action", "type": "ENUM", "key": "", "description": "'CREATE', 'UPDATE', 'DELETE'" },
+            { "name": "module", "type": "VARCHAR(50)", "key": "", "description": "" },
+            { "name": "details", "type": "TEXT", "key": "", "description": "" }
+          ],
+          "dummy_data": [
+            { "id": "log_001", "timestamp": "2024-10-24 09:42:15", "actor_id": "emp-1", "action": "UPDATE", "module": "Employee Profile" }
+          ]
+        }
+      ]
+    }
+  ]
+}
