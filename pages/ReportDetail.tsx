@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Modal from '../components/Modal';
+import { useBreadcrumb } from '../context/BreadcrumbContext';
 
 // --- Mock Report Definitions ---
 // In a real app, this would be fetched from an API.
@@ -99,6 +100,7 @@ const REPORT_DEFINITIONS: Record<string, any> = {
 const ReportDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { setPageTitle } = useBreadcrumb();
   const [isLoading, setIsLoading] = useState(true);
   const [filterDept, setFilterDept] = useState('All');
   
@@ -151,6 +153,13 @@ const ReportDetail: React.FC = () => {
       setIsLoading(false);
     }, 600);
   }, [id]);
+
+  // Sync resolved report title into the breadcrumb
+  useEffect(() => {
+    if (reportConfig?.title) {
+      setPageTitle(reportConfig.title);
+    }
+  }, [reportConfig?.title, setPageTitle]);
 
   const handleOpenConfig = () => {
       if (!reportConfig) return;
@@ -207,13 +216,6 @@ const ReportDetail: React.FC = () => {
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             Back to Reports
         </button>
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-            <span>Reports Center</span>
-            <span>/</span>
-            <span>{reportConfig?.category}</span>
-            <span>/</span>
-            <span className="text-slate-900 font-bold">{reportConfig?.title}</span>
-        </div>
       </div>
 
       {/* Main Report Card */}
