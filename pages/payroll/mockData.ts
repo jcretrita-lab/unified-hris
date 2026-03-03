@@ -90,6 +90,10 @@ export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
     actualThirteenthMonth: 20833.33,
     assumedStatus: 'Finalized',
     actualStatus: 'Draft',
+    assumedTax: 14500.00,
+    actualTax: 15000.00,
+    assumedTaxStatus: 'Finalized',
+    actualTaxStatus: 'Draft',
     govContributions: { sss: 12000, philhealth: 4500, pagibig: 2400 },
     status: 'Balanced'
   },
@@ -108,6 +112,10 @@ export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
     actualThirteenthMonth: 65000.00,
     assumedStatus: 'Finalized',
     actualStatus: 'Draft',
+    assumedTax: 83000.00,
+    actualTax: 82000.00,
+    assumedTaxStatus: 'Finalized',
+    actualTaxStatus: 'Draft',
     govContributions: { sss: 24000, philhealth: 12500, pagibig: 2400 },
     status: 'Refund Due'
   },
@@ -126,6 +134,10 @@ export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
     actualThirteenthMonth: 55000.00,
     assumedStatus: 'Finalized',
     actualStatus: 'Draft',
+    assumedTax: 62000.00,
+    actualTax: 65000.00,
+    assumedTaxStatus: 'Finalized',
+    actualTaxStatus: 'Draft',
     govContributions: { sss: 24000, philhealth: 11000, pagibig: 2400 },
     status: 'Tax Payable'
   }
@@ -138,33 +150,50 @@ export const MOCK_CONVERSION_DB: Omit<LeaveConversionItem, 'vlToConvert' | 'slTo
   { id: 'emp-1', name: 'James Cordon', role: 'IT Intern', department: 'IT', avatar: 'JC', dailyRate: 850.00, vlBalance: 5.0, slBalance: 2.0 },
 ];
 
-export const generate13thMonthHistory = (totalBasic: number): MonthlyPayrollRecord[] => {
+export const generate13thMonthHistory = (totalBasic: number, empId?: string): MonthlyPayrollRecord[] => {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const baseMonthly = totalBasic / 12;
 
   return months.map((m, idx) => {
     // Basic bi-monthly split
-    const p1_basic = baseMonthly / 2;
-    const p2_basic = baseMonthly / 2;
+    let p1_basic = baseMonthly / 2;
+    let p2_basic = baseMonthly / 2;
+
+    let p1_differential = 0;
+    let p2_differential = 0;
+
+    // Special Scenario: Maternity Leave for Sarah Wilson (HR Manager)
+    // Maternity leave typically lasts 105 days (approx 3.5 months)
+    // Let's simulate it from June (idx 5) to August (idx 7)
+    if (empId === 'emp-4' && (idx >= 5 && idx <= 7)) {
+      p1_basic = 0;
+      p2_basic = 0;
+      p1_differential = (baseMonthly / 2) * 0.65; // Simulated differential (Full - SSS Benefit)
+      p2_differential = (baseMonthly / 2) * 0.65;
+      // In June, maybe she only took half the month? We'll simplify and say she took full 3 months.
+    }
 
     // Simulate period-specific variances
     const p1_absences = (idx === 3) ? p1_basic * 0.1 : 0;
     const p2_absences = (idx === 7) ? p2_basic * 0.05 : 0;
 
-    const p1_late = (idx % 2 === 0) ? 225.10 : 0;
-    const p2_late = (idx % 3 === 0) ? 150.50 : 0;
+    const p1_late = (idx % 2 === 0 && p1_basic > 0) ? 225.10 : 0;
+    const p2_late = (idx % 3 === 0 && p2_basic > 0) ? 150.50 : 0;
 
-    const p1_ot = (idx % 4 === 0) ? 1200 : 0;
-    const p2_ot = (idx % 2 === 0) ? 800 : 0;
+    const p1_ot = (idx % 4 === 0 && p1_basic > 0) ? 1200 : 0;
+    const p2_ot = (idx % 2 === 0 && p2_basic > 0) ? 800 : 0;
 
-    const p1_sss = 1125;
+    const p1_sss = idx >= 5 && idx <= 7 && empId === 'emp-4' ? 0 : 1125; // SSS is usually zeroed during ML if no differential deduction
     const p1_pagibig = 100;
     const p2_ph = 450;
     const p2_tax = 1800;
 
-    const p1_nd2 = idx % 2 === 0 ? 350 : 0;
-    const p2_rdot = idx % 4 === 0 ? 1500 : 0;
+    const p1_nd2 = (idx % 2 === 0 && p1_basic > 0) ? 350 : 0;
+    const p2_rdot = (idx % 4 === 0 && p2_basic > 0) ? 1500 : 0;
     const p1_bonus = idx === 11 ? 5000 : 0; // Christmas bonus
+
+    const p1_earned = p1_basic + p1_differential + (idx === 11 ? p1_bonus : 0);
+    const p2_earned = p2_basic + p2_differential;
 
     return {
       month: m,
@@ -174,11 +203,13 @@ export const generate13thMonthHistory = (totalBasic: number): MonthlyPayrollReco
         lateUndertime: p1_late,
         leaves: 0,
         otherEarnings: p1_ot,
+        salaryDifferential: p1_differential,
+        otherTaxable: 0,
         sss: p1_sss,
         pagibig: p1_pagibig,
         nd2: p1_nd2,
         bonus: p1_bonus,
-        earnedBasic: p1_basic - p1_absences - p1_late + p1_ot + p1_nd2 + p1_bonus
+        earnedBasic: p1_earned,
       },
       p2: {
         basicPay: p2_basic,
@@ -186,13 +217,15 @@ export const generate13thMonthHistory = (totalBasic: number): MonthlyPayrollReco
         lateUndertime: p2_late,
         leaves: 0,
         otherEarnings: p2_ot,
+        salaryDifferential: p2_differential,
+        otherTaxable: 0,
         philhealth: p2_ph,
         tax: p2_tax,
         restDayOt: p2_rdot,
-        earnedBasic: p2_basic - p2_absences - p2_late + p2_ot + p2_rdot
+        earnedBasic: p2_earned,
       },
-      earnedBasic: (p1_basic - p1_absences - p1_late + p1_ot + p1_nd2 + p1_bonus) + (p2_basic - p2_absences - p2_late + p2_ot + p2_rdot),
-      status: idx > 9 ? 'Projected' : 'Paid'
+      earnedBasic: p1_earned + p2_earned,
+      status: 'Paid'
     };
   });
 };

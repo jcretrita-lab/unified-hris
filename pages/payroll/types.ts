@@ -30,6 +30,11 @@ export interface YearEndSummary {
   actualThirteenthMonth: number;
   assumedStatus: 'Draft' | 'Finalized';
   actualStatus: 'Draft' | 'Finalized';
+  // Tax Annualization Fields
+  assumedTax: number;
+  actualTax: number;
+  assumedTaxStatus: 'Draft' | 'Finalized';
+  actualTaxStatus: 'Draft' | 'Finalized';
   govContributions: {
     sss: number;
     philhealth: number;
@@ -44,6 +49,8 @@ export interface PeriodData {
   lateUndertime: number;
   leaves: number;
   otherEarnings: number;
+  salaryDifferential?: number;
+  otherTaxable?: number;
   earnedBasic: number;
   sss?: number;
   philhealth?: number;

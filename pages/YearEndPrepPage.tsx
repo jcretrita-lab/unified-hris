@@ -15,7 +15,8 @@ import {
     CheckCircle2,
     Building2,
     Calendar,
-    ArrowRight
+    ArrowRight,
+    Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_YEAR_END_DATA, generate13thMonthHistory } from './payroll/mockData';
@@ -35,13 +36,13 @@ const YearEndPrepPage: React.FC = () => {
     );
 
     const selectedEmployeeData = MOCK_YEAR_END_DATA.find(d => d.id === selectedEmpId);
-    const monthlyHistory = selectedEmployeeData ? generate13thMonthHistory(selectedEmployeeData.ytdGross) : [];
+    const monthlyHistory = selectedEmployeeData ? generate13thMonthHistory(selectedEmployeeData.ytdGross, selectedEmployeeData.id) : [];
 
     const formatCurrency = (amount: number) => {
         return `₱${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
-    const rowGroups = [
+    const month13thRowGroups = [
         {
             name: 'Earnings',
             rows: [
@@ -51,17 +52,39 @@ const YearEndPrepPage: React.FC = () => {
                 { label: 'Overtime Pay (OT 1.00)', key: 'otherEarnings', color: 'text-slate-600', isDeduction: false },
                 { label: 'Rest Day OT', key: 'restDayOt', color: 'text-slate-600', isDeduction: false },
                 { label: 'Attendance Bonus', key: 'bonus', color: 'text-emerald-600', isDeduction: false },
+                { label: 'Salary Differential', key: 'salaryDifferential', color: 'text-indigo-600', isDeduction: false },
+                { label: 'Other Taxable', key: 'otherTaxable', color: 'text-slate-600', isDeduction: false },
+                { label: 'Absences (LWOP)', key: 'absences', color: 'text-rose-600', isDeduction: true },
+                { label: 'Late / Undertime', key: 'lateUndertime', color: 'text-rose-600', isDeduction: true },
             ]
         },
         {
             name: 'Deductions',
             rows: [
-                { label: 'Absences (LWOP)', key: 'absences', color: 'text-rose-600', isDeduction: true },
-                { label: 'Late / Undertime', key: 'lateUndertime', color: 'text-rose-600', isDeduction: true },
                 { label: 'SSS Contribution', key: 'sss', color: 'text-slate-500', isDeduction: true },
                 { label: 'PhilHealth', key: 'philhealth', color: 'text-slate-500', isDeduction: true },
                 { label: 'Pag-IBIG Contribution', key: 'pagibig', color: 'text-slate-500', isDeduction: true },
                 { label: 'Withholding Tax', key: 'tax', color: 'text-rose-400', isDeduction: true },
+            ]
+        }
+    ];
+
+    const taxRowGroups = [
+        {
+            name: 'Taxable Income Details',
+            rows: [
+                { label: 'Basic Salary', key: 'basicPay', color: 'text-slate-900', isDeduction: false },
+                { label: 'Other Taxable Income', key: 'otherTaxable', color: 'text-slate-600', isDeduction: false },
+                { label: 'Salary Differential', key: 'salaryDifferential', color: 'text-indigo-600', isDeduction: false },
+            ]
+        },
+        {
+            name: 'Tax Payments & Deductions',
+            rows: [
+                { label: 'SSS (Employee Share)', key: 'sss', color: 'text-slate-500', isDeduction: true },
+                { label: 'PhilHealth (Employee Share)', key: 'philhealth', color: 'text-slate-500', isDeduction: true },
+                { label: 'Pag-IBIG (Employee Share)', key: 'pagibig', color: 'text-slate-500', isDeduction: true },
+                { label: 'Withholding Tax Paid', key: 'tax', color: 'text-rose-600', isDeduction: true },
             ]
         }
     ];
@@ -296,61 +319,130 @@ const YearEndPrepPage: React.FC = () => {
 
                         {/* Tax Annualization Tab */}
                         {activeTab === 'tax' && (
-                            <table className="min-w-full divide-y divide-slate-50">
-                                <thead className="bg-slate-50/50 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                    <tr>
-                                        <th className="px-8 py-5">Employee</th>
-                                        <th className="px-6 py-5 text-right">YTD Gross</th>
-                                        <th className="px-6 py-5 text-right">Taxable Income</th>
-                                        <th className="px-6 py-5 text-right">Tax Due</th>
-                                        <th className="px-6 py-5 text-right">Tax Withheld</th>
-                                        <th className="px-6 py-5 text-center">Refund / (Payable)</th>
-                                        <th className="px-6 py-5"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {filteredData.map((item) => {
-                                        const diff = item.taxWithheld - item.taxDue;
-                                        return (
-                                            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => setSelectedEmpId(item.id)}>
-                                                <td className="px-8 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-xs font-bold text-emerald-600 border border-emerald-100">
-                                                            {item.avatar}
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-sm font-bold text-slate-900">{item.name}</div>
-                                                            <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{item.department}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-right font-mono text-sm text-slate-600">
-                                                    {formatCurrency(item.ytdGross)}
-                                                </td>
-                                                <td className="px-6 py-4 text-right font-mono text-sm text-slate-900 font-bold">
-                                                    {formatCurrency(item.ytdTaxable)}
-                                                </td>
-                                                <td className="px-6 py-4 text-right font-mono text-sm text-slate-600">
-                                                    {formatCurrency(item.taxDue)}
-                                                </td>
-                                                <td className="px-6 py-4 text-right font-mono text-sm text-slate-600">
-                                                    {formatCurrency(item.taxWithheld)}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${diff > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                                        diff < 0 ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-slate-100 text-slate-500'
-                                                        }`}>
-                                                        {diff > 0 ? `+ ${formatCurrency(diff)}` : diff < 0 ? `- ${formatCurrency(Math.abs(diff))}` : 'BALANCED'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <MoreHorizontal size={18} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
-                                                </td>
+                            <div className="flex flex-col flex-1"> {/* Added a wrapper div here */}
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm shrink-0">
+                                    <div className="flex items-center gap-6">
+                                        <div className="p-4 bg-indigo-50 text-indigo-600 rounded-[1.5rem] shadow-inner">
+                                            <Calculator size={32} />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Tax Annualization</h2>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Year-End Tax Reconciliation (1604-C)</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right px-6 border-r border-slate-100 hidden lg:block">
+                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Tax (Assumed)</div>
+                                            <div className="text-xl font-black text-slate-900">₱ 1,425,000.00</div>
+                                        </div>
+                                        <div className="text-right px-6 border-r border-slate-100 hidden lg:block">
+                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Tax (Actual)</div>
+                                            <div className="text-xl font-black text-emerald-600">₱ 1,450,000.00</div>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => navigate('/manage/year-end-batch-tax?stage=assumed')}
+                                                className="flex items-center gap-2 px-6 py-3.5 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95 shadow-lg shadow-slate-100"
+                                            >
+                                                <Calculator size={16} /> Batch Process Assumed (Dec)
+                                            </button>
+                                            <button
+                                                onClick={() => navigate('/manage/year-end-batch-tax?stage=actual')}
+                                                className="flex items-center gap-2 px-6 py-3.5 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-2xl shadow-slate-200"
+                                            >
+                                                <ShieldCheck size={16} /> Batch Process Actual (Jan)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Tax Table */}
+                                <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm flex-1 flex flex-col">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50/50 border-b border-slate-100">
+                                                <th rowSpan={2} className="pl-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Employee Information</th>
+                                                <th colSpan={3} className="px-6 py-4 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100 bg-indigo-50/20">Tax Assumed (Dec)</th>
+                                                <th colSpan={3} className="px-6 py-4 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100 bg-emerald-50/20">Tax Actual (Jan)</th>
+                                                <th rowSpan={2} className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">Adjustment</th>
                                             </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                                            <tr className="bg-slate-50/50 border-b border-slate-100">
+                                                {/* Assumed */}
+                                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right border-l border-slate-100">Amount</th>
+                                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
+                                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Action</th>
+                                                {/* Actual */}
+                                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right border-l border-slate-100">Amount</th>
+                                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
+                                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {filteredData.map((item) => (
+                                                <tr key={item.id} className="hover:bg-slate-50/80 transition-all group">
+                                                    <td className="pl-10 py-5">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-2xl bg-slate-900 flex items-center justify-center text-xs font-black text-white shadow-xl">
+                                                                {item.avatar}
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-sm font-black text-slate-900">{item.name}</div>
+                                                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{item.role}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    {/* Assumed */}
+                                                    <td className="px-6 py-5 text-right font-mono text-sm font-black text-slate-900 border-l border-slate-50">
+                                                        {formatCurrency(item.assumedTax)}
+                                                    </td>
+                                                    <td className="px-6 py-5 text-center">
+                                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${item.assumedTaxStatus === 'Finalized'
+                                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                            : 'bg-amber-50 text-amber-600 border-amber-100'
+                                                            }`}>
+                                                            {item.assumedTaxStatus}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-5 text-center px-6">
+                                                        <button
+                                                            onClick={() => setSelectedEmpId(item.id)}
+                                                            className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-indigo-100 shadow-sm"
+                                                        >
+                                                            <Eye size={18} />
+                                                        </button>
+                                                    </td>
+                                                    {/* Actual */}
+                                                    <td className="px-6 py-5 text-right font-mono text-sm font-black text-indigo-600 border-l border-slate-50 bg-indigo-50/5">
+                                                        {formatCurrency(item.actualTax)}
+                                                    </td>
+                                                    <td className="px-6 py-5 text-center">
+                                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${item.actualTaxStatus === 'Finalized'
+                                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                            : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                                            }`}>
+                                                            {item.actualTaxStatus}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-5 text-center px-6">
+                                                        <button
+                                                            onClick={() => setSelectedEmpId(item.id)}
+                                                            className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-indigo-100 shadow-sm"
+                                                        >
+                                                            <Eye size={18} />
+                                                        </button>
+                                                    </td>
+                                                    {/* Adjustment */}
+                                                    <td className={`px-6 py-5 text-right font-mono text-sm font-black border-l border-slate-50 ${(item.actualTax - item.assumedTax) > 0 ? 'text-rose-600 bg-rose-50/30' :
+                                                        (item.actualTax - item.assumedTax) < 0 ? 'text-emerald-600 bg-emerald-50/30' : 'text-slate-400'
+                                                        }`}>
+                                                        {formatCurrency(item.actualTax - item.assumedTax)}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         )}
 
                         {/* Govt Contributions Tab */}
@@ -425,11 +517,11 @@ const YearEndPrepPage: React.FC = () => {
                         <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex justify-between items-start shrink-0">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 shadow-sm">
-                                    {selectedEmployeeData.avatar}
+                                    {selectedEmployeeData?.avatar}
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-900">{selectedEmployeeData.name}</h3>
-                                    <p className="text-xs text-slate-500 font-medium">{selectedEmployeeData.role} • {selectedEmployeeData.department}</p>
+                                    <h3 className="text-xl font-bold text-slate-900">{selectedEmployeeData?.name}</h3>
+                                    <p className="text-xs text-slate-500 font-medium">{selectedEmployeeData?.role} • {selectedEmployeeData?.department}</p>
                                 </div>
                             </div>
                             <button
@@ -473,7 +565,7 @@ const YearEndPrepPage: React.FC = () => {
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 text-[11px]">
-                                                    {rowGroups.map((group, gIdx) => (
+                                                    {month13thRowGroups.map((group, gIdx) => (
                                                         <React.Fragment key={gIdx}>
                                                             <tr className="bg-slate-50 group hover:bg-slate-100 transition-colors">
                                                                 <td className="px-8 py-3 text-[12px] font-black text-slate-900 uppercase tracking-[0.2em] border-y border-slate-200 sticky left-0 z-10 bg-slate-50 shadow-sm">
@@ -511,8 +603,8 @@ const YearEndPrepPage: React.FC = () => {
                                                             <tr className="bg-slate-200 border-t-2 border-slate-900">
                                                                 <td className="px-8 py-4 sticky left-0 bg-slate-200 z-10 border-r-2 border-slate-300 shadow-[2px_0_5px_rgba(0,0,0,0.05)] text-[11px] font-black text-slate-900 uppercase tracking-widest">{group.name} Total</td>
                                                                 {monthlyHistory.map((m: any, mIdx) => {
-                                                                    const p1Sum = group.rows.reduce((acc, r) => acc + (m.p1[r.key] || 0), 0);
-                                                                    const p2Sum = group.rows.reduce((acc, r) => acc + (m.p2[r.key] || 0), 0);
+                                                                    const p1Sum = group.rows.reduce((acc, r) => acc + (r.isDeduction ? -(m.p1[r.key] || 0) : (m.p1[r.key] || 0)), 0);
+                                                                    const p2Sum = group.rows.reduce((acc, r) => acc + (r.isDeduction ? -(m.p2[r.key] || 0) : (m.p2[r.key] || 0)), 0);
                                                                     return (
                                                                         <React.Fragment key={`${mIdx}-group-sum`}>
                                                                             <td className="px-2 py-4 text-right font-mono font-black text-slate-900 border-r border-slate-300">{formatVal(p1Sum)}</td>
@@ -521,7 +613,7 @@ const YearEndPrepPage: React.FC = () => {
                                                                     );
                                                                 })}
                                                                 <td className="px-8 py-4 text-right font-mono text-[12px] font-black text-white bg-slate-900 border-l border-slate-900">
-                                                                    {formatVal(monthlyHistory.reduce((acc, m: any) => acc + group.rows.reduce((rAcc, r) => rAcc + (m.p1[r.key] || 0) + (m.p2[r.key] || 0), 0), 0))}
+                                                                    {formatVal(monthlyHistory.reduce((acc, m: any) => acc + group.rows.reduce((rAcc, r) => rAcc + (r.isDeduction ? -(m.p1[r.key] || 0) - (m.p2[r.key] || 0) : (m.p1[r.key] || 0) + (m.p2[r.key] || 0)), 0), 0))}
                                                                 </td>
                                                             </tr>
                                                         </React.Fragment>
@@ -565,7 +657,7 @@ const YearEndPrepPage: React.FC = () => {
                                             <div className="h-20 w-px bg-white/10 hidden md:block"></div>
                                             <div className="text-center md:text-right">
                                                 <div className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-3">Projected 13th Month</div>
-                                                <div className="text-5xl font-black text-white tracking-tighter shadow-sm">{formatCurrency(selectedEmployeeData.thirteenthMonth)}</div>
+                                                <div className="text-5xl font-black text-white tracking-tighter shadow-sm">{formatCurrency(selectedEmployeeData?.thirteenthMonth || 0)}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -574,59 +666,93 @@ const YearEndPrepPage: React.FC = () => {
 
                             {activeTab === 'tax' && (
                                 <div className="space-y-6">
-                                    <h4 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                        <Calculator className="text-emerald-500" size={20} />
-                                        Tax Annualization Breakdown
-                                    </h4>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                            <Calculator className="text-indigo-600" size={20} />
+                                            Tax Annualization Ledger
+                                        </h4>
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference: Fiscal Year {selectedYear}</div>
+                                    </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Earnings Summary (YTD)</div>
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm font-medium text-slate-600">Total Gross Income</span>
-                                                    <span className="text-sm font-bold text-slate-900">{formatCurrency(selectedEmployeeData.ytdGross)}</span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm font-medium text-slate-600">Non-Taxable Allowances</span>
-                                                    <span className="text-sm font-bold text-slate-900">{formatCurrency(selectedEmployeeData.ytdGross - selectedEmployeeData.ytdTaxable)}</span>
-                                                </div>
-                                                <div className="h-px bg-slate-200"></div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm font-black text-slate-900">Taxable Income</span>
-                                                    <span className="text-lg font-black text-indigo-600">{formatCurrency(selectedEmployeeData.ytdTaxable)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 p-6 opacity-5">
-                                                <ShieldCheck size={100} />
-                                            </div>
-                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Tax Reconciliation</div>
-                                            <div className="space-y-3 relative z-10">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm font-medium text-slate-400">Total Tax Withheld</span>
-                                                    <span className="text-sm font-bold">{formatCurrency(selectedEmployeeData.taxWithheld)}</span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-sm font-medium text-slate-400">Total Tax Due (Projected)</span>
-                                                    <span className="text-sm font-bold text-rose-400">({formatCurrency(selectedEmployeeData.taxDue)})</span>
-                                                </div>
-                                                <div className="h-px bg-white/10 my-4"></div>
-                                                <div className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl border border-white/10">
-                                                    <div className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-2">Final Difference</div>
-                                                    <div className="text-3xl font-black text-emerald-400">{formatCurrency(selectedEmployeeData.taxWithheld - selectedEmployeeData.taxDue)}</div>
-                                                    <div className="text-[9px] font-bold text-slate-500 mt-2 uppercase">Status: REFUND DUE AT YEAR-END</div>
-                                                </div>
-                                            </div>
+                                    <div className="border-2 border-slate-300 overflow-hidden bg-white shadow-xl">
+                                        <div className="overflow-x-auto custom-scrollbar-horizontal pb-4">
+                                            <table className="w-full text-left border-collapse min-w-[2200px]">
+                                                <thead className="bg-white">
+                                                    <tr className="border-b-2 border-slate-900 bg-white">
+                                                        <th rowSpan={2} className="px-6 py-4 text-[11px] font-black text-slate-900 uppercase tracking-widest sticky left-0 top-0 bg-white z-20 border-r-2 border-slate-200 min-w-[250px]">Description</th>
+                                                        {monthsLong.map(m => (
+                                                            <th key={m} colSpan={2} className="px-2 py-2 text-[11px] font-black text-slate-900 text-center bg-white">{m}</th>
+                                                        ))}
+                                                        <th rowSpan={2} className="px-8 py-4 text-[11px] font-black text-slate-900 uppercase tracking-widest text-right bg-slate-50 border-l border-slate-200 sticky right-0 z-10">Total</th>
+                                                    </tr>
+                                                    <tr className="border-b-[3px] border-slate-900 border-dashed bg-white">
+                                                        {monthsLong.map(m => (
+                                                            <React.Fragment key={`${m}-periods`}>
+                                                                <th className="px-2 py-2 text-[9px] font-black text-slate-400 text-center border-r border-slate-100 bg-white">1st</th>
+                                                                <th className="px-2 py-2 text-[9px] font-black text-slate-400 text-center border-r-2 border-slate-200 bg-white">2nd</th>
+                                                            </React.Fragment>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100 text-[11px]">
+                                                    {taxRowGroups.map((group, gIdx) => (
+                                                        <React.Fragment key={gIdx}>
+                                                            <tr className="bg-slate-50 group hover:bg-slate-100 transition-colors">
+                                                                <td className="px-8 py-3 text-[12px] font-black text-slate-900 uppercase tracking-[0.2em] border-y border-slate-200 sticky left-0 z-10 bg-slate-50 shadow-sm">
+                                                                    {group.name}
+                                                                </td>
+                                                                <td colSpan={25} className="bg-slate-50/50 border-y border-slate-200"></td>
+                                                            </tr>
+                                                            {group.rows.map((row, rIdx) => {
+                                                                let rowTotal = 0;
+                                                                monthlyHistory.forEach((m: any) => {
+                                                                    rowTotal += (m.p1[row.key] || 0) + (m.p2[row.key] || 0);
+                                                                });
+
+                                                                return (
+                                                                    <tr key={rIdx} className="group hover:bg-slate-50 transition-colors">
+                                                                        <td className="px-8 py-3 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-r-2 border-slate-200">
+                                                                            <span className="font-bold text-slate-800 tracking-tight">{row.label}</span>
+                                                                        </td>
+                                                                        {monthlyHistory.map((m: any, mIdx) => (
+                                                                            <React.Fragment key={`${mIdx}-${rIdx}`}>
+                                                                                <td className="px-2 py-3 text-right font-mono border-r border-slate-50">
+                                                                                    <span className={m.p1[row.key] === 0 ? 'text-slate-300' : (row as any).color}>{formatVal(m.p1[row.key] || 0, row.isDeduction)}</span>
+                                                                                </td>
+                                                                                <td className="px-2 py-3 text-right font-mono border-r-2 border-slate-200">
+                                                                                    <span className={m.p2[row.key] === 0 ? 'text-slate-300' : (row as any).color}>{formatVal(m.p2[row.key] || 0, row.isDeduction)}</span>
+                                                                                </td>
+                                                                            </React.Fragment>
+                                                                        ))}
+                                                                        <td className="px-8 py-3 text-right font-mono font-black text-slate-900 bg-slate-50 border-l border-slate-200">
+                                                                            {formatVal(rowTotal, row.isDeduction)}
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
-                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center gap-3">
-                                        <Info size={16} className="text-indigo-600" />
-                                        <p className="text-[10px] text-indigo-700 font-bold leading-relaxed">
-                                            Calculations are based on the December final payroll project. Tax schedules follow the BIR Revised Withholding Tax Table (TRAIN Law Year 2025).
-                                            Final values will settle during the last payroll run of the year.
-                                        </p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="bg-indigo-900 rounded-[2rem] p-8 text-white shadow-2xl">
+                                            <div className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-4">Total Taxable Income</div>
+                                            <div className="text-4xl font-black">{formatCurrency(selectedEmployeeData?.ytdGross || 0)}</div>
+                                            <div className="text-[10px] text-indigo-400 font-bold mt-2 uppercase tracking-tight italic">Consolidated YTD Salary</div>
+                                        </div>
+                                        <div className="bg-rose-900 rounded-[2rem] p-8 text-white shadow-2xl">
+                                            <div className="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-4">Total Tax Withheld</div>
+                                            <div className="text-4xl font-black">{formatCurrency((selectedEmployeeData?.actualTax || 0) * 0.95)}</div>
+                                            <div className="text-[10px] text-rose-400 font-bold mt-2 uppercase tracking-tight italic">Total Monthly Remittances</div>
+                                        </div>
+                                        <div className={`rounded-[2rem] p-8 text-white shadow-2xl ${(selectedEmployeeData?.actualTax || 0) > (selectedEmployeeData?.assumedTax || 0) ? 'bg-rose-600' : 'bg-emerald-600'}`}>
+                                            <div className="text-[10px] font-black text-white/70 uppercase tracking-widest mb-4">{(selectedEmployeeData?.actualTax || 0) > (selectedEmployeeData?.assumedTax || 0) ? 'Annual Payable' : 'Annual Refund'}</div>
+                                            <div className="text-4xl font-black">{formatCurrency(Math.abs((selectedEmployeeData?.actualTax || 0) - (selectedEmployeeData?.assumedTax || 0)))}</div>
+                                            <div className="text-[10px] text-white/50 font-bold mt-2 uppercase tracking-tight italic">Year-End Reconciliation Result</div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -658,7 +784,7 @@ const YearEndPrepPage: React.FC = () => {
                     background: #94a3b8;
                 }
             `}</style>
-        </div>
+        </div >
     );
 };
 

@@ -26,7 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_YEAR_END_DATA, generate13thMonthHistory } from './payroll/mockData';
 import Modal from '../components/Modal';
 
-const YearEndBatch13thPage: React.FC = () => {
+const YearEndBatchTaxPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const stage = new URLSearchParams(location.search).get('stage') || 'assumed'; // 'assumed' or 'actual'
@@ -65,23 +65,22 @@ const YearEndBatch13thPage: React.FC = () => {
         const monthData = { ...newHistory[monthIdx] };
         monthData[period] = { ...monthData[period], [key]: val };
 
-        // Recalculate earnedBasic for that period
+        // Recalculate taxableIncome for that period
         const p = monthData[period];
-        // Rules: Basic Pay + Salary Differential + Other Taxable + Paid Leaves + Custom Earnings - Unpaid Absences - Lates - Custom Deductions
         const employeeCustomRows = customRows[activeId] || [];
 
-        monthData[period].earnedBasic =
+        monthData[period].taxableIncome =
             (p.basicPay || 0) +
-            (p.salaryDifferential || 0) +
             (p.otherTaxable || 0) +
-            (p.leaves || 0) +
+            (p.salaryDifferential || 0) +
             employeeCustomRows.filter(r => !r.isDeduction).reduce((sum, r) => sum + (p[r.key] || 0), 0) -
-            (p.absences || 0) -
-            (p.lateUndertime || 0) -
-            employeeCustomRows.filter(r => r.isDeduction).reduce((sum, r) => sum + (p[r.key] || 0), 0);
+            (p.sss || 0) -
+            (p.philhealth || 0) -
+            (p.pagibig || 0) -
+            employeeCustomRows.filter(r => r.isDeduction && r.key !== 'tax').reduce((sum, r) => sum + (p[r.key] || 0), 0);
 
-        // Group total for the whole month
-        monthData.earnedBasic = monthData.p1.earnedBasic + monthData.p2.earnedBasic;
+        // Monthly Taxable Income
+        monthData.taxableIncome = monthData.p1.taxableIncome + monthData.p2.taxableIncome;
 
         newHistory[monthIdx] = monthData;
         setTempHistory(newHistory);
@@ -139,7 +138,7 @@ const YearEndBatch13thPage: React.FC = () => {
         if (nextIndex < employees.length) {
             setActiveId(employees[nextIndex].id);
         } else {
-            alert("All employees have been reviewed!");
+            alert(`Batch Tax Annualization (${stage.toUpperCase()}) Completed!`);
             navigate('/manage/year-end-prep');
         }
     };
@@ -148,28 +147,21 @@ const YearEndBatch13thPage: React.FC = () => {
 
     const rowGroups = [
         {
-            name: 'Earnings',
+            name: 'Taxable Income Details',
             rows: [
                 { label: 'Basic Salary', key: 'basicPay', color: 'text-slate-900', isDeduction: false },
-                { label: 'Holiday Pay', key: 'leaves', color: 'text-slate-600', isDeduction: false },
-                { label: 'Night Diff (ND2)', key: 'nd2', color: 'text-slate-600', isDeduction: false },
-                { label: 'Overtime Pay (OT 1.00)', key: 'otherEarnings', color: 'text-slate-600', isDeduction: false },
-                { label: 'Rest Day OT', key: 'restDayOt', color: 'text-slate-600', isDeduction: false },
-                { label: 'Attendance Bonus', key: 'bonus', color: 'text-emerald-600', isDeduction: false },
+                { label: 'Other Taxable Income', key: 'otherTaxable', color: 'text-slate-600', isDeduction: false },
                 { label: 'Salary Differential', key: 'salaryDifferential', color: 'text-indigo-600', isDeduction: false },
-                { label: 'Other Taxable', key: 'otherTaxable', color: 'text-slate-600', isDeduction: false },
-                { label: 'Absences (LWOP)', key: 'absences', color: 'text-rose-600', isDeduction: true },
-                { label: 'Late / Undertime', key: 'lateUndertime', color: 'text-rose-600', isDeduction: true },
                 ...(customRows[activeId!]?.filter(r => !r.isDeduction) || [])
             ]
         },
         {
-            name: 'Deductions',
+            name: 'Tax Payments & Deductions',
             rows: [
-                { label: 'SSS Contribution', key: 'sss', color: 'text-slate-500', isDeduction: true },
-                { label: 'PhilHealth', key: 'philhealth', color: 'text-slate-500', isDeduction: true },
-                { label: 'Pag-IBIG Contribution', key: 'pagibig', color: 'text-slate-500', isDeduction: true },
-                { label: 'Withholding Tax', key: 'tax', color: 'text-rose-400', isDeduction: true },
+                { label: 'SSS (Employee Share)', key: 'sss', color: 'text-slate-500', isDeduction: true },
+                { label: 'PhilHealth (Employee Share)', key: 'philhealth', color: 'text-slate-500', isDeduction: true },
+                { label: 'Pag-IBIG (Employee Share)', key: 'pagibig', color: 'text-slate-500', isDeduction: true },
+                { label: 'Withholding Tax Paid', key: 'tax', color: 'text-rose-600', isDeduction: true, isTaxPayment: true },
                 ...(customRows[activeId!]?.filter(r => r.isDeduction) || [])
             ]
         }
@@ -183,10 +175,14 @@ const YearEndBatch13thPage: React.FC = () => {
     if (!activeEmployee) return null;
 
     const displayHistory = isEditingLedger ? tempHistory : monthlyHistory;
-    const totalEarnedBasic = displayHistory.reduce((acc, curr: any) => acc + curr.earnedBasic, 0);
-    const calculated13th = totalEarnedBasic / 12;
+    const totalTaxableIncome = displayHistory.reduce((acc, curr: any) => acc + (curr.taxableIncome || 0), 0);
 
-    const current13thVal = overrides[activeId] !== undefined ? overrides[activeId] : calculated13th;
+    // Simple mock tax calculation (20% above 250k annual taxable)
+    const annualTaxDue = Math.max(0, (totalTaxableIncome - 250000) * 0.20);
+    const totalTaxPaid = displayHistory.reduce((acc, curr: any) => acc + (curr.p1.tax || 0) + (curr.p2.tax || 0), 0);
+    const taxAdjustment = annualTaxDue - totalTaxPaid;
+
+    const currentTaxValue = taxAdjustment;
 
     return (
         <div className="fixed inset-0 bg-slate-100 z-[100] flex flex-col h-screen overflow-hidden text-slate-900">
@@ -202,12 +198,12 @@ const YearEndBatch13thPage: React.FC = () => {
                     <div className="h-10 w-px bg-slate-200"></div>
                     <div>
                         <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                            13th Month Adjustment Ledger
+                            Tax Annualization Adjustment Ledger
                             <span className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100">
                                 {stage === 'assumed' ? 'Assumed (Dec)' : 'Actual (Jan)'}
                             </span>
                         </h2>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Workspace: Review and verify monthly earnings for the final 13th month payout</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Workspace: Review YTD taxable income and verify final tax liability</span>
                     </div>
                 </div>
 
@@ -299,12 +295,11 @@ const YearEndBatch13thPage: React.FC = () => {
 
                             {/* Payout Calculation Snapshot */}
                             <div className="p-6 bg-slate-50 flex flex-col justify-center min-w-[300px] gap-1">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Verified Payout Value</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{taxAdjustment > 0 ? 'Tax Payable' : 'Tax Refund'}</span>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-black text-indigo-600 tracking-tighter">{formatCurrency(current13thVal)}</span>
-                                    {overrides[activeId] !== undefined && (
-                                        <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">[Manual Override]</span>
-                                    )}
+                                    <span className={`text-3xl font-black tracking-tighter ${taxAdjustment > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                        {formatCurrency(Math.abs(taxAdjustment))}
+                                    </span>
                                 </div>
                             </div>
 
@@ -455,22 +450,45 @@ const YearEndBatch13thPage: React.FC = () => {
                                         <tr className="border-t-4 border-slate-900">
                                             <td className="px-6 py-8 sticky left-0 bg-slate-900 text-white z-10 border-r-2 border-slate-800">
                                                 <div className="flex flex-col">
-                                                    <span className="text-[12px] font-black uppercase tracking-[0.2em] leading-none mb-1">Grand Total Result</span>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Net Computable Earnings</span>
+                                                    <span className="text-[12px] font-black uppercase tracking-[0.2em] leading-none mb-1">Total Taxable Income</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">YTD Performance</span>
                                                 </div>
                                             </td>
                                             {displayHistory.map((m: any, mIdx) => (
                                                 <React.Fragment key={`${mIdx}-total-row`}>
                                                     <td className="px-2 py-6 text-right font-mono text-[11px] font-black text-slate-900 bg-slate-50 border-r border-slate-200">
-                                                        {formatVal(m.p1.earnedBasic)}
+                                                        {formatVal(m.p1.taxableIncome)}
                                                     </td>
                                                     <td className="px-2 py-6 text-right font-mono text-[11px] font-black text-slate-900 bg-slate-50 border-r-2 border-slate-300">
-                                                        {formatVal(m.p2.earnedBasic)}
+                                                        {formatVal(m.p2.taxableIncome)}
                                                     </td>
                                                 </React.Fragment>
                                             ))}
                                             <td className="px-8 py-6 text-right font-mono text-[16px] font-black text-indigo-700 bg-slate-100 border-l-2 border-indigo-700">
-                                                {formatCurrency(totalEarnedBasic)}
+                                                {formatCurrency(totalTaxableIncome)}
+                                            </td>
+                                        </tr>
+                                        {/* Final Tax Reconciliation Row */}
+                                        <tr className="bg-indigo-50/50">
+                                            <td className="px-6 py-4 sticky left-0 bg-indigo-900 text-white z-10 border-r-2 border-indigo-800">
+                                                <div className="flex justify-between items-center pr-4">
+                                                    <span className="text-[11px] font-black uppercase tracking-widest">Actual Tax Due (Annual)</span>
+                                                </div>
+                                            </td>
+                                            <td colSpan={24} className="px-2 py-4 text-right pr-10"></td>
+                                            <td className="px-8 py-4 text-right font-mono text-[16px] font-black text-slate-900 bg-indigo-100/50 border-l-2 border-indigo-700">
+                                                {formatCurrency(annualTaxDue)}
+                                            </td>
+                                        </tr>
+                                        <tr className="bg-rose-50/50">
+                                            <td className="px-6 py-4 sticky left-0 bg-rose-900 text-white z-10 border-r-2 border-rose-800">
+                                                <div className="flex justify-between items-center pr-4">
+                                                    <span className="text-[11px] font-black uppercase tracking-widest">Total Tax Withheld</span>
+                                                </div>
+                                            </td>
+                                            <td colSpan={24} className="px-2 py-4 text-right pr-10"></td>
+                                            <td className="px-8 py-4 text-right font-mono text-[16px] font-black text-rose-700 bg-rose-100/50 border-l-2 border-rose-700">
+                                                {formatCurrency(totalTaxPaid)}
                                             </td>
                                         </tr>
                                     </tbody>
@@ -482,11 +500,11 @@ const YearEndBatch13thPage: React.FC = () => {
                                 <Info className="text-slate-400 shrink-0" size={18} />
                                 <div className="flex-1">
                                     <p className="text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
-                                        13th Month Computation Rule: 1/12 of total basic salary. Excludes overtime/bonuses unless integrated in company policy.
+                                        Tax Annualization Rule: Year-end recalculation of tax due vs total tax withheld. Follows the Revised BIR Withholding Tax Table.
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 border border-slate-200">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">PD 851 COMPLIANT</span>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">BIR 1604-C/2316 COMPLIANT</span>
                                 </div>
                             </div>
                         </div>
@@ -504,7 +522,7 @@ const YearEndBatch13thPage: React.FC = () => {
                             </div>
                         ))}
                     </div>
-                    <p className="text-xs font-bold text-slate-400 ml-2">Reviewing list for <span className="text-slate-900">13th Month 2026 Batch</span></p>
+                    <p className="text-xs font-bold text-slate-400 ml-2">Reviewing list for <span className="text-slate-900">Tax Annualization 2026 ({stage.toUpperCase()})</span></p>
                 </div>
 
                 <div className="flex gap-3">
@@ -597,7 +615,7 @@ const YearEndBatch13thPage: React.FC = () => {
     );
 };
 
-export default YearEndBatch13thPage;
+export default YearEndBatchTaxPage;
 
 const ChevronRight = ({ size, className }: { size: number, className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6" /></svg>
