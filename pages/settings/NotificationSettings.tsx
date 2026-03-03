@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { 
   BellRing, 
@@ -190,6 +189,321 @@ const INITIAL_RULES: NotificationRule[] = [
         actionUrl: '/manage/schedule'
     }
   },
+  {
+    id: 'ta-3',
+    module: 'Time & Attendance',
+    event: 'Leave Request Cancelled',
+    triggerType: 'Event-Based',
+    description: 'When an employee cancels a previously submitted leave request.',
+    recipientRoles: ['Approver', 'HR Admin'],
+    inAppEnabled: true,
+    emailEnabled: false,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Leave Request Cancelled: {{employee_name}}',
+        emailBody: '{{employee_name}} has cancelled their {{leave_type}} request for {{date}}.',
+        inAppTitle: 'Leave Request Cancelled',
+        inAppBody: '{{employee_name}} cancelled their {{leave_type}} request for {{date}}.',
+        type: 'Warning',
+        senderName: '{{employee_name}}',
+        actionLabel: 'View Schedule',
+        actionUrl: '/manage/schedule'
+    }
+  },
+  {
+    id: 'ta-4',
+    module: 'Time & Attendance',
+    event: 'Leave Request Modified',
+    triggerType: 'Event-Based',
+    description: 'When an employee updates a pending leave request.',
+    recipientRoles: ['Approver'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Leave Request Updated: {{employee_name}}',
+        emailBody: '{{employee_name}} has modified their {{leave_type}} request.\n\nUpdated Date: {{date}}\nReason: {{reason}}',
+        inAppTitle: 'Leave Request Modified',
+        inAppBody: '{{employee_name}} updated their {{leave_type}} request for {{date}}.',
+        type: 'Info',
+        senderName: 'Timekeeping Bot',
+        actionLabel: 'Review Request',
+        actionUrl: '/monitor/approvals'
+    }
+  },
+  {
+    id: 'ta-5',
+    module: 'Time & Attendance',
+    event: 'Leave Request Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Remind the employee of an upcoming approved leave.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Upcoming Leave Reminder: {{date}}',
+        emailBody: 'This is a reminder that your {{leave_type}} leave is scheduled for {{date}}.',
+        inAppTitle: 'Upcoming Leave Reminder',
+        inAppBody: 'Your {{leave_type}} leave starts on {{date}}.',
+        type: 'Reminder',
+        senderName: 'Timekeeping Bot',
+        actionLabel: 'View Schedule',
+        actionUrl: '/manage/schedule'
+    }
+  },
+  {
+    id: 'ta-6',
+    module: 'Time & Attendance',
+    event: 'Leave Balance Low Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Notify the employee when their leave balance is running low.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Low Leave Balance: {{leave_type}}',
+        emailBody: 'Your {{leave_type}} balance is running low. Please plan accordingly.',
+        inAppTitle: 'Low Leave Balance',
+        inAppBody: 'Your {{leave_type}} balance is running low.',
+        type: 'Warning',
+        senderName: 'HR System',
+        actionLabel: 'View Leave Balances',
+        actionUrl: '/manage/leave-balances'
+    }
+  },
+  {
+    id: 'ta-7',
+    module: 'Time & Attendance',
+    event: 'Leave Balance Fully Consumed',
+    triggerType: 'Event-Based',
+    description: 'Notify the employee when a leave type balance reaches zero.',
+    recipientRoles: ['Employee', 'HR Admin'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Leave Balance Fully Used: {{leave_type}}',
+        emailBody: 'Your {{leave_type}} leave balance has been fully consumed for the period {{period}}.',
+        inAppTitle: 'Leave Balance Exhausted',
+        inAppBody: 'Your {{leave_type}} balance is now at zero.',
+        type: 'Error',
+        senderName: 'HR System',
+        actionLabel: 'View Leave Balances',
+        actionUrl: '/manage/leave-balances'
+    }
+  },
+  {
+    id: 'ta-8',
+    module: 'Time & Attendance',
+    event: 'Employee Clocked In/Out',
+    triggerType: 'Event-Based',
+    description: 'Log notification when an employee records a time entry.',
+    recipientRoles: ['HR Attendance Personnel'],
+    inAppEnabled: true,
+    emailEnabled: false,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Time Entry Recorded: {{employee_name}}',
+        emailBody: '{{employee_name}} clocked in/out on {{date}}.',
+        inAppTitle: 'Time Entry: {{employee_name}}',
+        inAppBody: '{{employee_name}} recorded a time entry on {{date}}.',
+        type: 'Info',
+        senderName: 'Timekeeping Bot',
+        actionLabel: 'View Attendance',
+        actionUrl: '/monitor/attendance'
+    }
+  },
+  {
+    id: 'ta-9',
+    module: 'Time & Attendance',
+    event: 'Late Attendance Detected',
+    triggerType: 'Event-Based',
+    description: 'Alert when an employee clocks in past the scheduled start time.',
+    recipientRoles: ['HR Attendance Personnel', 'Approver'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Late Attendance: {{employee_name}} — {{date}}',
+        emailBody: '{{employee_name}} was detected as late on {{date}}.\n\nDepartment: {{department}}',
+        inAppTitle: 'Late Attendance: {{employee_name}}',
+        inAppBody: '{{employee_name}} clocked in late on {{date}}.',
+        type: 'Warning',
+        senderName: 'Timekeeping Bot',
+        actionLabel: 'View Record',
+        actionUrl: '/monitor/attendance'
+    }
+  },
+  {
+    id: 'ta-10',
+    module: 'Time & Attendance',
+    event: 'Early Checkout Detected',
+    triggerType: 'Event-Based',
+    description: 'Alert when an employee clocks out before the scheduled end time.',
+    recipientRoles: ['HR Attendance Personnel', 'Approver'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Early Checkout: {{employee_name}} — {{date}}',
+        emailBody: '{{employee_name}} checked out early on {{date}}.\n\nDepartment: {{department}}',
+        inAppTitle: 'Early Checkout: {{employee_name}}',
+        inAppBody: '{{employee_name}} checked out early on {{date}}.',
+        type: 'Warning',
+        senderName: 'Timekeeping Bot',
+        actionLabel: 'View Record',
+        actionUrl: '/monitor/attendance'
+    }
+  },
+  {
+    id: 'ta-11',
+    module: 'Time & Attendance',
+    event: 'Absence Detected',
+    triggerType: 'Event-Based',
+    description: 'Alert when an employee has no time log for a scheduled workday.',
+    recipientRoles: ['HR Attendance Personnel', 'Approver', 'Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Absence Detected: {{employee_name}} — {{date}}',
+        emailBody: '{{employee_name}} was recorded as absent on {{date}} with no approved leave.\n\nDepartment: {{department}}',
+        inAppTitle: 'Absence Detected',
+        inAppBody: '{{employee_name}} has no attendance record for {{date}}.',
+        type: 'Error',
+        senderName: 'Timekeeping Bot',
+        actionLabel: 'View Attendance',
+        actionUrl: '/monitor/attendance'
+    }
+  },
+  {
+    id: 'ta-12',
+    module: 'Time & Attendance',
+    event: 'Missing Time Log Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Remind the employee to log missing time entries.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Missing Time Log Reminder',
+        emailBody: 'You have one or more missing time log entries for {{period}}. Please complete your timekeeping records.',
+        inAppTitle: 'Missing Time Log',
+        inAppBody: 'You have missing time entries for {{period}}.',
+        type: 'Reminder',
+        senderName: 'Timekeeping Bot',
+        actionLabel: 'Update Time Logs',
+        actionUrl: '/manage/schedule'
+    }
+  },
+  {
+    id: 'ta-13',
+    module: 'Time & Attendance',
+    event: 'Incomplete Attendance Record Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Remind HR Attendance Personnel of employees with incomplete records.',
+    recipientRoles: ['HR Attendance Personnel'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Incomplete Attendance Records — {{period}}',
+        emailBody: 'There are employees with incomplete attendance records for {{period}}. Please review and finalize.',
+        inAppTitle: 'Incomplete Attendance Records',
+        inAppBody: 'Employees have incomplete records for {{period}}.',
+        type: 'Reminder',
+        senderName: 'Timekeeping Bot',
+        actionLabel: 'Review Attendance',
+        actionUrl: '/monitor/attendance'
+    }
+  },
+  {
+    id: 'ta-14',
+    module: 'Time & Attendance',
+    event: 'Pending Leave Approval Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Remind approvers of leave requests still awaiting action.',
+    recipientRoles: ['Approver'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Pending Leave Approvals — Action Required',
+        emailBody: 'You have pending leave requests awaiting your approval.\n\nPlease review them as soon as possible.',
+        inAppTitle: 'Pending Leave Approvals',
+        inAppBody: 'You have leave requests pending your review.',
+        type: 'Reminder',
+        senderName: 'HR System',
+        actionLabel: 'Review Approvals',
+        actionUrl: '/monitor/approvals'
+    }
+  },
+  {
+    id: 'ta-15',
+    module: 'Time & Attendance',
+    event: 'Leave Approval Overdue Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Alert HR when a leave request has not been acted on past its due date.',
+    recipientRoles: ['HR Admin', 'Approver'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Overdue Leave Approval Alert',
+        emailBody: 'One or more leave requests have exceeded their approval deadline and require immediate attention.',
+        inAppTitle: 'Overdue Leave Approval',
+        inAppBody: 'Leave requests are past their approval deadline.',
+        type: 'Critical',
+        senderName: 'HR System',
+        actionLabel: 'Review Approvals',
+        actionUrl: '/monitor/approvals'
+    }
+  },
+  {
+    id: 'ta-16',
+    module: 'Time & Attendance',
+    event: 'Attendance Correction Request Submitted',
+    triggerType: 'Event-Based',
+    description: 'When an employee submits a request to correct an attendance record.',
+    recipientRoles: ['HR Attendance Personnel'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Attendance Correction Request: {{employee_name}}',
+        emailBody: '{{employee_name}} has submitted an attendance correction request for {{date}}.\n\nReason: {{reason}}',
+        inAppTitle: 'Correction Request: {{employee_name}}',
+        inAppBody: '{{employee_name}} submitted an attendance correction for {{date}}.',
+        type: 'Info',
+        senderName: '{{employee_name}}',
+        actionLabel: 'Review Correction',
+        actionUrl: '/monitor/attendance'
+    }
+  },
+  {
+    id: 'ta-17',
+    module: 'Time & Attendance',
+    event: 'Attendance Correction Approved/Rejected',
+    triggerType: 'Event-Based',
+    description: 'Notify the employee of the decision on their correction request.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Attendance Correction {{status}}',
+        emailBody: 'Your attendance correction request for {{date}} has been {{status}} by {{approver_name}}.',
+        inAppTitle: 'Correction {{status}}',
+        inAppBody: 'Your attendance correction for {{date}} was {{status}}.',
+        type: 'Success',
+        senderName: '{{approver_name}}',
+        actionLabel: 'View Attendance',
+        actionUrl: '/monitor/attendance'
+    }
+  },
   
   // Payroll
   { 
@@ -211,6 +525,258 @@ const INITIAL_RULES: NotificationRule[] = [
         senderName: 'Payroll System',
         actionLabel: 'View Payslip',
         actionUrl: '/my-profile'
+    }
+  },
+  {
+    id: 'pay-2',
+    module: 'Payroll',
+    event: 'Payslip Available for Viewing',
+    triggerType: 'Schedule-Based',
+    description: 'Remind the employee that their payslip is available and ready to view.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Your Payslip Is Ready: {{period}}',
+        emailBody: 'Your payslip for {{period}} is now available in the portal.\n\nNet Pay: {{amount}}\n\nPlease log in to view your payslip.',
+        inAppTitle: 'Payslip Ready to View',
+        inAppBody: 'Your payslip for {{period}} is available.',
+        type: 'Success',
+        senderName: 'Payroll System',
+        actionLabel: 'View Payslip',
+        actionUrl: '/my-profile'
+    }
+  },
+  {
+    id: 'pay-3',
+    module: 'Payroll',
+    event: 'Payroll Processed Successfully',
+    triggerType: 'Event-Based',
+    description: 'Notify payroll staff when a payroll run is completed without errors.',
+    recipientRoles: ['HR Payroll Personnel', 'Superadmin'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Payroll Processed: {{period}}',
+        emailBody: 'The payroll run for {{period}} has been completed successfully.\n\nTotal Payout: {{amount}}',
+        inAppTitle: 'Payroll Run Complete',
+        inAppBody: 'Payroll for {{period}} has been processed successfully.',
+        type: 'Success',
+        senderName: 'Payroll System',
+        actionLabel: 'View Payroll',
+        actionUrl: '/manage/payroll'
+    }
+  },
+  {
+    id: 'pay-4',
+    module: 'Payroll',
+    event: 'Payroll Processing Failed Alert',
+    triggerType: 'Event-Based',
+    description: 'Alert payroll staff when a payroll run encounters a critical error.',
+    recipientRoles: ['HR Payroll Personnel', 'Superadmin'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Payroll Processing Failed: {{period}}',
+        emailBody: 'The payroll run for {{period}} has failed and requires immediate attention.\n\nPlease review the payroll batch for errors.',
+        inAppTitle: 'Payroll Processing Failed',
+        inAppBody: 'The payroll run for {{period}} failed. Immediate action required.',
+        type: 'Critical',
+        senderName: 'Payroll System',
+        actionLabel: 'View Payroll',
+        actionUrl: '/manage/payroll'
+    }
+  },
+  {
+    id: 'pay-5',
+    module: 'Payroll',
+    event: 'Salary Updated Notification',
+    triggerType: 'Event-Based',
+    description: 'Notify the employee and payroll staff when a base salary is updated.',
+    recipientRoles: ['Employee', 'HR Payroll Personnel'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Salary Update Notice',
+        emailBody: 'Your base salary has been updated effective {{date}}.\n\nNew Amount: {{amount}}\n\nPlease contact HR if you have any questions.',
+        inAppTitle: 'Salary Updated',
+        inAppBody: 'Your salary has been updated effective {{date}}.',
+        type: 'Info',
+        senderName: 'Payroll System',
+        actionLabel: 'View Details',
+        actionUrl: '/manage/payroll'
+    }
+  },
+  {
+    id: 'pay-6',
+    module: 'Payroll',
+    event: 'Allowance Added or Updated',
+    triggerType: 'Event-Based',
+    description: 'Notify the employee when an allowance is added or updated in their pay structure.',
+    recipientRoles: ['Employee', 'HR Payroll Personnel'],
+    inAppEnabled: true,
+    emailEnabled: false,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Allowance Update Notice',
+        emailBody: 'An allowance has been added to or updated in your pay structure effective {{date}}.',
+        inAppTitle: 'Allowance Updated',
+        inAppBody: 'An allowance in your pay structure was updated.',
+        type: 'Info',
+        senderName: 'Payroll System',
+        actionLabel: 'View Pay Structure',
+        actionUrl: '/manage/payroll'
+    }
+  },
+  {
+    id: 'pay-7',
+    module: 'Payroll',
+    event: 'Deduction Applied Notification',
+    triggerType: 'Event-Based',
+    description: 'Notify the employee when a deduction is applied to their payroll.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: false,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Payroll Deduction Applied',
+        emailBody: 'A deduction of {{amount}} has been applied to your payroll for {{period}}.',
+        inAppTitle: 'Deduction Applied',
+        inAppBody: 'A deduction of {{amount}} was applied for {{period}}.',
+        type: 'Warning',
+        senderName: 'Payroll System',
+        actionLabel: 'View Payslip',
+        actionUrl: '/my-profile'
+    }
+  },
+  {
+    id: 'pay-8',
+    module: 'Payroll',
+    event: 'Bonus Added Notification',
+    triggerType: 'Event-Based',
+    description: 'Notify the employee when a bonus is added to their payroll.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Bonus Added to Your Payroll',
+        emailBody: 'A bonus of {{amount}} has been added to your payroll for {{period}}.',
+        inAppTitle: 'Bonus Added',
+        inAppBody: 'A bonus of {{amount}} was added for {{period}}.',
+        type: 'Success',
+        senderName: 'Payroll System',
+        actionLabel: 'View Payslip',
+        actionUrl: '/my-profile'
+    }
+  },
+  {
+    id: 'pay-9',
+    module: 'Payroll',
+    event: 'Incentive Added Notification',
+    triggerType: 'Event-Based',
+    description: 'Notify the employee when an incentive is credited to their payroll.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Incentive Added to Your Payroll',
+        emailBody: 'An incentive of {{amount}} has been added to your payroll for {{period}}.',
+        inAppTitle: 'Incentive Added',
+        inAppBody: 'An incentive of {{amount}} was added for {{period}}.',
+        type: 'Success',
+        senderName: 'Payroll System',
+        actionLabel: 'View Payslip',
+        actionUrl: '/my-profile'
+    }
+  },
+  {
+    id: 'pay-10',
+    module: 'Payroll',
+    event: 'Payslip Viewing Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Remind employees who have not yet opened their payslip.',
+    recipientRoles: ['Employee'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Reminder: View Your Payslip for {{period}}',
+        emailBody: 'Your payslip for {{period}} is still unread. Please log in to review your payslip.',
+        inAppTitle: 'Payslip Unread Reminder',
+        inAppBody: 'You have not yet viewed your payslip for {{period}}.',
+        type: 'Reminder',
+        senderName: 'Payroll System',
+        actionLabel: 'View Payslip',
+        actionUrl: '/my-profile'
+    }
+  },
+  {
+    id: 'pay-11',
+    module: 'Payroll',
+    event: 'Missing Payroll Information Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Alert payroll staff of employees with incomplete payroll data.',
+    recipientRoles: ['HR Payroll Personnel'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Missing Payroll Information — Action Required',
+        emailBody: 'One or more employees have missing payroll information for {{period}}. Please review and complete the data before processing.',
+        inAppTitle: 'Incomplete Payroll Data',
+        inAppBody: 'Employees have missing payroll info for {{period}}.',
+        type: 'Warning',
+        senderName: 'Payroll System',
+        actionLabel: 'View Payroll',
+        actionUrl: '/manage/payroll'
+    }
+  },
+  {
+    id: 'pay-12',
+    module: 'Payroll',
+    event: 'Bank Details Missing Reminder',
+    triggerType: 'Schedule-Based',
+    description: 'Remind employees and payroll staff when bank details are not on file.',
+    recipientRoles: ['Employee', 'HR Payroll Personnel'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Action Required: Bank Details Missing',
+        emailBody: 'Your bank details are missing from the system. Please update your bank information to ensure timely salary disbursement.',
+        inAppTitle: 'Bank Details Required',
+        inAppBody: 'Your bank details are missing. Please update to receive your salary.',
+        type: 'Critical',
+        senderName: 'Payroll System',
+        actionLabel: 'Update Profile',
+        actionUrl: '/manage/employee'
+    }
+  },
+  {
+    id: 'pay-13',
+    module: 'Payroll',
+    event: 'Bank Details Updated Notification',
+    triggerType: 'Event-Based',
+    description: 'Notify payroll staff when an employee updates their bank details.',
+    recipientRoles: ['HR Payroll Personnel', 'Superadmin'],
+    inAppEnabled: true,
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Bank Details Updated: {{employee_name}}',
+        emailBody: '{{employee_name}} has updated their bank details on {{date}}.\n\nPlease verify the information before the next payroll run.',
+        inAppTitle: 'Bank Details Updated',
+        inAppBody: '{{employee_name}} updated their bank details on {{date}}.',
+        type: 'Warning',
+        senderName: 'HR System',
+        actionLabel: 'Verify Details',
+        actionUrl: '/manage/employee'
     }
   },
   
