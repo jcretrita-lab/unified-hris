@@ -31,25 +31,99 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { BreadcrumbProvider } from '../context/BreadcrumbContext';
+import Breadcrumb from './Breadcrumb';
+import useDebounce from '../hooks/useDebounce';
+import { SEGMENT_LABELS, HIDDEN_SEGMENTS } from '../config/route';
 import { AnimatePresence, motion } from 'framer-motion';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-// Mock Search Data
-const SEARCH_ITEMS = [
-  { id: 'p1', title: 'Dashboard', type: 'Page', path: '/dashboard' },
-  { id: 'p2', title: 'Employee Directory', type: 'Page', path: '/manage/employee' },
-  { id: 'p3', title: 'Payroll Management', type: 'Page', path: '/manage/payroll' },
-  { id: 'p4', title: 'Attendance Monitor', type: 'Page', path: '/monitor/attendance' },
-  { id: 'e1', title: 'James Cordon', type: 'Employee', path: '/manage/employee/emp-1' },
-  { id: 'e2', title: 'Sarah Wilson', type: 'Employee', path: '/manage/employee/emp-4' },
-  { id: 'e3', title: 'Louis Panganiban', type: 'Employee', path: '/manage/employee/emp-2' },
-  { id: 's1', title: 'Settings: Notifications', type: 'Setting', path: '/settings/notifications' },
-  { id: 's2', title: 'Settings: Roles', type: 'Setting', path: '/settings/roles' },
-  { id: 's3', title: 'Settings: Salary Grades', type: 'Setting', path: '/settings/salary-grade' },
+// ---------------------------------------------------------------------------
+// Route-derived global search items
+//
+// SEARCHABLE_PATHS lists every static (non-dynamic) navigable route from
+// App.tsx — auth routes, redirects, and ":id" detail pages are excluded.
+//
+// pathToSearchItem() converts a path into a { title, type } using the same
+// SEGMENT_LABELS map that drives the Breadcrumb component, so both stay
+// in sync automatically when routes are added or renamed.
+// ---------------------------------------------------------------------------
+
+type SearchItemType = 'Page' | 'Setting';
+
+interface SearchItem {
+  id: string;
+  path: string;
+  title: string;
+  type: SearchItemType;
+}
+
+function pathToSearchItem(path: string): SearchItem {
+  const isSettings = path.startsWith('/settings/');
+  const type: SearchItemType = isSettings ? 'Setting' : 'Page';
+  const segments = path.split('/').filter(Boolean);
+
+  // Build a human-readable label from the meaningful segments
+  const labels = segments
+    .filter(s => !HIDDEN_SEGMENTS.has(s))
+    .map(s => SEGMENT_LABELS[s] ?? s);
+
+  let title: string;
+  if (isSettings) {
+    // Drop "Settings" prefix segment; prepend "Settings: " as a category tag
+    const inner = labels.filter((_, i) => {
+      const seg = segments.filter(s => !HIDDEN_SEGMENTS.has(s))[i];
+      return seg !== 'settings';
+    });
+    title = inner.length > 0 ? `Settings: ${inner.join(' › ')}` : 'Settings';
+  } else {
+    title = labels.join(' › ');
+  }
+
+  return { id: path, path, title, type };
+}
+
+// All static, navigable routes from App.tsx (no :id params, no auth/redirect routes)
+const SEARCHABLE_PATHS: string[] = [
+  '/dashboard',
+  // Manage
+  '/manage/employee',
+  '/manage/employee/new',
+  '/manage/schedule',
+  '/manage/leave-balances',
+  '/manage/payroll',
+  '/manage/payroll/batch',
+  '/manage/pay-schedule',
+  '/manage/pay-structure',
+  // Monitor
+  '/monitor/attendance',
+  '/monitor/audit-logs',
+  '/monitor/approvals',
+  '/monitor/reports',
+  '/monitor/notifications',
+  // Settings
+  '/settings/overview',
+  '/settings/employee-fields',
+  '/settings/shift',
+  '/settings/leave',
+  '/settings/holiday',
+  '/settings/ranks',
+  '/settings/salary-grade',
+  '/settings/adjustments',
+  '/settings/structure',
+  '/settings/policies',
+  '/settings/approvals',
+  '/settings/users',
+  '/settings/permissions',
+  '/settings/roles',
+  '/settings/notifications',
+  '/settings/audit',
 ];
+
+const SEARCH_ITEMS: SearchItem[] = SEARCHABLE_PATHS.map(pathToSearchItem);
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
@@ -58,7 +132,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   
   // Search State
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const searchQuery = useDebounce(searchInput, 300);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Sidebar State
@@ -508,14 +583,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             )}
             {/* Global Search / Command Palette */}
-            <div className="relative flex-1 max-w-md hidden md:block" ref={searchRef}>
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <div className="relative flex-1 max-w-lg hidden md:block" ref={searchRef}>
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
                 type="text" 
-                placeholder="Search pages, employees, settings..." 
-                className="w-full bg-slate-50 border-none rounded-xl pl-10 py-2 text-sm focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search pages" 
+                className="w-full bg-slate-50 border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
               />
               <AnimatePresence>
@@ -532,11 +607,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                 {filteredSearchItems.map(item => (
                                     <button 
                                         key={item.id}
-                                        onClick={() => { navigate(item.path); setIsSearchFocused(false); setSearchQuery(''); }}
+                                        onClick={() => { navigate(item.path); setIsSearchFocused(false); setSearchInput(''); }}
                                         className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between group transition-colors"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${item.type === 'Page' ? 'bg-indigo-50 text-indigo-600' : item.type === 'Employee' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
+                                            <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${item.type === 'Page' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
                                                 {item.type}
                                             </span>
                                             <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{item.title}</span>
@@ -595,7 +670,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         <div className="p-10 max-w-[1500px] mx-auto">
-          {children}
+          <BreadcrumbProvider>
+            <Breadcrumb />
+            {children}
+          </BreadcrumbProvider>
         </div>
       </main>
     </div>
