@@ -256,6 +256,16 @@ const PoliciesPage: React.FC = () => {
     const [divisorForm, setDivisorForm] = useState<Partial<Divisor>>({ name: '', days: 0 });
     const [hasChanges, setHasChanges] = useState(false);
 
+    // --- Separation Pay Calculator ---
+    const [sepCalcSalary, setSepCalcSalary] = useState<number>(20000);
+    const [sepCalcYears, setSepCalcYears] = useState<number>(5);
+    const [sepCalcCause, setSepCalcCause] = useState<'redundancy' | 'retrenchment' | 'disease'>('redundancy');
+
+    // --- Retirement Pay Calculator ---
+    const [retCalcSalary, setRetCalcSalary] = useState<number>(20000);
+    const [retCalcYears, setRetCalcYears] = useState<number>(10);
+    const [retCalcAge, setRetCalcAge] = useState<number>(60);
+
     // Leave Monetization State
     const [selectedLeaveId, setSelectedLeaveId] = useState<string>('sil');
     const [leaveSettings, setLeaveSettings] = useState<Record<string, LeaveConfig>>(INITIAL_LEAVE_CONFIGS);
@@ -306,6 +316,21 @@ const PoliciesPage: React.FC = () => {
     };
 
     const currentLeaveConfig = leaveSettings[selectedLeaveId];
+
+    // --- Computed: Separation Pay (Art. 298-299, Labor Code) ---
+    const sepMultiplier = sepCalcCause === 'redundancy'
+        ? policies.separationPayRedundancy
+        : policies.separationPayDisease;
+    const sepPerYear = sepCalcSalary * sepMultiplier;
+    const sepComputed = sepPerYear * sepCalcYears;
+    const sepPayResult = Math.max(sepCalcSalary, sepComputed); // minimum 1 month salary
+
+    // --- Computed: Retirement Pay (RA 7641 / Art. 302) ---
+    const retDivisor = divisors[0]?.days || 314;
+    const retDailyRate = (retCalcSalary * 12) / retDivisor;
+    const retPayResult = retDailyRate * policies.retirementPayMultiplier * retCalcYears;
+    const retEligible = retCalcYears >= 5 && retCalcAge >= policies.retirementAgeMin;
+    const retCompulsory = retCalcAge >= policies.retirementAgeMax;
 
     const getComplianceStatus = (
         value: number,
@@ -488,6 +513,7 @@ const PoliciesPage: React.FC = () => {
                         [
                             { id: 'Divisor', icon: Calculator, label: 'Divisor Setup' },
                             { id: 'Works', icon: Clock, label: 'Works & Wages' },
+                            { id: 'PostEmployment', icon: Briefcase, label: 'Separation & Retirement' },
                             { id: 'Special', icon: Heart, label: 'Special Laws & Leaves' },
                         ].map((tab) => (
                             <button
@@ -1521,9 +1547,17 @@ const PoliciesPage: React.FC = () => {
                                                 </div>
                                                 <ComplianceBadge {...getComplianceStatus(policies.noticePeriodDays, 30, 'min')} citation="Art. 297/298" />
                                             </div>
+                                        </div>
+                                    </div>
 
-                                            <div className="mt-6 pt-6 border-t border-slate-100">
-                                                <h5 className="font-bold text-slate-800 text-sm mb-2">Retirement Calculation</h5>
+                                    {/* Retirement Pay — full-width standalone card */}
+                                    <div className="p-6 bg-white border border-slate-200 rounded-2xl">
+                                        <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                            <Coins size={18} className="text-emerald-600" /> Retirement Pay Configuration
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Pay Multiplier</label>
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
@@ -1532,11 +1566,38 @@ const PoliciesPage: React.FC = () => {
                                                         step="0.5"
                                                         onChange={(e) => updatePolicy('retirementPayMultiplier', Number(e.target.value))}
                                                     />
-                                                    <span className="text-sm font-bold text-slate-700">Days / Year of Service</span>
+                                                    <span className="text-sm font-bold text-slate-700">Days / Year</span>
                                                 </div>
                                                 <ComplianceBadge {...getComplianceStatus(policies.retirementPayMultiplier, LEGAL_STANDARDS.RETIREMENT_PAY_MULTIPLIER, 'min')} citation="Art. 302" />
                                             </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Optional Retirement Age</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        value={policies.retirementAgeMin}
+                                                        onChange={(e) => updatePolicy('retirementAgeMin', Number(e.target.value))}
+                                                    />
+                                                    <span className="text-sm font-bold text-slate-700">Years Old</span>
+                                                </div>
+                                                <ComplianceBadge {...getComplianceStatus(policies.retirementAgeMin, LEGAL_STANDARDS.RETIREMENT_AGE_MIN, 'exact')} citation="Art. 302" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Compulsory Retirement Age</label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        value={policies.retirementAgeMax}
+                                                        onChange={(e) => updatePolicy('retirementAgeMax', Number(e.target.value))}
+                                                    />
+                                                    <span className="text-sm font-bold text-slate-700">Years Old</span>
+                                                </div>
+                                                <ComplianceBadge {...getComplianceStatus(policies.retirementAgeMax, LEGAL_STANDARDS.RETIREMENT_AGE_MAX, 'exact')} citation="Art. 302" />
+                                            </div>
                                         </div>
+                                        <LegalNote text="½ month salary = 15 days basic pay + 1/12 of 13th month pay (2.5 days) + 5 SIL days = 22.5 days total. Minimum 5 years of service required (RA 7641)." />
                                     </div>
                                 </div>
                             )}
@@ -1785,6 +1846,247 @@ const PoliciesPage: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {/* --- COMPANY: SEPARATION & RETIREMENT CALCULATOR --- */}
+                            {primaryTab === 'Company' && activeTab === 'PostEmployment' && (
+                                <div className="space-y-10">
+
+                                    {/* === SEPARATION PAY === */}
+                                    <SectionTitle
+                                        icon={Coins}
+                                        title="Separation Pay Calculator"
+                                        description="Compute statutory separation pay based on cause and years of service. Multipliers are configurable in Government Standards › Book VI."
+                                        citation="Art. 298-299"
+                                    />
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        {/* Inputs */}
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Cause of Separation</label>
+                                                <div className="space-y-2">
+                                                    {([
+                                                        { value: 'redundancy', label: 'Redundancy / Labor-Saving Device', desc: `${policies.separationPayRedundancy} month/year (Art. 298)` },
+                                                        { value: 'retrenchment', label: 'Retrenchment / Closure (No Serious Losses)', desc: `${policies.separationPayDisease} month/year (Art. 298)` },
+                                                        { value: 'disease', label: 'Disease / Illness', desc: `${policies.separationPayDisease} month/year (Art. 299)` },
+                                                    ] as const).map(cause => (
+                                                        <button
+                                                            key={cause.value}
+                                                            onClick={() => setSepCalcCause(cause.value)}
+                                                            className={`flex items-center justify-between w-full p-4 rounded-xl border text-left transition-all ${sepCalcCause === cause.value ? 'bg-indigo-50 border-indigo-300 shadow-sm' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
+                                                        >
+                                                            <div>
+                                                                <div className={`text-sm font-bold ${sepCalcCause === cause.value ? 'text-indigo-900' : 'text-slate-700'}`}>{cause.label}</div>
+                                                                <div className="text-[10px] text-slate-400 font-medium mt-0.5">{cause.desc}</div>
+                                                            </div>
+                                                            {sepCalcCause === cause.value && <Check size={16} className="text-indigo-600 shrink-0 ml-3" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Monthly Basic Salary</label>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₱</span>
+                                                        <input
+                                                            type="number"
+                                                            min={0}
+                                                            className="w-full pl-7 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                            value={sepCalcSalary}
+                                                            onChange={(e) => setSepCalcSalary(Number(e.target.value))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Years of Service</label>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                        value={sepCalcYears}
+                                                        onChange={(e) => setSepCalcYears(Number(e.target.value))}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <LegalNote text="A fraction of at least 6 months of service is considered one (1) whole year. Minimum separation pay is one (1) month salary." />
+                                        </div>
+
+                                        {/* Result */}
+                                        <div className="flex flex-col gap-4">
+                                            <div className="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-6 text-white relative overflow-hidden flex-1">
+                                                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                                                    <Coins size={100} />
+                                                </div>
+                                                <div className="relative z-10 space-y-4">
+                                                    <div>
+                                                        <div className="text-xs text-indigo-300 font-bold uppercase tracking-widest mb-1">Formula</div>
+                                                        <div className="font-mono text-xs text-indigo-200 bg-white/10 px-3 py-2 rounded-lg">
+                                                            max(₱{sepCalcSalary.toLocaleString()}, {sepMultiplier} × {sepCalcYears} yrs × ₱{sepCalcSalary.toLocaleString()})
+                                                        </div>
+                                                    </div>
+                                                    <div className="border-t border-white/10 pt-4 space-y-2">
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-slate-400">Rate per year</span>
+                                                            <span className="font-bold text-white">₱ {sepPerYear.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        </div>
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-slate-400">Computed ({sepCalcYears} yrs)</span>
+                                                            <span className="font-bold text-white">₱ {sepComputed.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        </div>
+                                                        {sepComputed < sepCalcSalary && (
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-amber-400 text-xs">Minimum applied (1 month)</span>
+                                                                <span className="font-bold text-amber-300">₱ {sepCalcSalary.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="border-t border-white/10 pt-4">
+                                                        <div className="text-xs text-indigo-300 font-bold uppercase tracking-widest mb-1">Total Separation Pay</div>
+                                                        <div className="text-3xl font-black text-white tracking-tight">
+                                                            ₱ {sepPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
+                                                <AlertTriangle size={16} className="text-amber-500 mt-0.5 shrink-0" />
+                                                <p className="text-[10px] text-amber-700 leading-relaxed font-medium">
+                                                    Preview only. Actual computation uses configured multipliers from Government Standards › Book VI.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full h-px bg-slate-100"></div>
+
+                                    {/* === RETIREMENT PAY === */}
+                                    <SectionTitle
+                                        icon={Briefcase}
+                                        title="Retirement Pay Calculator"
+                                        description="Compute statutory retirement pay (RA 7641). Requires minimum 5 years of service and age ≥ 60. Multiplier and age thresholds are set in Government Standards › Book VI."
+                                        citation="RA 7641 / Art. 302"
+                                    />
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        {/* Inputs */}
+                                        <div className="space-y-6">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Monthly Basic Salary</label>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₱</span>
+                                                        <input
+                                                            type="number"
+                                                            min={0}
+                                                            className="w-full pl-7 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                            value={retCalcSalary}
+                                                            onChange={(e) => setRetCalcSalary(Number(e.target.value))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Years of Service</label>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                        value={retCalcYears}
+                                                        onChange={(e) => setRetCalcYears(Number(e.target.value))}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Employee Age</label>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                    value={retCalcAge}
+                                                    onChange={(e) => setRetCalcAge(Number(e.target.value))}
+                                                />
+                                            </div>
+
+                                            {/* Eligibility checks */}
+                                            <div className="space-y-2">
+                                                <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retCalcYears >= 5 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                                                    {retCalcYears >= 5 ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                                    {retCalcYears >= 5 ? `${retCalcYears} years — Service requirement met (min. 5)` : `${retCalcYears} yr(s) — Below minimum service (5 years required)`}
+                                                </div>
+                                                <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retEligible ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                                                    {retEligible ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                                    {retCompulsory
+                                                        ? `Age ${retCalcAge} — Compulsory Retirement (≥ ${policies.retirementAgeMax})`
+                                                        : retEligible
+                                                            ? `Age ${retCalcAge} — Optional Retirement (≥ ${policies.retirementAgeMin})`
+                                                            : `Age ${retCalcAge} — Below minimum retirement age (${policies.retirementAgeMin})`
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                    <Info size={11} /> Divisor Used
+                                                </div>
+                                                <div className="font-mono text-xs text-slate-700 font-bold">{divisors[0]?.name || '314 Days'}</div>
+                                                <div className="text-[10px] text-slate-400 mt-1">
+                                                    Daily Rate = (₱{retCalcSalary.toLocaleString()} × 12) ÷ {retDivisor} = ₱{retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / day
+                                                </div>
+                                            </div>
+
+                                            <LegalNote text="½ month salary = 15 days basic pay + 1/12 of 13th month (2.5 days) + 5 SIL days = 22.5 days. Fraction ≥ 6 months = 1 whole year (RA 7641)." />
+                                        </div>
+
+                                        {/* Result */}
+                                        <div className="flex flex-col gap-4">
+                                            <div className={`bg-gradient-to-br rounded-2xl p-6 text-white relative overflow-hidden flex-1 ${retEligible ? 'from-emerald-900 to-slate-900' : 'from-slate-700 to-slate-900'}`}>
+                                                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                                                    <Briefcase size={100} />
+                                                </div>
+                                                <div className="relative z-10 space-y-4">
+                                                    <div>
+                                                        <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Formula</div>
+                                                        <div className="font-mono text-xs text-emerald-100 bg-white/10 px-3 py-2 rounded-lg">
+                                                            (₱{retCalcSalary.toLocaleString()} × 12 ÷ {retDivisor}) × {policies.retirementPayMultiplier} days × {retCalcYears} yrs
+                                                        </div>
+                                                    </div>
+                                                    <div className="border-t border-white/10 pt-4 space-y-2">
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-slate-400">Daily rate</span>
+                                                            <span className="font-bold text-white">₱ {retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        </div>
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-slate-400">Pay/year ({policies.retirementPayMultiplier} days)</span>
+                                                            <span className="font-bold text-white">₱ {(retDailyRate * policies.retirementPayMultiplier).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        </div>
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-slate-400">× {retCalcYears} years</span>
+                                                            <span className="font-bold text-white">₱ {retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="border-t border-white/10 pt-4">
+                                                        <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Total Retirement Pay</div>
+                                                        <div className={`text-3xl font-black tracking-tight ${retEligible ? 'text-white' : 'text-slate-400'}`}>
+                                                            {retEligible
+                                                                ? `₱ ${retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                : 'Not Eligible'
+                                                            }
+                                                        </div>
+                                                        {!retEligible && <p className="text-xs text-slate-400 mt-1">Employee does not meet minimum service or age requirements.</p>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-start gap-3">
+                                                <Info size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                                                <p className="text-[10px] text-emerald-800 leading-relaxed font-medium">
+                                                    Multiplier ({policies.retirementPayMultiplier} days) and age thresholds (optional: {policies.retirementAgeMin}, compulsory: {policies.retirementAgeMax}) are set in Government Standards › Book VI.
+                                                </p>
                                             </div>
                                         </div>
                                     </div>

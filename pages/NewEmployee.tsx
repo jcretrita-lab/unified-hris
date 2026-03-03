@@ -30,7 +30,10 @@ import {
     ChevronRight,
     Network,
     Zap,
-    Info
+    Info,
+    X,
+    ArrowUpCircle,
+    ArrowDownCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -149,6 +152,22 @@ const MOCK_PAY_TEMPLATES: PayTemplate[] = [
     }
 ];
 
+// Added Mock compensation components that can be added to a template
+const MOCK_PAY_COMPONENTS: PayComponent[] = [
+    { id: 'pc-1',  name: 'Rice Subsidy',               type: 'Earning',   value: 2000, isFixed: true },
+    { id: 'pc-2',  name: 'Clothing Allowance',         type: 'Earning',   value: 1000, isFixed: true },
+    { id: 'pc-3',  name: 'SSS Contribution',           type: 'Deduction', value: 1350, isFixed: true },
+    { id: 'pc-4',  name: 'PhilHealth',                 type: 'Deduction', value: 450,  isFixed: true },
+    { id: 'pc-5',  name: 'Car Allowance',              type: 'Earning',   value: 5000, isFixed: true },
+    { id: 'pc-6',  name: 'Project Allowance',          type: 'Earning',   value: 3000, isFixed: true },
+    { id: 'pc-7',  name: 'Withholding Tax',            type: 'Deduction', value: 1500, isFixed: true },
+    { id: 'pc-8',  name: 'Transportation Allowance',   type: 'Earning',   value: 1500, isFixed: true },
+    { id: 'pc-9',  name: 'Communication Allowance',    type: 'Earning',   value: 500,  isFixed: true },
+    { id: 'pc-10', name: 'Pag-IBIG Contribution',      type: 'Deduction', value: 200,  isFixed: true },
+    { id: 'pc-11', name: 'Performance Bonus',          type: 'Earning',   value: 2000, isFixed: false },
+    { id: 'pc-12', name: 'Night Differential',         type: 'Earning',   value: 500,  isFixed: false },
+];
+
 const STEPS = [
     { id: 1, title: 'Personnel Details', icon: <User size={18} />, description: 'Basic bio & contact info' },
     { id: 2, title: 'Employment', icon: <Briefcase size={18} />, description: 'IDs, dates & schedule' },
@@ -164,6 +183,8 @@ const NewEmployee: React.FC = () => {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const [viewDate, setViewDate] = useState(new Date());
+    const [showAddComponentModal, setShowAddComponentModal] = useState(false);
+    const [pendingComponentIds, setPendingComponentIds] = useState<string[]>([]);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -347,6 +368,18 @@ const NewEmployee: React.FC = () => {
     const handleComponentChange = (id: string, value: number) => {
         const updated = formData.customComponents.map(c => c.id === id ? { ...c, value } : c);
         setFormData({ ...formData, customComponents: updated });
+    };
+
+    const handleAddComponents = () => {
+        const toAdd = MOCK_PAY_COMPONENTS
+            .filter(c => pendingComponentIds.includes(c.id) && !formData.customComponents.some(e => e.id === c.id));
+        setFormData({ ...formData, customComponents: [...formData.customComponents, ...toAdd.map(c => ({ ...c }))] });
+        setPendingComponentIds([]);
+        setShowAddComponentModal(false);
+    };
+
+    const handleRemoveComponent = (id: string) => {
+        setFormData({ ...formData, customComponents: formData.customComponents.filter(c => c.id !== id) });
     };
 
     const handlePositionChange = (title: string) => {
@@ -654,17 +687,40 @@ const NewEmployee: React.FC = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Components</label>
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Components</label>
+                                                {formData.customizePay && (
+                                                    <button
+                                                        onClick={() => { setPendingComponentIds([]); setShowAddComponentModal(true); }}
+                                                        className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                                                    >
+                                                        <Plus size={12} />
+                                                        Add
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {formData.customComponents.length === 0 && (
+                                                <p className="text-xs text-slate-400 italic py-2">No components added.</p>
+                                            )}
                                             {formData.customComponents.map(comp => (
-                                                <div key={comp.id} className="flex justify-between items-center text-sm py-2 border-b border-dashed border-slate-100">
-                                                    <span className={`${comp.type === 'Earning' ? 'text-emerald-700' : 'text-rose-700'}`}>{comp.name}</span>
+                                                <div key={comp.id} className="flex items-center gap-2 text-sm py-2 border-b border-dashed border-slate-100">
+                                                    <span className={`flex-1 ${comp.type === 'Earning' ? 'text-emerald-700' : 'text-rose-700'}`}>{comp.name}</span>
                                                     {formData.customizePay ? (
-                                                        <input
-                                                            type="number"
-                                                            className="w-24 text-right bg-slate-50 rounded px-2 py-1 font-mono text-xs font-bold outline-none focus:ring-1 ring-indigo-500"
-                                                            value={comp.value}
-                                                            onChange={e => handleComponentChange(comp.id, parseFloat(e.target.value))}
-                                                        />
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="number"
+                                                                className="w-24 text-right bg-slate-50 rounded px-2 py-1 font-mono text-xs font-bold outline-none focus:ring-1 ring-indigo-500"
+                                                                value={comp.value}
+                                                                onChange={e => handleComponentChange(comp.id, parseFloat(e.target.value) || 0)}
+                                                            />
+                                                            <button
+                                                                onClick={() => handleRemoveComponent(comp.id)}
+                                                                className="text-rose-400 hover:text-rose-600 transition-colors shrink-0"
+                                                                title="Remove component"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
                                                     ) : (
                                                         <span className="font-mono font-bold text-slate-600">₱{comp.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                     )}
@@ -1131,6 +1187,189 @@ const NewEmployee: React.FC = () => {
 
     return (
         <div className="min-h-full bg-slate-50 flex items-center justify-center p-0 md:p-6">
+
+            {/* Add Component Modal */}
+            {showAddComponentModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+                    onClick={() => setShowAddComponentModal(false)}
+                >
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Modal Header */}
+                        <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/30 flex items-start justify-between">
+                            <div>
+                                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                                    <DollarSign size={17} className="text-indigo-600" />
+                                    Add Compensation Components
+                                </h3>
+                                <p className="text-xs text-slate-500 font-medium mt-0.5 ml-6">
+                                    Select one or more components to include in this template.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowAddComponentModal(false)}
+                                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="max-h-[420px] overflow-y-auto">
+
+                            {/* Earnings Group */}
+                            {MOCK_PAY_COMPONENTS.filter(c => c.type === 'Earning' && !formData.customComponents.some(e => e.id === c.id)).length > 0 && (
+                                <div>
+                                    <div className="px-6 py-2 bg-emerald-50/60 border-y border-emerald-100/80 flex items-center gap-2">
+                                        <ArrowUpCircle size={13} className="text-emerald-600" />
+                                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Earnings & Allowances</span>
+                                    </div>
+                                    <div className="px-5 py-3 space-y-2">
+                                        {MOCK_PAY_COMPONENTS
+                                            .filter(c => c.type === 'Earning' && !formData.customComponents.some(e => e.id === c.id))
+                                            .map(c => {
+                                                const isChecked = pendingComponentIds.includes(c.id);
+                                                return (
+                                                    <div
+                                                        key={c.id}
+                                                        onClick={() => setPendingComponentIds(prev =>
+                                                            prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                                                        )}
+                                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                                            isChecked
+                                                                ? 'bg-emerald-50 border-emerald-200 shadow-sm'
+                                                                : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                                                        }`}
+                                                    >
+                                                        {/* Custom checkbox */}
+                                                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
+                                                            isChecked
+                                                                ? 'bg-emerald-600 border-emerald-600 text-white'
+                                                                : 'border-slate-300 bg-white'
+                                                        }`}>
+                                                            {isChecked && <Check size={12} strokeWidth={3} />}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-bold text-sm text-slate-700">{c.name}</div>
+                                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                                {c.isFixed ? 'Fixed Amount' : 'Variable'}
+                                                            </div>
+                                                        </div>
+                                                        <span className={`font-mono text-sm font-bold tabular-nums ${isChecked ? 'text-emerald-600' : 'text-slate-500'}`}>
+                                                            +₱{c.value.toLocaleString()}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded uppercase tracking-wide shrink-0">
+                                                            Earning
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })
+                                        }
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Deductions Group */}
+                            {MOCK_PAY_COMPONENTS.filter(c => c.type === 'Deduction' && !formData.customComponents.some(e => e.id === c.id)).length > 0 && (
+                                <div>
+                                    <div className="px-6 py-2 bg-rose-50/60 border-y border-rose-100/80 flex items-center gap-2">
+                                        <ArrowDownCircle size={13} className="text-rose-600" />
+                                        <span className="text-[10px] font-bold text-rose-700 uppercase tracking-widest">Deductions</span>
+                                    </div>
+                                    <div className="px-5 py-3 space-y-2">
+                                        {MOCK_PAY_COMPONENTS
+                                            .filter(c => c.type === 'Deduction' && !formData.customComponents.some(e => e.id === c.id))
+                                            .map(c => {
+                                                const isChecked = pendingComponentIds.includes(c.id);
+                                                return (
+                                                    <div
+                                                        key={c.id}
+                                                        onClick={() => setPendingComponentIds(prev =>
+                                                            prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
+                                                        )}
+                                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                                                            isChecked
+                                                                ? 'bg-rose-50 border-rose-200 shadow-sm'
+                                                                : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                                                        }`}
+                                                    >
+                                                        {/* Custom checkbox */}
+                                                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
+                                                            isChecked
+                                                                ? 'bg-rose-600 border-rose-600 text-white'
+                                                                : 'border-slate-300 bg-white'
+                                                        }`}>
+                                                            {isChecked && <Check size={12} strokeWidth={3} />}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-bold text-sm text-slate-700">{c.name}</div>
+                                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                                {c.isFixed ? 'Fixed Amount' : 'Variable'}
+                                                            </div>
+                                                        </div>
+                                                        <span className={`font-mono text-sm font-bold tabular-nums ${isChecked ? 'text-rose-600' : 'text-slate-500'}`}>
+                                                            -₱{c.value.toLocaleString()}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded uppercase tracking-wide shrink-0">
+                                                            Deduction
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })
+                                        }
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* All components already added — empty state */}
+                            {MOCK_PAY_COMPONENTS.filter(c => !formData.customComponents.some(e => e.id === c.id)).length === 0 && (
+                                <div className="px-6 py-12 flex flex-col items-center justify-center gap-2 text-center">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center mb-1">
+                                        <Check size={18} className="text-emerald-500" strokeWidth={3} />
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-600">All components added</p>
+                                    <p className="text-xs text-slate-400">All available components are already in this template.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-white">
+                            <div className="flex items-center gap-2 text-xs text-slate-400">
+                                <Info size={13} />
+                                <span>
+                                    {pendingComponentIds.length === 0
+                                        ? 'Select components to add'
+                                        : `${pendingComponentIds.length} component${pendingComponentIds.length > 1 ? 's' : ''} selected`}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setShowAddComponentModal(false)}
+                                    className="text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors px-4 py-2 rounded-xl"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAddComponents}
+                                    disabled={pendingComponentIds.length === 0}
+                                    className="flex items-center gap-1.5 text-sm font-bold px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-slate-200 active:scale-95"
+                                >
+                                    <Plus size={14} />
+                                    Add {pendingComponentIds.length > 0 ? `(${pendingComponentIds.length})` : 'Selected'}
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

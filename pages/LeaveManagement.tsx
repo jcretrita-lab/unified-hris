@@ -69,6 +69,71 @@ const MOCK_LEAVES: LeaveType[] = [
     resetDate: '01-01',
     resetFrequency: 'Yearly',
     isPaid: true
+  },
+  {
+    id: '4',
+    name: 'Paternity Leave',
+    maxDays: 7,
+    minDays: 1,
+    perEmployee: 7,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-blue-500',
+    resetDate: '01-01',
+    isPaid: true,
+    resetFrequency: 'Yearly'
+  },
+  {
+    id: '5',
+    name: 'Solo Parent Leave',
+    maxDays: 7,
+    minDays: 1,
+    perEmployee: 7,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-amber-500',
+    resetDate: '01-01',
+    isPaid: true,
+    resetFrequency: 'Yearly'
+  },
+  {
+    id: '6',
+    name: 'Special Leave for Women',
+    maxDays: 60,
+    minDays: 1,
+    perEmployee: 60,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-rose-500',
+    resetDate: '01-01',
+    isPaid: true,
+    resetFrequency: 'Never'
+  },
+  {
+    id: '7',
+    name: 'Bereavement Leave',
+    maxDays: 5,
+    minDays: 1,
+    perEmployee: 5,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-slate-500',
+    resetDate: '01-01',
+    isPaid: true,
+    resetFrequency: 'Yearly'
+  },
+  {
+    id: '8',
+    name: 'Leave Without Pay',
+    maxDays: 30,
+    minDays: 1,
+    perEmployee: 30,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-slate-500',
+    resetDate: '01-01',
+    isPaid: true,
+    resetFrequency: 'Yearly'
   }
 ];
 
