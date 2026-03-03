@@ -92,7 +92,8 @@ const SEARCHABLE_PATHS: string[] = [
   '/dashboard',
   // Manage
   '/manage/employee',
-  '/manage/employee/new',
+  '/manage/employee/onboarding',
+  '/manage/employee/offboarding',
   '/manage/schedule',
   '/manage/leave-balances',
   '/manage/payroll',

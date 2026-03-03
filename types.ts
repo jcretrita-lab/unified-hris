@@ -61,7 +61,7 @@ export interface MonthOverride {
 export interface PaySchedule {
   id: string;
   name: string;
-  frequency: 'Weekly' | 'Semi-Monthly' | 'Monthly';
+  frequency: 'Weekly' | 'Semi-Monthly' | 'Monthly' | 'Daily';
   targetType: 'Global' | 'Department' | 'Position';
   targetId: string | null;
   firstCutoff?: number;
@@ -74,6 +74,9 @@ export interface PaySchedule {
   secondCutoffRange?: CutoffRange;
   monthOverrides?: MonthOverride[];
   applyToAllMonths?: boolean;
+  dailyStartTime?: string;
+  dailyEndTime?: string;
+  dailyPayTime?: string;
 }
 
 export interface Divisor {

@@ -37,6 +37,7 @@ import TimekeepingDetail from './pages/TimekeepingDetail';
 import UserManagement from './pages/UserManagement';
 import NewOrganization from './pages/NewOrganization';
 import NewEmployee from './pages/NewEmployee';
+import OffboardingEmployee from './pages/OffboardingEmployee';
 import ReportsPage from './pages/ReportsPage';
 import ReportDetail from './pages/ReportDetail';
 import EmployeeFieldsSetup from './pages/settings/EmployeeFieldsSetup';
@@ -127,7 +128,8 @@ const AnimatedRoutes = () => {
         {/* Admin Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><PageWrapper><Dashboard /></PageWrapper></ProtectedRoute>} />
         <Route path="/manage/employee" element={<ProtectedRoute><PageWrapper><EmployeeList /></PageWrapper></ProtectedRoute>} />
-        <Route path="/manage/employee/new" element={<ProtectedRoute><PageWrapper><NewEmployee /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/employee/onboarding" element={<ProtectedRoute><PageWrapper><NewEmployee /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/employee/offboarding" element={<ProtectedRoute><PageWrapper><OffboardingEmployee /></PageWrapper></ProtectedRoute>} />
 
         {/* Shared Route (Admin sees all, Employee sees self via protection logic) */}
         <Route path="/manage/employee/:id" element={<ProtectedRoute><PageWrapper><EmployeeDetail /></PageWrapper></ProtectedRoute>} />

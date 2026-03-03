@@ -154,18 +154,18 @@ const MOCK_PAY_TEMPLATES: PayTemplate[] = [
 
 // Added Mock compensation components that can be added to a template
 const MOCK_PAY_COMPONENTS: PayComponent[] = [
-    { id: 'pc-1',  name: 'Rice Subsidy',               type: 'Earning',   value: 2000, isFixed: true },
-    { id: 'pc-2',  name: 'Clothing Allowance',         type: 'Earning',   value: 1000, isFixed: true },
-    { id: 'pc-3',  name: 'SSS Contribution',           type: 'Deduction', value: 1350, isFixed: true },
-    { id: 'pc-4',  name: 'PhilHealth',                 type: 'Deduction', value: 450,  isFixed: true },
-    { id: 'pc-5',  name: 'Car Allowance',              type: 'Earning',   value: 5000, isFixed: true },
-    { id: 'pc-6',  name: 'Project Allowance',          type: 'Earning',   value: 3000, isFixed: true },
-    { id: 'pc-7',  name: 'Withholding Tax',            type: 'Deduction', value: 1500, isFixed: true },
-    { id: 'pc-8',  name: 'Transportation Allowance',   type: 'Earning',   value: 1500, isFixed: true },
-    { id: 'pc-9',  name: 'Communication Allowance',    type: 'Earning',   value: 500,  isFixed: true },
-    { id: 'pc-10', name: 'Pag-IBIG Contribution',      type: 'Deduction', value: 200,  isFixed: true },
-    { id: 'pc-11', name: 'Performance Bonus',          type: 'Earning',   value: 2000, isFixed: false },
-    { id: 'pc-12', name: 'Night Differential',         type: 'Earning',   value: 500,  isFixed: false },
+    { id: 'pc-1', name: 'Rice Subsidy', type: 'Earning', value: 2000, isFixed: true },
+    { id: 'pc-2', name: 'Clothing Allowance', type: 'Earning', value: 1000, isFixed: true },
+    { id: 'pc-3', name: 'SSS Contribution', type: 'Deduction', value: 1350, isFixed: true },
+    { id: 'pc-4', name: 'PhilHealth', type: 'Deduction', value: 450, isFixed: true },
+    { id: 'pc-5', name: 'Car Allowance', type: 'Earning', value: 5000, isFixed: true },
+    { id: 'pc-6', name: 'Project Allowance', type: 'Earning', value: 3000, isFixed: true },
+    { id: 'pc-7', name: 'Withholding Tax', type: 'Deduction', value: 1500, isFixed: true },
+    { id: 'pc-8', name: 'Transportation Allowance', type: 'Earning', value: 1500, isFixed: true },
+    { id: 'pc-9', name: 'Communication Allowance', type: 'Earning', value: 500, isFixed: true },
+    { id: 'pc-10', name: 'Pag-IBIG Contribution', type: 'Deduction', value: 200, isFixed: true },
+    { id: 'pc-11', name: 'Performance Bonus', type: 'Earning', value: 2000, isFixed: false },
+    { id: 'pc-12', name: 'Night Differential', type: 'Earning', value: 500, isFixed: false },
 ];
 
 const STEPS = [
@@ -1241,18 +1241,16 @@ const NewEmployee: React.FC = () => {
                                                         onClick={() => setPendingComponentIds(prev =>
                                                             prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
                                                         )}
-                                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                                                            isChecked
+                                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isChecked
                                                                 ? 'bg-emerald-50 border-emerald-200 shadow-sm'
                                                                 : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {/* Custom checkbox */}
-                                                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
-                                                            isChecked
+                                                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${isChecked
                                                                 ? 'bg-emerald-600 border-emerald-600 text-white'
                                                                 : 'border-slate-300 bg-white'
-                                                        }`}>
+                                                            }`}>
                                                             {isChecked && <Check size={12} strokeWidth={3} />}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
@@ -1293,18 +1291,16 @@ const NewEmployee: React.FC = () => {
                                                         onClick={() => setPendingComponentIds(prev =>
                                                             prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]
                                                         )}
-                                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                                                            isChecked
+                                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isChecked
                                                                 ? 'bg-rose-50 border-rose-200 shadow-sm'
                                                                 : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {/* Custom checkbox */}
-                                                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
-                                                            isChecked
+                                                        <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${isChecked
                                                                 ? 'bg-rose-600 border-rose-600 text-white'
                                                                 : 'border-slate-300 bg-white'
-                                                        }`}>
+                                                            }`}>
                                                             {isChecked && <Check size={12} strokeWidth={3} />}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
@@ -1387,7 +1383,7 @@ const NewEmployee: React.FC = () => {
                                 <UserPlus size={24} className="text-white" />
                             </div>
                             <div>
-                                <h1 className="font-bold text-lg leading-none">New Employee</h1>
+                                <h1 className="font-bold text-lg leading-none">Onboard Employee</h1>
                                 <span className="text-[10px] text-indigo-300 font-medium uppercase tracking-widest">Onboarding Wizard</span>
                             </div>
                         </div>

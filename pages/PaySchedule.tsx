@@ -62,6 +62,19 @@ const INITIAL_SCHEDULES: PaySchedule[] = [
         firstCutoffRange: { startDay: 1, endDay: 31, payDay: 31 },
         applyToAllMonths: true,
         monthOverrides: []
+    },
+    {
+        id: 'ps-004',
+        name: 'Daily Wage Workers — Physical Plant',
+        frequency: 'Daily',
+        targetType: 'Department',
+        targetId: 'dept-pp',
+        divisorId: 'div-1',
+        applyToAllMonths: true,
+        monthOverrides: [],
+        dailyStartTime: '08:00',
+        dailyEndTime: '17:00',
+        dailyPayTime: '18:00'
     }
 ];
 
@@ -193,6 +206,10 @@ const MiniMonthCalendar: React.FC<MiniMonthCalendarProps> = ({ month, year, sche
         : { r1: schedule.firstCutoffRange, r2: schedule.secondCutoffRange };
 
     const getDayClass = (day: number) => {
+        if (schedule.frequency === 'Daily') {
+            return 'bg-emerald-500 text-white';
+        }
+
         if (schedule.frequency === 'Weekly') {
             const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const dayOfWeek = new Date(year, month, day).getDay();
@@ -292,6 +309,9 @@ export const PaySchedulePage: React.FC = () => {
         firstCutoffRange: { startDay: 1, endDay: 10, payDay: 15 },
         secondCutoffRange: { startDay: 11, endDay: 25, payDay: 30 },
         applyToAllMonths: true,
+        dailyStartTime: '08:00',
+        dailyEndTime: '17:00',
+        dailyPayTime: '18:00',
     });
 
     const selectedSchedule = useMemo(() => schedules.find(s => s.id === selectedId), [schedules, selectedId]);
@@ -369,7 +389,9 @@ export const PaySchedulePage: React.FC = () => {
             selectedSchedule, viewDate.getMonth(), viewDate.getFullYear()
         );
 
-        if (frequency === 'Weekly') {
+        if (frequency === 'Daily') {
+            events.push({ type: 'pay', label: 'Daily Pay' });
+        } else if (frequency === 'Weekly') {
             const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const currentDayName = weekDays[new Date(viewDate.getFullYear(), viewDate.getMonth(), day).getDay()];
             if (String(selectedSchedule.firstPayDate) === currentDayName) {
@@ -459,6 +481,9 @@ export const PaySchedulePage: React.FC = () => {
             firstCutoffRange: editor.firstCutoffRange,
             secondCutoffRange: editor.secondCutoffRange,
             applyToAllMonths: editor.applyToAllMonths ?? true,
+            dailyStartTime: editor.dailyStartTime,
+            dailyEndTime: editor.dailyEndTime,
+            dailyPayTime: editor.dailyPayTime,
             monthOverrides: activeId ? (schedules.find(s => s.id === activeId)?.monthOverrides || []) : [],
         };
 
@@ -520,6 +545,11 @@ export const PaySchedulePage: React.FC = () => {
                                 <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button onClick={(e) => { e.stopPropagation(); handleOpenEdit(s); }} className="p-1.5 bg-slate-100 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"><Edit2 size={14} /></button>
                                     <button onClick={(e) => handleDelete(s.id, e)} className="p-1.5 bg-slate-100 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"><Trash2 size={14} /></button>
+                                    {s.frequency === 'Daily' && s.dailyStartTime && (
+                                        <span className="text-[10px] text-amber-600 font-bold border border-amber-100 bg-amber-50 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                            <Clock size={10} /> {s.dailyStartTime}-{s.dailyEndTime}
+                                        </span>
+                                    )}
                                 </div>
                                 <h3 className={`font-bold text-sm ${selectedId === s.id ? 'text-indigo-900' : 'text-slate-700'}`}>{s.name}</h3>
                                 <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -581,11 +611,10 @@ export const PaySchedulePage: React.FC = () => {
                                 {!showYearView && selectedSchedule.frequency !== 'Weekly' && (
                                     <button
                                         onClick={() => handleOpenOverrideEdit(viewDate.getMonth(), viewDate.getFullYear())}
-                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                                            currentMonthOverride
-                                                ? 'bg-indigo-600 text-white border-indigo-600'
-                                                : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200 hover:text-indigo-600'
-                                        }`}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${currentMonthOverride
+                                            ? 'bg-indigo-600 text-white border-indigo-600'
+                                            : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200 hover:text-indigo-600'
+                                            }`}
                                     >
                                         <Edit2 size={13} />
                                         {currentMonthOverride ? 'Edit Override' : 'Override Month'}
@@ -593,9 +622,8 @@ export const PaySchedulePage: React.FC = () => {
                                 )}
                                 <button
                                     onClick={() => setShowYearView(!showYearView)}
-                                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                                        showYearView ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200'
-                                    }`}
+                                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${showYearView ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200'
+                                        }`}
                                 >
                                     {showYearView ? 'Month View' : 'Year View'}
                                 </button>
@@ -645,7 +673,7 @@ export const PaySchedulePage: React.FC = () => {
                                                 schedule={selectedSchedule}
                                                 override={override}
                                                 onEdit={() => handleOpenOverrideEdit(i, yr)}
-                                                isEditable={selectedSchedule.frequency !== 'Weekly'}
+                                                isEditable={selectedSchedule.frequency !== 'Weekly' && selectedSchedule.frequency !== 'Daily'}
                                             />
                                         );
                                     })}
@@ -744,6 +772,7 @@ export const PaySchedulePage: React.FC = () => {
                                         <option value="Semi-Monthly">Semi-Monthly (Twice)</option>
                                         <option value="Monthly">Monthly (Once)</option>
                                         <option value="Weekly">Weekly</option>
+                                        <option value="Daily">Daily</option>
                                     </select>
                                     <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
                                 </div>
@@ -810,8 +839,49 @@ export const PaySchedulePage: React.FC = () => {
                             </div>
                         )}
 
+                        {editor.frequency === 'Daily' && (
+                            <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100/50 space-y-6">
+                                <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase tracking-wide">
+                                    <Clock size={14} className="text-indigo-500" />
+                                    Daily Cutoff & Pay Time
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Work Start</label>
+                                        <input
+                                            type="time"
+                                            className="w-full border border-slate-200 p-2.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
+                                            value={editor.dailyStartTime}
+                                            onChange={e => setEditor({ ...editor, dailyStartTime: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Work End</label>
+                                        <input
+                                            type="time"
+                                            className="w-full border border-slate-200 p-2.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
+                                            value={editor.dailyEndTime}
+                                            onChange={e => setEditor({ ...editor, dailyEndTime: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Pay Time</label>
+                                        <input
+                                            type="time"
+                                            className="w-full border border-slate-200 p-2.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
+                                            value={editor.dailyPayTime}
+                                            onChange={e => setEditor({ ...editor, dailyPayTime: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-indigo-600 font-medium bg-white/50 p-3 rounded-lg border border-indigo-100/50 italic">
+                                    Cutoff is defined per day. Pay is released daily at the specified pay time.
+                                </p>
+                            </div>
+                        )}
+
                         {/* Apply to all months toggle */}
-                        {editor.frequency !== 'Weekly' && (
+                        {editor.frequency !== 'Weekly' && editor.frequency !== 'Daily' && (
                             <label className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
                                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${editor.applyToAllMonths ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 bg-white'}`}>
                                     {editor.applyToAllMonths && <Check size={12} className="text-white" />}

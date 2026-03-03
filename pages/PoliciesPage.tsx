@@ -12,7 +12,9 @@ import {
     Info,
     CheckCircle2,
     Calendar,
-    Scale,
+    Scale as ScaleIcon,
+    Ban,
+    RotateCcw,
     BadgePercent,
     History,
     Heart,
@@ -39,7 +41,9 @@ import {
     Plus,
     Trash2,
     Edit,
-    TrendingUp
+    TrendingUp,
+    ChevronDown,
+    ShieldPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -154,6 +158,7 @@ interface PolicyState {
     standardDailyHours: number;
     flexibleMinimumHours: number;
     holidayDecompressionEnabled: boolean;
+    hmoEligibility: 'Immediate' | 'Upon Regularization';
 }
 
 const INITIAL_STATE: PolicyState = {
@@ -215,6 +220,7 @@ const INITIAL_STATE: PolicyState = {
     standardDailyHours: 8,
     flexibleMinimumHours: 8.5,
     holidayDecompressionEnabled: false,
+    hmoEligibility: 'Upon Regularization',
 };
 
 // Leave Monetization Types
@@ -321,7 +327,8 @@ const PoliciesPage: React.FC = () => {
     const [retCalcYears, setRetCalcYears] = useState<number>(10);
     const [retCalcAge, setRetCalcAge] = useState<number>(60);
 
-    // Leave Monetization State
+    // Master Leave Select State
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [selectedLeaveId, setSelectedLeaveId] = useState<string>('sil');
     const [leaveSettings, setLeaveSettings] = useState<Record<string, LeaveConfig>>(INITIAL_LEAVE_CONFIGS);
 
@@ -524,7 +531,7 @@ const PoliciesPage: React.FC = () => {
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
                         Policy Governance
-                        <Scale className="text-indigo-600" size={24} />
+                        <ScaleIcon className="text-indigo-600" size={24} />
                     </h1>
                     <p className="text-slate-500 font-medium mt-1">Configure business rules in compliance with the <span className="text-indigo-600 font-bold">Labor Code of the Philippines</span>.</p>
                 </div>
@@ -543,13 +550,13 @@ const PoliciesPage: React.FC = () => {
             {/* Primary Tab Switcher */}
             <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
                 <button
-                    onClick={() => setPrimaryTab('Government')}
+                    onClick={() => { setPrimaryTab('Government'); setActiveTab('Book3'); }}
                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${primaryTab === 'Government' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
                     <ShieldCheck size={18} /> Government Standards
                 </button>
                 <button
-                    onClick={() => setPrimaryTab('Company')}
+                    onClick={() => { setPrimaryTab('Company'); setActiveTab('Divisor'); }}
                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${primaryTab === 'Company' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
                     <Building2 size={18} /> Company Policies
@@ -557,55 +564,134 @@ const PoliciesPage: React.FC = () => {
             </div>
 
             {/* Main Interface */}
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col gap-6">
 
-                {/* Navigation Sidebar */}
-                <div className="w-full lg:w-72 flex flex-col gap-2">
-                    {primaryTab === 'Government' ? (
-                        [
-                            { id: 'Book1_2', icon: GraduationCap, label: 'Book I-II: Recruitment' },
-                            { id: 'Book3', icon: Clock, label: 'Book III: Work & Wages' },
-                            { id: 'Book4_5', icon: Stethoscope, label: 'Book IV-V: Health & Relations' },
-                            { id: 'Book6', icon: Briefcase, label: 'Book VI: Post-Employment' },
-                            { id: 'Special', icon: Heart, label: 'Special Laws & Leaves' },
-                        ].map((tab) => (
+                {/* Dropdown Section Selector + Effectivity Note */}
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4 z-30">
+                    <div className="flex-1 relative w-full md:w-auto">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Active Section</label>
+
+                        <div className="relative">
                             <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
-                                className={`flex items-center gap-3 px-4 py-4 rounded-xl text-sm font-bold transition-all text-left ${activeTab === tab.id
-                                    ? 'bg-slate-900 text-white shadow-md'
-                                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className={`w-full md:w-[450px] flex items-center justify-between pl-6 pr-5 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm ${primaryTab === 'Government'
+                                    ? 'bg-slate-900 text-white border-slate-800'
+                                    : 'bg-blue-600 text-white border-blue-700'
                                     }`}
                             >
-                                <tab.icon size={18} />
-                                {tab.label}
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 bg-white/10 rounded-lg">
+                                        {(() => {
+                                            const govTabs = [
+                                                { id: 'Book1_2', icon: GraduationCap },
+                                                { id: 'Book3', icon: Clock },
+                                                { id: 'Book4_5', icon: Stethoscope },
+                                                { id: 'Book6', icon: Briefcase },
+                                                { id: 'Special', icon: Heart },
+                                            ];
+                                            const companyTabs = [
+                                                { id: 'Divisor', icon: Calculator },
+                                                { id: 'Works', icon: Clock },
+                                                { id: 'PostEmployment', icon: Briefcase },
+                                                { id: 'Special', icon: Heart },
+                                            ];
+                                            const tabs = primaryTab === 'Government' ? govTabs : companyTabs;
+                                            const found = tabs.find(t => t.id === activeTab);
+                                            if (found) {
+                                                const IconComp = found.icon;
+                                                return <IconComp size={18} />;
+                                            }
+                                            return <BookOpen size={18} />;
+                                        })()}
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="text-[10px] text-white/50 uppercase tracking-widest mb-0.5">Current View</div>
+                                        <div className="truncate">
+                                            {primaryTab === 'Government' ? (
+                                                activeTab === 'Book1_2' ? 'Book I-II: Recruitment & Training' :
+                                                    activeTab === 'Book3' ? 'Book III: Work & Wages' :
+                                                        activeTab === 'Book4_5' ? 'Book IV-V: Health & Relations' :
+                                                            activeTab === 'Book6' ? 'Book VI: Post-Employment' :
+                                                                'Special Laws & Leaves'
+                                            ) : (
+                                                activeTab === 'Divisor' ? 'Divisor Setup' :
+                                                    activeTab === 'Works' ? 'Works & Wages' :
+                                                        activeTab === 'PostEmployment' ? 'Separation & Retirement' :
+                                                            'Special Laws & Leaves'
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <ChevronDown size={20} className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
-                        ))
-                    ) : (
-                        [
-                            { id: 'Divisor', icon: Calculator, label: 'Divisor Setup' },
-                            { id: 'Works', icon: Clock, label: 'Works & Wages' },
-                            { id: 'PostEmployment', icon: Briefcase, label: 'Separation & Retirement' },
-                            { id: 'Special', icon: Heart, label: 'Special Laws & Leaves' },
-                        ].map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
-                                className={`flex items-center gap-3 px-4 py-4 rounded-xl text-sm font-bold transition-all text-left ${activeTab === tab.id
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'
-                                    }`}
-                            >
-                                <tab.icon size={18} />
-                                {tab.label}
-                            </button>
-                        ))
-                    )}
 
-                    <div className="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
-                        <h4 className="text-xs font-bold text-indigo-900 mb-2 flex items-center gap-2">
-                            <History size={14} /> Effectivity
-                        </h4>
+                            <AnimatePresence>
+                                {isDropdownOpen && (
+                                    <>
+                                        {/* Backdrop */}
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
+
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute top-full left-0 mt-3 w-full md:w-[500px] bg-white border border-slate-200 rounded-3xl shadow-2xl z-50 overflow-hidden py-3"
+                                        >
+                                            <div className="px-5 pb-2 mb-2 border-b border-slate-50">
+                                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                    Available Sections ({primaryTab})
+                                                </div>
+                                            </div>
+
+                                            <div className="px-2 max-h-[400px] overflow-y-auto">
+                                                {(primaryTab === 'Government' ? [
+                                                    { id: 'Book1_2', icon: GraduationCap, label: 'Book I-II: Recruitment & Training', desc: 'Pre-employment standards & apprenticeships' },
+                                                    { id: 'Book3', icon: Clock, label: 'Book III: Work & Wages', desc: 'Hours, breaks, premiums & holidays' },
+                                                    { id: 'Book4_5', icon: Stethoscope, label: 'Book IV-V: Health & Relations', desc: 'Safety, medical & grievance machinery' },
+                                                    { id: 'Book6', icon: Briefcase, label: 'Book VI: Post-Employment', desc: 'Separation pay & retirement' },
+                                                    { id: 'Special', icon: Heart, label: 'Special Laws & Leaves', desc: 'Detailed leaf config (Maternity, Solo Parent, etc)' },
+                                                ] : [
+                                                    { id: 'Divisor', icon: Calculator, label: 'Divisor Setup', desc: 'Configure working days per year' },
+                                                    { id: 'Works', icon: Clock, label: 'Works & Wages', desc: 'Company-specific attendance rules' },
+                                                    { id: 'PostEmployment', icon: Briefcase, label: 'Separation & Retirement', desc: 'Internal calculators & policies' },
+                                                    { id: 'Special', icon: Heart, label: 'Special Laws & Leaves', desc: 'Company-specific leave benefits' },
+                                                ]).map((item) => (
+                                                    <button
+                                                        key={item.id}
+                                                        onClick={() => {
+                                                            setActiveTab(item.id);
+                                                            setIsDropdownOpen(false);
+                                                        }}
+                                                        className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${activeTab === item.id
+                                                            ? 'bg-slate-100 text-slate-900'
+                                                            : 'hover:bg-slate-50 text-slate-600'
+                                                            }`}
+                                                    >
+                                                        <div className={`p-2.5 rounded-xl transition-all ${activeTab === item.id
+                                                            ? primaryTab === 'Government' ? 'bg-slate-900 text-white' : 'bg-blue-600 text-white'
+                                                            : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'
+                                                            }`}>
+                                                            <item.icon size={20} />
+                                                        </div>
+                                                        <div className="text-left flex-1">
+                                                            <div className="text-sm font-bold">{item.label}</div>
+                                                            <div className="text-[11px] text-slate-400 group-hover:text-slate-500 font-medium">{item.desc}</div>
+                                                        </div>
+                                                        {activeTab === item.id && (
+                                                            <CheckCircle2 size={18} className={primaryTab === 'Government' ? 'text-indigo-600' : 'text-blue-600'} />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-100 px-4 py-3 rounded-xl w-full md:w-auto md:max-w-sm">
+                        <History size={14} className="text-indigo-600 mt-0.5 shrink-0" />
                         <p className="text-[10px] text-indigo-700 leading-relaxed">
                             Changes made here will apply to <strong>future</strong> payroll runs generated after today.
                         </p>
@@ -917,6 +1003,52 @@ const PoliciesPage: React.FC = () => {
                                             <p className="mt-3 text-[10px] text-slate-400 italic">
                                                 Shift change requests not approved within {shiftRequestApprovalDeadlineDays} days will automatically expire.
                                             </p>
+                                        </div>
+                                    </div>
+
+                                    {/* HMO Enrollment Policy */}
+                                    <div className="p-8 border border-slate-200 rounded-3xl bg-slate-50">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <ShieldPlus size={24} className="text-emerald-600" />
+                                            <div>
+                                                <h4 className="font-bold text-slate-900">HMO Enrollment Policy</h4>
+                                                <p className="text-xs text-slate-500">Determine when probationary employees become eligible for HMO coverage.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {(['Immediate', 'Upon Regularization'] as const).map(option => (
+                                                    <button
+                                                        key={option}
+                                                        onClick={() => updatePolicy('hmoEligibility', option)}
+                                                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${policies.hmoEligibility === option
+                                                            ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                                                            : 'border-slate-100 bg-white hover:border-slate-200'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${policies.hmoEligibility === option ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}>
+                                                                {policies.hmoEligibility === option && <Check size={10} className="text-white" />}
+                                                            </div>
+                                                            <span className={`text-sm font-bold ${policies.hmoEligibility === option ? 'text-emerald-900' : 'text-slate-600'}`}>{option}</span>
+                                                        </div>
+                                                        <span className="text-[10px] text-slate-400 font-medium">
+                                                            {option === 'Immediate' ? 'Upon Day 1 of Hire' : 'After Prob. Period'}
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            <div className="mt-6 flex items-start gap-3 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
+                                                <Info size={16} className="text-emerald-600 mt-0.5" />
+                                                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                                                    {policies.hmoEligibility === 'Immediate'
+                                                        ? 'Employees will be included in the next HMO batch enrollment immediately following their start date.'
+                                                        : 'Employees will only be eligible for HMO coverage once they successfully pass their probationary period and are regularized.'
+                                                    }
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -1359,7 +1491,7 @@ const PoliciesPage: React.FC = () => {
                                                     {/* Exception Scenarios Container */}
                                                     <div>
                                                         <div className="flex items-center gap-3 mb-6">
-                                                            <Scale size={18} className="text-slate-400" />
+                                                            <ScaleIcon size={18} className="text-slate-400" />
                                                             <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Legal Exceptions & Scenarios</h5>
                                                         </div>
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -1682,201 +1814,233 @@ const PoliciesPage: React.FC = () => {
                                         citation="Labor Code / Special Laws"
                                     />
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-[700px]">
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[500px]">
                                         {/* Left Panel: Leave Picker */}
-                                        <div className="lg:col-span-4 space-y-4">
-                                            <div className="bg-slate-900 rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-8 opacity-10">
-                                                    <Calendar size={120} className="text-white" />
+                                        <div className="lg:col-span-3 space-y-6">
+                                            <div className="bg-slate-900 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-4 opacity-5">
+                                                    <Calendar size={60} className="text-white" />
                                                 </div>
-                                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 relative z-10">Select Leave Type</h4>
+                                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 relative z-10">Benefit Types</h4>
 
-                                                <div className="space-y-2 relative z-10">
-                                                    {LEAVE_TYPES_LIST.map(leave => (
-                                                        <button
-                                                            key={leave.id}
-                                                            onClick={() => setSelectedLeaveId(leave.id)}
-                                                            className={`w-full text-left p-4 rounded-2xl flex items-center justify-between transition-all group ${selectedLeaveId === leave.id
-                                                                ? 'bg-white text-slate-900 shadow-lg'
-                                                                : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                                                }`}
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <div className={`p-2 rounded-xl ${selectedLeaveId === leave.id ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700'}`}>
-                                                                    <leave.icon size={18} />
-                                                                </div>
-                                                                <div>
-                                                                    <div className="text-sm font-black text-inherit">{leave.name}</div>
-                                                                    <div className="flex items-center gap-2 mt-0.5">
-                                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${selectedLeaveId === leave.id ? 'bg-slate-100 text-slate-600' : 'bg-slate-800 text-slate-500'}`}>
-                                                                            {leave.code}
-                                                                        </span>
-                                                                        {leave.isStatutory && <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">Statutory</span>}
+                                                <div className="space-y-1 relative z-10">
+                                                    {LEAVE_TYPES_LIST.map(leave => {
+                                                        const isSelected = selectedLeaveId === leave.id;
+                                                        const isEnabled = leaveSettings[leave.id]?.enabled ?? true;
+                                                        return (
+                                                            <button
+                                                                key={leave.id}
+                                                                onClick={() => setSelectedLeaveId(leave.id)}
+                                                                className={`w-full text-left p-3 rounded-xl flex items-center justify-between transition-all duration-300 relative overflow-hidden group ${isSelected
+                                                                    ? 'text-slate-900'
+                                                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                                                    }`}
+                                                            >
+                                                                {isSelected && (
+                                                                    <motion.div
+                                                                        layoutId="activeLeave"
+                                                                        className="absolute inset-0 bg-white"
+                                                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                                                    />
+                                                                )}
+
+                                                                <div className="flex items-center gap-3 relative z-10">
+                                                                    <div className={`p-2 rounded-lg transition-transform duration-500 ${isSelected ? 'bg-indigo-600 text-white shadow-lg scale-110' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700'}`}>
+                                                                        <leave.icon size={16} />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className={`w-1.5 h-1.5 rounded-full ${isEnabled ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-600'}`} />
+                                                                            <div className="text-[11px] font-black truncate max-w-[120px]">{leave.name}</div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                                                            <span className={`text-[8px] font-bold px-1 py-0.5 rounded ${isSelected ? 'bg-slate-100 text-slate-600' : 'bg-slate-800 text-slate-500'}`}>
+                                                                                {leave.code}
+                                                                            </span>
+                                                                            {leave.isStatutory && <span className="text-[7px] font-bold text-indigo-400 uppercase tracking-tighter">Statutory</span>}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                            <ArrowRight size={16} className={`transition-transform ${selectedLeaveId === leave.id ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0'}`} />
-                                                        </button>
-                                                    ))}
+                                                                <ArrowRight size={14} className={`relative z-10 transition-all duration-500 ${isSelected ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'}`} />
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
 
-                                            <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-[2rem]">
-                                                <h5 className="text-xs font-black text-indigo-900 uppercase tracking-widest mb-2">Policy Note</h5>
-                                                <p className="text-[11px] text-indigo-700/70 leading-relaxed font-medium">
-                                                    Standardizing these settings ensures consistency across automated payroll and leave management components.
-                                                </p>
+                                            <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                                                <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Compliance Info</h5>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-start gap-2">
+                                                        <ShieldCheck size={14} className="text-emerald-500 shrink-0 mt-0.5" />
+                                                        <p className="text-[10px] text-slate-500 leading-relaxed">Statutory leaves are non-negotiable legal minimums.</p>
+                                                    </div>
+                                                    <div className="flex items-start gap-2">
+                                                        <Info size={14} className="text-indigo-400 shrink-0 mt-0.5" />
+                                                        <p className="text-[10px] text-slate-500 leading-relaxed">Tax-exempt conversion is capped at 10 days.</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Right Panel: Configuration */}
-                                        <div className="lg:col-span-8">
-                                            <div className="bg-white border-2 border-slate-100 rounded-[3.5rem] p-16 shadow-sm min-h-full">
+                                        <div className="lg:col-span-9">
+                                            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-lg min-h-full flex flex-col">
                                                 {/* Panel Header */}
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 mb-16 pb-12 border-b-2 border-slate-50">
-                                                    <div className="flex items-center gap-8 text-left">
-                                                        <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center text-white shadow-2xl ${currentLeaveConfig.color.replace('text', 'bg')} transform -rotate-3 hover:rotate-0 transition-transform duration-500`}>
-                                                            <currentLeaveConfig.icon size={44} />
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-6 border-b border-slate-50 relative">
+                                                    <div className="flex items-center gap-5 text-left relative z-10">
+                                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl ${currentLeaveConfig.color.replace('text', 'bg')} transform -rotate-1 ring-4 ring-white`}>
+                                                            <currentLeaveConfig.icon size={28} />
                                                         </div>
                                                         <div>
-                                                            <div className="flex items-center gap-5">
-                                                                <h3 className="text-3xl font-black text-slate-900 tracking-tight">{currentLeaveConfig.name}</h3>
-                                                                <span className="text-[11px] font-black bg-slate-100 text-slate-500 px-5 py-2 rounded-full uppercase tracking-[0.25em] border border-slate-200">{currentLeaveConfig.code}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-3 mt-3">
-                                                                <div className="p-1.5 bg-slate-100 rounded-lg">
-                                                                    <BookMarked size={16} className="text-slate-400" />
+                                                            <div className="flex items-center gap-3">
+                                                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{currentLeaveConfig.name}</h3>
+                                                                <div className="flex items-center gap-1">
+                                                                    <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full uppercase tracking-[0.2em] border border-indigo-100">{currentLeaveConfig.code}</span>
+                                                                    {currentLeaveConfig.isStatutory && (
+                                                                        <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full uppercase tracking-widest border border-emerald-100">Statutory</span>
+                                                                    )}
                                                                 </div>
-                                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em]">{currentLeaveConfig.citation}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mt-2">
+                                                                <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-100 shadow-sm">
+                                                                    <BookMarked size={14} className="text-slate-400" />
+                                                                </div>
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-80">{currentLeaveConfig.citation}</span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-8 bg-slate-50 px-8 py-5 rounded-[2rem] border border-slate-100">
+                                                    <div className="flex items-center gap-6 bg-slate-50/80 backdrop-blur-sm px-6 py-4 rounded-3xl border border-slate-100 shadow-sm transition-all hover:bg-white group cursor-default">
                                                         <div className="text-right">
-                                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Benefit Status</div>
-                                                            <div className={`text-xs font-black tracking-[0.2em] ${currentLeaveConfig.enabled ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                                                {currentLeaveConfig.enabled ? 'ACTIVE' : 'DISABLED'}
+                                                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 opacity-70">Control Status</div>
+                                                            <div className={`text-[11px] font-black tracking-widest flex items-center gap-2 justify-end ${currentLeaveConfig.enabled ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                                                {currentLeaveConfig.enabled && <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
+                                                                {currentLeaveConfig.enabled ? 'LIVE BENEFIT' : 'BENEFIT DEACTIVATED'}
                                                             </div>
                                                         </div>
                                                         <button
                                                             onClick={() => updateLeaveConfig(selectedLeaveId, 'enabled', !currentLeaveConfig.enabled)}
-                                                            className={`w-16 h-9 rounded-full relative transition-all duration-500 ${currentLeaveConfig.enabled ? 'bg-emerald-500 shadow-xl shadow-emerald-100' : 'bg-slate-300'}`}
+                                                            className={`w-14 h-7 rounded-full relative transition-all duration-700 ease-in-out px-1 flex items-center ${currentLeaveConfig.enabled ? 'bg-emerald-500 shadow-lg shadow-emerald-100' : 'bg-slate-200'}`}
                                                         >
-                                                            <div className={`absolute top-1 w-7 h-7 bg-white rounded-full shadow-md transition-all duration-500 ease-spring ${currentLeaveConfig.enabled ? 'left-8' : 'left-1'}`} />
+                                                            <div className={`w-5 h-5 bg-white rounded-full shadow-lg transition-all duration-500 ease-spring transform ${currentLeaveConfig.enabled ? 'translate-x-[1.75rem]' : 'translate-x-0'}`} />
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                <div className={`space-y-20 transition-all duration-700 ${currentLeaveConfig.enabled ? 'opacity-100 scale-100' : 'opacity-20 scale-[0.98] pointer-events-none'}`}>
+                                                <div className={`flex-1 space-y-8 transition-all duration-700 ${currentLeaveConfig.enabled ? 'opacity-100 scale-100' : 'opacity-20 scale-[0.98] pointer-events-none'}`}>
 
-                                                    {/* Row 1: Credits & Accrual */}
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 text-left">
-                                                        <div className="space-y-10">
-                                                            <div className="flex items-center gap-4 mb-2">
-                                                                <div className="p-2.5 bg-indigo-50 rounded-2xl shadow-sm">
-                                                                    <CalendarCheck size={22} className="text-indigo-600" />
+                                                    {/* Row 1: Core Lifecycle & Units */}
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-3 mb-1">
+                                                                <div className="p-2 bg-indigo-50 rounded-xl">
+                                                                    <CalendarCheck size={18} className="text-indigo-600" />
                                                                 </div>
-                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Allowance & Accrual</h4>
+                                                                <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.15em]">Allowance & Accrual</h4>
                                                             </div>
 
-                                                            <div className="bg-slate-50/50 rounded-[3rem] p-12 space-y-10 border border-slate-100 shadow-inner">
+                                                            <div className="bg-slate-50/50 rounded-2xl p-5 space-y-5 border border-slate-100 shadow-inner">
                                                                 <div>
-                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Annual Leave Credits</label>
-                                                                    <div className="flex items-center gap-6">
-                                                                        <input
-                                                                            type="number"
-                                                                            className="w-32 p-6 bg-white border-2 border-slate-200 rounded-[1.5rem] text-4xl font-black text-slate-900 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-50 outline-none transition-all shadow-sm"
-                                                                            value={currentLeaveConfig.days}
-                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'days', Number(e.target.value))}
-                                                                        />
+                                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Principal Allowance</label>
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="relative">
+                                                                            <input
+                                                                                type="number"
+                                                                                className="w-20 p-2.5 bg-white border-2 border-slate-200 rounded-xl text-xl font-black text-slate-900 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                                                                value={currentLeaveConfig.days}
+                                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'days', Number(e.target.value))}
+                                                                            />
+                                                                        </div>
                                                                         <div>
-                                                                            <div className="text-sm font-black text-slate-900 uppercase tracking-widest leading-none">Days / Year</div>
-                                                                            <div className="text-[11px] font-bold text-slate-400 mt-2 tracking-tight">Main statutory benefit</div>
+                                                                            <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest leading-none">Days / Year</div>
+                                                                            <div className="text-[8px] font-bold text-slate-400 mt-1 tracking-tight">Standard annual credit allocation</div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
                                                                 <div>
-                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Accrual Strategy</label>
-                                                                    <div className="grid grid-cols-1 gap-3">
-                                                                        {['Immediate', 'Monthly', 'Yearly', 'Upon regularization'].map(policy => (
-                                                                            <button
-                                                                                key={policy}
-                                                                                onClick={() => updateLeaveConfig(selectedLeaveId, 'accrualPolicy', policy)}
-                                                                                className={`p-6 rounded-2xl border-2 text-xs font-black text-left transition-all ${currentLeaveConfig.accrualPolicy === policy ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-100 translate-x-2' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}
-                                                                            >
-                                                                                <div className="flex items-center justify-between">
-                                                                                    {policy}
-                                                                                    {currentLeaveConfig.accrualPolicy === policy && (
-                                                                                        <div className="bg-white/20 p-1 rounded-full">
-                                                                                            <Check size={16} className="text-white" />
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
-                                                                            </button>
-                                                                        ))}
+                                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Accrual Logic</label>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        {['Immediate', 'Monthly', 'Yearly', 'Upon regularization'].map(policy => {
+                                                                            const active = currentLeaveConfig.accrualPolicy === policy;
+                                                                            return (
+                                                                                <button
+                                                                                    key={policy}
+                                                                                    onClick={() => updateLeaveConfig(selectedLeaveId, 'accrualPolicy', policy)}
+                                                                                    className={`p-2.5 rounded-xl border-2 text-[9px] font-black text-left transition-all relative overflow-hidden group ${active ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                                                                >
+                                                                                    <div className="flex items-center justify-between relative z-10 gap-1">
+                                                                                        <span className="truncate">{policy}</span>
+                                                                                        {active && <CheckCircle2 size={10} className="text-indigo-400 shrink-0" />}
+                                                                                    </div>
+                                                                                    {!active && <div className="absolute inset-0 bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                                                                                </button>
+                                                                            );
+                                                                        })}
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        <div className="space-y-10">
-                                                            <div className="flex items-center gap-4 mb-2">
-                                                                <div className="p-2.5 bg-amber-50 rounded-2xl shadow-sm">
-                                                                    <History size={22} className="text-amber-600" />
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-3 mb-1">
+                                                                <div className="p-2 bg-amber-50 rounded-xl">
+                                                                    <History size={18} className="text-amber-600" />
                                                                 </div>
-                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Retention & Limits</h4>
+                                                                <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.15em]">Retention & Limits</h4>
                                                             </div>
 
-                                                            <div className="bg-slate-50/50 rounded-[3rem] p-12 space-y-12 border border-slate-100 shadow-inner">
+                                                            <div className="bg-slate-50/50 rounded-2xl p-5 space-y-5 border border-slate-100 shadow-inner">
                                                                 <div>
-                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Accumulation Cap</label>
-                                                                    <div className="flex items-center gap-6">
+                                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Accumulation Threshold</label>
+                                                                    <div className="flex items-center gap-4">
                                                                         <input
                                                                             type="number"
-                                                                            className="w-32 p-6 bg-white border-2 border-slate-200 rounded-[1.5rem] text-4xl font-black text-slate-900 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-50 outline-none transition-all shadow-sm"
+                                                                            className="w-20 p-2.5 bg-white border-2 border-slate-200 rounded-xl text-xl font-black text-slate-900 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                                                             value={currentLeaveConfig.maxAccrued}
                                                                             onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxAccrued', Number(e.target.value))}
                                                                         />
                                                                         <div>
-                                                                            <div className="text-sm font-black text-slate-900 uppercase tracking-widest leading-none">Max Days</div>
-                                                                            <div className="text-[11px] font-bold text-slate-400 mt-2 tracking-tight">Total audit accumulation</div>
+                                                                            <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest leading-none">Maximum Storage</div>
+                                                                            <div className="text-[8px] font-bold text-slate-400 mt-1 tracking-tight">System cap for unused credits</div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
-                                                                <div className="space-y-6">
+                                                                <div className="space-y-4">
                                                                     <div className="relative group">
-                                                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 pr-2">Expiration Frequency</label>
-                                                                        <select
-                                                                            className="w-full p-6 bg-white border-2 border-slate-200 rounded-[1.5rem] font-black text-slate-800 focus:border-indigo-500 outline-none appearance-none cursor-pointer shadow-sm transition-all"
-                                                                            value={currentLeaveConfig.expiration}
-                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'expiration', e.target.value)}
-                                                                        >
-                                                                            <option>Never</option>
-                                                                            <option>Every Year-End</option>
-                                                                            <option>After 12 Months</option>
-                                                                        </select>
-                                                                        <div className="absolute right-6 bottom-6 pointer-events-none text-slate-400">
-                                                                            <ArrowRight size={18} className="rotate-90" />
+                                                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Lifecycle Expiration</label>
+                                                                        <div className="relative">
+                                                                            <select
+                                                                                className="w-full pl-5 pr-10 py-5 bg-white border-2 border-slate-200 rounded-2xl font-black text-xs text-slate-800 focus:border-indigo-500 outline-none appearance-none cursor-pointer shadow-sm transition-all"
+                                                                                value={currentLeaveConfig.expiration}
+                                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'expiration', e.target.value)}
+                                                                            >
+                                                                                <option>Never</option>
+                                                                                <option>Every Year-End</option>
+                                                                                <option>After 12 Months</option>
+                                                                            </select>
+                                                                            <div className="absolute right-5 inset-y-0 flex items-center pointer-events-none text-slate-400">
+                                                                                <ChevronDown size={16} />
+                                                                            </div>
                                                                         </div>
                                                                     </div>
 
                                                                     <button
                                                                         onClick={() => updateLeaveConfig(selectedLeaveId, 'isForfeited', !currentLeaveConfig.isForfeited)}
-                                                                        className={`w-full p-8 rounded-[1.5rem] border-2 flex items-center justify-between transition-all group ${currentLeaveConfig.isForfeited ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-md translate-y-[-2px]' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                                                                        className={`w-full p-3.5 rounded-xl border-2 flex items-center justify-between transition-all group ${currentLeaveConfig.isForfeited ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-sm' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'}`}
                                                                     >
-                                                                        <div className="flex items-center gap-5">
-                                                                            <div className={`p-3 rounded-2xl transition-colors ${currentLeaveConfig.isForfeited ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
-                                                                                {currentLeaveConfig.isForfeited ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className={`p-1.5 rounded-lg transition-colors ${currentLeaveConfig.isForfeited ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
+                                                                                {currentLeaveConfig.isForfeited ? <Ban size={14} /> : <RotateCcw size={14} />}
                                                                             </div>
                                                                             <div className="text-left">
-                                                                                <span className="text-xs font-black uppercase tracking-[0.15em] block">Unused Credits</span>
-                                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 leading-none">Auto-Forfeiture Policy</span>
+                                                                                <span className="text-[10px] font-black uppercase tracking-[0.1em] block leading-none">Unused Balance</span>
+                                                                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1 block leading-none">Auto-Processing</span>
                                                                             </div>
                                                                         </div>
-                                                                        <span className={`text-[10px] font-black uppercase tracking-widest px-5 py-2 rounded-full ${currentLeaveConfig.isForfeited ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                                                            {currentLeaveConfig.isForfeited ? 'FORFEITED' : 'RETAINED'}
+                                                                        <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${currentLeaveConfig.isForfeited ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                                                            {currentLeaveConfig.isForfeited ? 'FORFEIT' : 'CARRY-OVER'}
                                                                         </span>
                                                                     </button>
                                                                 </div>
@@ -1884,103 +2048,131 @@ const PoliciesPage: React.FC = () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* Row 2: Eligibility & Filing */}
-                                                    <div className="border-t-2 border-slate-50 pt-20">
-                                                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 text-left">
-                                                            <div className="lg:col-span-8 space-y-10">
-                                                                <div className="flex items-center gap-4 mb-2">
-                                                                    <div className="p-2.5 bg-purple-50 rounded-2xl shadow-sm">
-                                                                        <Users size={22} className="text-purple-600" />
+                                                    {/* Row 2: Governance & Constraints */}
+                                                    <div className="border-t border-slate-100 pt-8">
+                                                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
+                                                            <div className="lg:col-span-7 space-y-6">
+                                                                <div className="flex items-center gap-3 mb-1">
+                                                                    <div className="p-2 bg-purple-50 rounded-xl shadow-sm border border-purple-100">
+                                                                        <Users size={18} className="text-purple-600" />
                                                                     </div>
-                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Eligibility Matrix</h4>
+                                                                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.15em]">Eligibility Bounds</h4>
                                                                 </div>
-                                                                <div className="flex flex-wrap gap-4 p-2 relative">
-                                                                    {['Regular', 'Probationary', 'Full-time', 'Part-time', 'Male', 'Female', 'Solo Parent', 'Married'].map(tag => (
-                                                                        <button
-                                                                            key={tag}
-                                                                            onClick={() => {
-                                                                                const exists = currentLeaveConfig.eligibility.includes(tag);
-                                                                                const newVal = exists
-                                                                                    ? currentLeaveConfig.eligibility.filter((t: string) => t !== tag)
-                                                                                    : [...currentLeaveConfig.eligibility, tag];
-                                                                                updateLeaveConfig(selectedLeaveId, 'eligibility', newVal);
-                                                                            }}
-                                                                            className={`px-8 py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all border-2 ${currentLeaveConfig.eligibility.includes(tag) ? 'bg-indigo-600 border-indigo-600 text-white shadow-[0_15px_40px_rgba(79,70,229,0.25)] scale-110 z-10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
-                                                                        >
-                                                                            {tag}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                                <div className="flex items-center gap-3 pl-3">
-                                                                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
-                                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.15em]">Selected groups are automatically entitled to this benefit.</p>
+                                                                <div className="bg-slate-50/30 rounded-2xl p-5 border border-slate-100/50">
+                                                                    <div className="flex flex-wrap gap-2 relative">
+                                                                        {['Regular', 'Probationary', 'Full-time', 'Part-time', 'Male', 'Female', 'Solo Parent', 'Married'].map(tag => {
+                                                                            const active = currentLeaveConfig.eligibility.includes(tag);
+                                                                            return (
+                                                                                <button
+                                                                                    key={tag}
+                                                                                    onClick={() => {
+                                                                                        const exists = active;
+                                                                                        const newVal = exists
+                                                                                            ? currentLeaveConfig.eligibility.filter((t: string) => t !== tag)
+                                                                                            : [...currentLeaveConfig.eligibility, tag];
+                                                                                        updateLeaveConfig(selectedLeaveId, 'eligibility', newVal);
+                                                                                    }}
+                                                                                    className={`px-3.5 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border-2 relative overflow-hidden group ${active ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'}`}
+                                                                                >
+                                                                                    <div className="relative z-10 flex items-center gap-2">
+                                                                                        {active && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
+                                                                                        {tag}
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2.5 mt-4 opacity-60">
+                                                                        <div className="w-1 h-1 bg-indigo-500 rounded-full animate-ping"></div>
+                                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Selected groups inherit this entitlement automatically.</p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="lg:col-span-4 space-y-10">
-                                                                <div className="flex items-center gap-4 mb-2">
-                                                                    <div className="p-2.5 bg-rose-50 rounded-2xl shadow-sm">
-                                                                        <Clock size={22} className="text-rose-600" />
+                                                            <div className="lg:col-span-5 space-y-6">
+                                                                <div className="flex items-center gap-3 mb-1">
+                                                                    <div className="p-2 bg-rose-50 rounded-xl shadow-sm border border-rose-100">
+                                                                        <Clock size={18} className="text-rose-600" />
                                                                     </div>
-                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Filing Constraints</h4>
+                                                                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.15em]">Usage Velocity</h4>
                                                                 </div>
-                                                                <div className="bg-rose-50/50 rounded-[3rem] p-12 border border-rose-100 flex flex-col items-center shadow-inner">
-                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center w-full">Max Filed Per Month</label>
-                                                                    <div className="flex items-center gap-6">
+                                                                <div className="bg-rose-50/30 rounded-2xl p-5 border border-rose-100/50 flex flex-col items-center">
+                                                                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center w-full">Concurrent Filing Cap</label>
+                                                                    <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-rose-100 shadow-sm">
                                                                         <input
                                                                             type="number"
-                                                                            className="w-28 p-6 bg-white border-2 border-rose-200 rounded-[2rem] text-4xl font-black text-rose-600 focus:border-rose-500 focus:ring-8 focus:ring-rose-50 outline-none transition-all shadow-sm text-center"
+                                                                            className="w-16 bg-transparent text-2xl font-black text-rose-600 outline-none text-center"
                                                                             value={currentLeaveConfig.maxFiledPerMonth}
                                                                             onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxFiledPerMonth', Number(e.target.value))}
                                                                         />
-                                                                        <div className="text-[11px] font-black text-rose-400 uppercase tracking-[0.2em] leading-tight">Days<br />Limit</div>
+                                                                        <div className="h-8 w-[1px] bg-rose-100"></div>
+                                                                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-tight">Days<br />/ Month</div>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {/* Row 3: Monetization Setup */}
-                                                    <div className="bg-slate-900 rounded-[4rem] p-20 text-white shadow-2xl relative overflow-hidden text-left mt-10">
-                                                        <div className="absolute top-0 right-0 p-32 opacity-[0.02] transform rotate-12 scale-150 pointer-events-none">
-                                                            <DollarSign size={500} />
+                                                    {/* Row 3: Financial Framework */}
+                                                    <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-2xl relative overflow-hidden text-left mt-8 ring-1 ring-white/10">
+                                                        {/* Animated Mesh Glow */}
+                                                        <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none" />
+                                                        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+                                                        <div className="absolute top-0 right-0 p-16 opacity-[0.05] transform rotate-12 scale-150 pointer-events-none">
+                                                            <DollarSign size={200} />
                                                         </div>
 
-                                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20 relative z-10 border-b border-white/10 pb-16">
-                                                            <div className="flex items-center gap-10">
-                                                                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[2rem] shadow-[0_25px_60px_rgba(79,70,229,0.3)] flex items-center justify-center transform hover:rotate-6 transition-transform duration-500">
-                                                                    <Coins size={44} className="text-white" />
+                                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 relative z-10 border-b border-white/5 pb-8">
+                                                            <div className="flex items-center gap-5">
+                                                                <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-800 rounded-2xl shadow-xl flex items-center justify-center transform rotate-3 hover:rotate-0 transition-all duration-700 ring-4 ring-white/5">
+                                                                    <Coins size={28} className="text-white drop-shadow-lg" />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-4xl font-black tracking-tighter">Monetization Engine</h4>
-                                                                    <p className="text-base text-indigo-400/80 font-bold uppercase tracking-[0.3em] mt-2">Cash Conversion Rules & Policy</p>
+                                                                    <div className="flex items-center gap-3">
+                                                                        <h4 className="text-2xl font-black tracking-tighter">Monetization Engine</h4>
+                                                                        <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full font-black uppercase tracking-widest border border-indigo-500/20">v2.0</span>
+                                                                    </div>
+                                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.25em] mt-1.5 flex items-center gap-2">
+                                                                        <span className="w-4 h-[1px] bg-slate-700" />
+                                                                        Cash Conversion Rules & Policy
+                                                                    </p>
                                                                 </div>
                                                             </div>
 
                                                             <button
                                                                 onClick={() => updateLeaveConfig(selectedLeaveId, 'monetizationEnabled', !currentLeaveConfig.monetizationEnabled)}
-                                                                className={`flex items-center gap-6 px-12 py-6 rounded-[3rem] border transition-all duration-500 ${currentLeaveConfig.monetizationEnabled ? 'bg-indigo-600 border-indigo-400 shadow-[0_30px_70px_rgba(79,70,229,0.4)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                                                                className={`flex items-center gap-4 px-6 py-3 rounded-2xl border transition-all duration-700 relative group overflow-hidden ${currentLeaveConfig.monetizationEnabled ? 'bg-indigo-600 border-indigo-400 shadow-[0_10px_40px_rgba(79,70,229,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                                                             >
-                                                                <span className={`text-xs font-black uppercase tracking-[0.25em] ${currentLeaveConfig.monetizationEnabled ? 'text-white' : 'text-slate-500'}`}>
-                                                                    {currentLeaveConfig.monetizationEnabled ? 'MONETIZATION ACTIVE' : 'NO CASH VALUE'}
-                                                                </span>
-                                                                <div className="relative">
-                                                                    <div className={`w-16 h-8 rounded-full transition-colors ${currentLeaveConfig.monetizationEnabled ? 'bg-indigo-400' : 'bg-slate-800'}`}></div>
-                                                                    <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-2xl transition-all duration-500 ease-spring ${currentLeaveConfig.monetizationEnabled ? 'translate-x-[2rem]' : 'translate-x-0'}`}></div>
+                                                                <div className="relative z-10 flex items-center gap-4">
+                                                                    <span className={`text-[10px] font-black uppercase tracking-[0.25em] ${currentLeaveConfig.monetizationEnabled ? 'text-white' : 'text-slate-500'}`}>
+                                                                        {currentLeaveConfig.monetizationEnabled ? 'ENGINE ACTIVE' : 'LOCKED / NO VALUE'}
+                                                                    </span>
+                                                                    <div className="relative">
+                                                                        <div className={`w-12 h-6 rounded-full transition-colors duration-500 ${currentLeaveConfig.monetizationEnabled ? 'bg-indigo-400' : 'bg-slate-800'}`}></div>
+                                                                        <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-xl transition-all duration-700 ease-spring ${currentLeaveConfig.monetizationEnabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                                                    </div>
                                                                 </div>
+                                                                {currentLeaveConfig.monetizationEnabled && (
+                                                                    <motion.div
+                                                                        animate={{ x: ['100%', '-100%'] }}
+                                                                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                                                                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none"
+                                                                    />
+                                                                )}
                                                             </button>
                                                         </div>
 
                                                         {currentLeaveConfig.monetizationEnabled ? (
-                                                            <div className="space-y-20 relative z-10 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-                                                                    <div className="space-y-6">
-                                                                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] mb-3">Computation Basis</label>
-                                                                        <div className="flex flex-col gap-3">
+                                                            <div className="space-y-10 relative z-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                                                    <div className="space-y-4">
+                                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Computation Basis</label>
+                                                                        <div className="flex flex-col gap-2">
                                                                             {['Daily Rate', 'Monthly Rate'].map(b => (
                                                                                 <button
                                                                                     key={b}
                                                                                     onClick={() => updateLeaveConfig(selectedLeaveId, 'monetizationBasis', b as 'Daily Rate' | 'Monthly Rate')}
-                                                                                    className={`p-6 rounded-2xl border-2 font-black text-[11px] uppercase tracking-widest transition-all ${currentLeaveConfig.monetizationBasis === b ? 'bg-white text-slate-900 border-white shadow-2xl scale-105 z-10' : 'bg-transparent border-white/10 text-slate-500 hover:border-white/30'}`}
+                                                                                    className={`p-4 rounded-xl border-2 font-black text-[10px] uppercase tracking-widest transition-all ${currentLeaveConfig.monetizationBasis === b ? 'bg-white text-slate-900 border-white shadow-lg' : 'bg-transparent border-white/10 text-slate-500 hover:border-white/30'}`}
                                                                                 >
                                                                                     {b}
                                                                                 </button>
@@ -1988,92 +2180,98 @@ const PoliciesPage: React.FC = () => {
                                                                         </div>
                                                                     </div>
 
-                                                                    <div className="space-y-6">
-                                                                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] mb-3">Cash Value Rate</label>
-                                                                        <div className="flex items-center gap-6 bg-white/5 p-4 rounded-[2.5rem] border border-white/10 focus-within:border-indigo-400 transition-all shadow-inner group">
+                                                                    <div className="space-y-4">
+                                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Cash Value Rate</label>
+                                                                        <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 focus-within:border-indigo-400 transition-all shadow-inner group">
                                                                             <input
                                                                                 type="number"
-                                                                                className="w-full p-6 bg-transparent text-5xl font-black text-white outline-none text-center"
+                                                                                className="w-full p-3 bg-transparent text-2xl font-black text-white outline-none text-center"
                                                                                 value={currentLeaveConfig.monetizationRate}
                                                                                 onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationRate', Number(e.target.value))}
                                                                             />
-                                                                            <span className="text-4xl font-black text-indigo-400 pr-10 group-focus-within:animate-pulse">%</span>
+                                                                            <span className="text-xl font-black text-indigo-400 pr-4">%</span>
                                                                         </div>
                                                                     </div>
 
-                                                                    <div className="space-y-6">
-                                                                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] mb-3">Max Conversion</label>
-                                                                        <div className="flex items-center gap-6 bg-white/5 p-4 rounded-[2.5rem] border border-white/10 focus-within:border-indigo-400 transition-all shadow-inner group">
+                                                                    <div className="space-y-4">
+                                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Max Conversion</label>
+                                                                        <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10 focus-within:border-indigo-400 transition-all shadow-inner group">
                                                                             <input
                                                                                 type="number"
-                                                                                className="w-full p-6 bg-transparent text-5xl font-black text-white outline-none text-center"
+                                                                                className="w-full p-3 bg-transparent text-2xl font-black text-white outline-none text-center"
                                                                                 value={currentLeaveConfig.monetizationMaxDays}
                                                                                 onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationMaxDays', Number(e.target.value))}
                                                                             />
-                                                                            <span className="text-xs font-black text-slate-500 uppercase tracking-[0.25em] pr-10">Days</span>
+                                                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest pr-4">Days</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
-                                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center bg-indigo-600/10 p-16 rounded-[4rem] border border-indigo-500/20 shadow-inner">
-                                                                    <div className="flex items-center gap-10">
-                                                                        <div className="p-6 bg-indigo-500/20 rounded-[2rem] shadow-2xl border border-indigo-500/20">
-                                                                            <Calculator size={50} className="text-indigo-300" />
+                                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl relative group overflow-hidden">
+                                                                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+                                                                    <div className="flex items-center gap-8 relative z-10">
+                                                                        <div className="w-20 h-20 bg-indigo-500/10 rounded-2xl shadow-2xl border border-indigo-500/20 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-500">
+                                                                            <Calculator size={36} className="text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />
                                                                         </div>
                                                                         <div>
-                                                                            <div className="text-[12px] font-black text-indigo-300 uppercase tracking-[0.3em] mb-3">Policy Calculation</div>
-                                                                            <div className="text-xl font-bold font-mono text-indigo-100 flex items-center gap-4">
-                                                                                <span className="bg-white/10 px-4 py-2 rounded-xl">Rate</span>
-                                                                                <span className="text-indigo-500 font-black">×</span>
-                                                                                <span className="bg-white/10 px-4 py-2 rounded-xl">{currentLeaveConfig.monetizationRate}%</span>
-                                                                                <span className="text-indigo-500 font-black">×</span>
-                                                                                <span className="bg-white/10 px-4 py-2 rounded-xl">{currentLeaveConfig.monetizationMaxDays}d</span>
+                                                                            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+                                                                                <div className="w-1 h-1 bg-indigo-500 rounded-full" />
+                                                                                Live Formula Output
+                                                                            </div>
+                                                                            <div className="text-lg font-bold font-mono text-indigo-100 flex items-center gap-4">
+                                                                                <span className="bg-white/5 px-4 py-2 rounded-xl border border-white/5">Daily Rate</span>
+                                                                                <span className="text-indigo-500 font-extrabold text-2xl">×</span>
+                                                                                <span className="bg-indigo-500/20 text-indigo-200 px-4 py-2 rounded-xl border border-indigo-500/20">{currentLeaveConfig.monetizationRate}%</span>
+                                                                                <span className="text-indigo-500 font-extrabold text-2xl">×</span>
+                                                                                <span className="bg-indigo-500/20 text-indigo-200 px-4 py-2 rounded-xl border border-indigo-500/20">{currentLeaveConfig.monetizationMaxDays}d</span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="lg:text-right">
-                                                                        <div className="text-[12px] font-black text-indigo-300 uppercase tracking-[0.3em] mb-3">Estimated Value</div>
-                                                                        <div className="text-7xl font-black text-white tracking-tighter shadow-indigo-500/20">
-                                                                            ₱ <span className="text-indigo-100 italic transition-colors">{(1500 * (currentLeaveConfig.monetizationRate / 100) * currentLeaveConfig.monetizationMaxDays).toLocaleString()}</span>
+                                                                    <div className="lg:text-right relative z-10">
+                                                                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">Estimated Benefit Value</div>
+                                                                        <div className="text-5xl font-black text-white tracking-tighter flex items-end lg:justify-end gap-2 group-hover:text-indigo-100 transition-colors">
+                                                                            <span className="text-xl text-indigo-500 mb-2 font-black">₱</span>
+                                                                            <span className="drop-shadow-[0_0_25px_rgba(79,70,229,0.3)]">{(1500 * (currentLeaveConfig.monetizationRate / 100) * currentLeaveConfig.monetizationMaxDays).toLocaleString()}</span>
                                                                         </div>
-                                                                        <div className="text-[11px] font-bold text-slate-500 mt-5 italic flex items-center lg:justify-end gap-4 opacity-70">
-                                                                            <div className="w-2 h-2 rounded-full bg-slate-700"></div>
-                                                                            Calculated on sample ₱1,500 Daily Rate
+                                                                        <div className="text-[10px] font-bold text-slate-500 mt-5 italic flex items-center lg:justify-end gap-3 opacity-60">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-700 shadow-[0_0_8px_rgba(67,56,202,0.8)]" />
+                                                                            Based on theoretical ₱1,500 daily reference
                                                                         </div>
                                                                     </div>
                                                                 </div>
 
                                                                 {/* Global Tax Exemption */}
-                                                                <div className="bg-gradient-to-r from-amber-500/10 to-transparent rounded-[4rem] p-12 border border-dashed border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-12">
-                                                                    <div className="flex gap-10 items-center">
-                                                                        <div className="p-6 bg-amber-500/10 rounded-[2rem] border border-amber-500/10 shadow-xl">
-                                                                            <Scale size={40} className="text-amber-500 shrink-0" />
+                                                                <div className="bg-gradient-to-r from-amber-500/10 to-transparent rounded-3xl p-6 border border-dashed border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-8">
+                                                                    <div className="flex gap-6 items-center">
+                                                                        <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/10 shadow-lg">
+                                                                            <ScaleIcon size={24} className="text-amber-500 shrink-0" />
                                                                         </div>
                                                                         <div className="text-left">
-                                                                            <h5 className="text-2xl font-black text-white tracking-tight">Global Tax Exemption Limit</h5>
-                                                                            <p className="text-sm text-slate-500 leading-relaxed max-w-sm mt-3 font-medium">
+                                                                            <h5 className="text-lg font-black text-white tracking-tight">Global Tax Exemption Limit</h5>
+                                                                            <p className="text-[11px] text-slate-500 leading-relaxed max-w-sm mt-1.5 font-medium">
                                                                                 Converted leave credits within this de minimis limit are non-taxable (Revenue Regulation 1-2015).
                                                                             </p>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="flex items-center gap-8 bg-white/5 px-10 py-6 rounded-[2rem] border border-white/10 group focus-within:border-amber-500 transition-all shadow-inner">
+                                                                    <div className="flex items-center gap-6 bg-white/5 px-6 py-4 rounded-2xl border border-white/10 group focus-within:border-amber-500 transition-all shadow-inner">
                                                                         <input
                                                                             type="number"
-                                                                            className="w-24 bg-transparent text-5xl font-black text-amber-500 text-center outline-none"
+                                                                            className="w-16 bg-transparent text-3xl font-black text-amber-500 text-center outline-none"
                                                                             value={policies.leaveConversionTaxExemptDays}
                                                                             onChange={(e) => updatePolicy('leaveConversionTaxExemptDays', Number(e.target.value))}
                                                                         />
-                                                                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] shrink-0">Days Limit</span>
+                                                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest shrink-0">Days Limit</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="py-32 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-1000">
-                                                                <div className="w-32 h-32 rounded-[2.5rem] bg-white/5 flex items-center justify-center mb-12 border border-white/10 shadow-2xl transform -rotate-6">
-                                                                    <FileMinus size={64} className="text-slate-700" />
+                                                            <div className="py-16 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-700">
+                                                                <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mb-6 border border-white/10 shadow-xl transform -rotate-3">
+                                                                    <FileMinus size={32} className="text-slate-700" />
                                                                 </div>
-                                                                <h5 className="text-4xl font-black text-white mb-5 tracking-tight">Non-Monetizable Benefit</h5>
-                                                                <p className="text-base text-slate-500 max-w-lg mx-auto leading-relaxed font-medium">This policy is strictly for employee time-off and does not accrue any cash conversion value according to current company standards.</p>
+                                                                <h5 className="text-xl font-black text-white mb-3 tracking-tight">Non-Monetizable Benefit</h5>
+                                                                <p className="text-[11px] text-slate-500 max-w-xs mx-auto leading-relaxed font-medium">This policy is strictly for employee time-off and does not accrue any cash conversion value according to current company standards.</p>
                                                             </div>
                                                         )}
                                                     </div>
