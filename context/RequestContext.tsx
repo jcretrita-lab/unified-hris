@@ -32,6 +32,11 @@ export interface AppRequest {
     shiftToId?: string;
     shiftToName?: string;
     shiftReason?: string;
+    shiftChangeType?: 'Full Cutoff' | 'Single Day';
+    shiftChangeDate?: string; // ISO date string for Single Day changes
+    // Expiration fields
+    expirationDate?: string; // ISO date string
+    isExpired?: boolean;
     // Approval trail
     timeline: {
         id: number;
@@ -91,10 +96,66 @@ const SEED_REQUESTS: AppRequest[] = [
         shiftFromName: 'Shift 8',
         shiftToId: '2',
         shiftToName: 'Sales Flexi Group',
+        shiftChangeType: 'Full Cutoff',
         shiftReason: 'Requesting to move to Sales Flexi Group starting next cutoff due to personal transportation changes.',
         timeline: [
             { id: 1, title: '1. Submit Request', description: 'Submitted shift change request', timestamp: 'October 10, 2025 8:30:00 AM', status: 'completed' },
             { id: 2, title: '2. Department Approval', description: 'Pending approval from Alex Thompson', timestamp: '', status: 'current' },
+            { id: 3, title: '3. HR Approval', description: 'Pending HR review', timestamp: '', status: 'pending' },
+            { id: 4, title: '4. Application Result', description: 'Shift assignment will be updated', timestamp: '', status: 'pending' },
+        ],
+    },
+    {
+        id: 'req-seed-003',
+        type: 'Shift Change',
+        status: 'Submitted',
+        employeeId: 'emp-003',
+        employeeName: 'Jane Smith',
+        employeeRole: 'Junior Developer',
+        employeeAvatar: 'JS',
+        departmentName: 'IT Department',
+        managerName: 'Alex Thompson',
+        submittedAt: '2025-10-12T09:15:00',
+        lastModifiedBy: 'System',
+        dateModified: '10/12/2025 9:15:00 AM',
+        setupName: 'IT Shift Change',
+        shiftFromName: 'Standard Regular Shift',
+        shiftToId: '4',
+        shiftToName: 'NSWP',
+        shiftChangeType: 'Single Day',
+        shiftChangeDate: '2025-10-20',
+        shiftReason: 'Need to switch to NSWP shift on October 20 for a medical appointment in the morning.',
+        timeline: [
+            { id: 1, title: '1. Submit Request', description: 'Submitted shift change request', timestamp: 'October 12, 2025 9:15:00 AM', status: 'completed' },
+            { id: 2, title: '2. Department Approval', description: 'Pending approval from Alex Thompson', timestamp: '', status: 'current' },
+            { id: 3, title: '3. HR Approval', description: 'Pending HR review', timestamp: '', status: 'pending' },
+            { id: 4, title: '4. Application Result', description: 'Shift assignment will be updated', timestamp: '', status: 'pending' },
+        ],
+    },
+    {
+        id: 'req-seed-004',
+        type: 'Shift Change',
+        status: 'Submitted',
+        employeeId: 'emp-004',
+        employeeName: 'Mike Brown',
+        employeeRole: 'Payroll Specialist',
+        employeeAvatar: 'MB',
+        departmentName: 'Finance Department',
+        managerName: 'Alex Thompson',
+        submittedAt: '2025-09-01T10:00:00',
+        lastModifiedBy: 'System',
+        dateModified: '9/1/2025 10:00:00 AM',
+        setupName: 'Finance Shift Change',
+        shiftFromName: 'Standard Regular Shift',
+        shiftToId: '2',
+        shiftToName: 'Sales Flexi Group',
+        shiftChangeType: 'Full Cutoff',
+        shiftReason: 'Requesting flexible schedule to accommodate client meetings in different time zones.',
+        expirationDate: '2025-09-05',
+        isExpired: true,
+        timeline: [
+            { id: 1, title: '1. Submit Request', description: 'Submitted shift change request', timestamp: 'September 1, 2025 10:00:00 AM', status: 'completed' },
+            { id: 2, title: '2. Department Approval', description: 'Expired — not approved in time', timestamp: '', status: 'current' },
             { id: 3, title: '3. HR Approval', description: 'Pending HR review', timestamp: '', status: 'pending' },
             { id: 4, title: '4. Application Result', description: 'Shift assignment will be updated', timestamp: '', status: 'pending' },
         ],
@@ -104,11 +165,14 @@ const SEED_REQUESTS: AppRequest[] = [
 // --- Context Interface ---
 interface RequestContextType {
     requests: AppRequest[];
+    shiftRequestApprovalDeadlineDays: number;
+    setShiftRequestApprovalDeadlineDays: (days: number) => void;
     submitLeaveRequest: (req: Omit<AppRequest, 'id' | 'status' | 'timeline' | 'dateModified' | 'lastModifiedBy' | 'setupName'>) => AppRequest;
     submitShiftRequest: (req: Omit<AppRequest, 'id' | 'status' | 'timeline' | 'dateModified' | 'lastModifiedBy' | 'setupName'>) => AppRequest;
     approveRequest: (id: string, approverName: string) => void;
     rejectRequest: (id: string, approverName: string, reason: string) => void;
     getRequestById: (id: string) => AppRequest | undefined;
+    isRequestStillValid: (id: string) => boolean;
 }
 
 const RequestContext = createContext<RequestContextType | undefined>(undefined);
@@ -116,6 +180,7 @@ const RequestContext = createContext<RequestContextType | undefined>(undefined);
 // --- Provider ---
 export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [requests, setRequests] = useState<AppRequest[]>(SEED_REQUESTS);
+    const [shiftRequestApprovalDeadlineDays, setShiftRequestApprovalDeadlineDays] = useState(5);
 
     const now = () => {
         const d = new Date();
@@ -155,6 +220,11 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
             hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
         });
 
+        // Compute expiration date based on deadline days
+        const expDate = new Date();
+        expDate.setDate(expDate.getDate() + shiftRequestApprovalDeadlineDays);
+        const expirationDate = expDate.toISOString().split('T')[0];
+
         const newReq: AppRequest = {
             ...partial,
             id: `req-${Date.now()}`,
@@ -162,6 +232,8 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
             lastModifiedBy: 'System',
             dateModified: now(),
             setupName: 'Employee Shift Change',
+            expirationDate,
+            isExpired: false,
             timeline: [
                 { id: 1, title: '1. Submit Request', description: 'Shift change request submitted by employee', timestamp, status: 'completed' },
                 { id: 2, title: '2. Department Approval', description: `Pending approval from ${partial.managerName}`, timestamp: '', status: 'current' },
@@ -228,8 +300,16 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const getRequestById = (id: string) => requests.find(r => r.id === id);
 
+    const isRequestStillValid = (id: string): boolean => {
+        const req = requests.find(r => r.id === id);
+        if (!req) return false;
+        if (req.isExpired) return false;
+        if (!req.expirationDate) return true;
+        return new Date() <= new Date(req.expirationDate + 'T23:59:59');
+    };
+
     return (
-        <RequestContext.Provider value={{ requests, submitLeaveRequest, submitShiftRequest, approveRequest, rejectRequest, getRequestById }}>
+        <RequestContext.Provider value={{ requests, shiftRequestApprovalDeadlineDays, setShiftRequestApprovalDeadlineDays, submitLeaveRequest, submitShiftRequest, approveRequest, rejectRequest, getRequestById, isRequestStillValid }}>
             {children}
         </RequestContext.Provider>
     );

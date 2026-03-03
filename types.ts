@@ -45,6 +45,19 @@ export interface RoleSetup {
   lastModified: string;
 }
 
+export interface CutoffRange {
+  startDay: number;
+  endDay: number;
+  payDay: number;
+}
+
+export interface MonthOverride {
+  month: number; // 0-11
+  year: number;
+  cutoffs: CutoffRange[];
+  note?: string;
+}
+
 export interface PaySchedule {
   id: string;
   name: string;
@@ -56,6 +69,11 @@ export interface PaySchedule {
   secondCutoff?: number;
   secondPayDate?: number;
   divisorId?: string; // Links to a Divisor
+  // Airbnb-style range fields
+  firstCutoffRange?: CutoffRange;
+  secondCutoffRange?: CutoffRange;
+  monthOverrides?: MonthOverride[];
+  applyToAllMonths?: boolean;
 }
 
 export interface Divisor {
@@ -195,4 +213,14 @@ export interface PayTemplate {
   components: string[]; // IDs of PayComponents
   isTaxExempt?: boolean;
   taxRate?: number;
+}
+
+export interface DailyPayTemplate {
+  id: string;
+  name: string;
+  dailyRate: number;
+  targetType: 'Global' | 'Department' | 'Position';
+  targetId: string | null;
+  additionalComponents: { name: string; amount: number; type: 'earning' | 'deduction' }[];
+  isActive: boolean;
 }

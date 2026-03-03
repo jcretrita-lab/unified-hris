@@ -24,7 +24,7 @@ import { motion } from 'framer-motion';
 const ApprovalDetail: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getRequestById, approveRequest, rejectRequest } = useRequest();
+    const { getRequestById, approveRequest, rejectRequest, isRequestStillValid } = useRequest();
     const { user } = useAuth();
 
     const data = getRequestById(id || '');
@@ -136,6 +136,30 @@ const ApprovalDetail: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Change Type & Effective Date */}
+                {data.shiftChangeType && (
+                    <div className="flex flex-wrap gap-3">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-100 bg-indigo-50">
+                            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Type</span>
+                            <span className="text-sm font-bold text-indigo-700">{data.shiftChangeType}</span>
+                        </div>
+                        {data.shiftChangeType === 'Single Day' && data.shiftChangeDate && (
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-100 bg-amber-50">
+                                <CalendarDays size={14} className="text-amber-600" />
+                                <span className="text-sm font-bold text-amber-700">
+                                    {new Date(data.shiftChangeDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                </span>
+                            </div>
+                        )}
+                        {data.shiftChangeType === 'Full Cutoff' && (
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-100 bg-emerald-50">
+                                <Clock size={14} className="text-emerald-600" />
+                                <span className="text-sm font-bold text-emerald-700">Effective Next Cutoff</span>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="space-y-4">
                     <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
@@ -259,6 +283,33 @@ const ApprovalDetail: React.FC = () => {
                                 {data.status === 'Submitted' && <Clock size={24} className="text-amber-600" />}
                                 <span className="text-2xl font-bold tracking-tight">{data.status}</span>
                             </div>
+
+                            {/* Expiration Badge for Shift Change */}
+                            {data.type === 'Shift Change' && data.expirationDate && (
+                                <div className={`p-4 rounded-xl border-l-4 flex items-center gap-4 shadow-sm ${
+                                    data.isExpired || !isRequestStillValid(data.id)
+                                        ? 'bg-rose-50 border-rose-500 text-rose-900'
+                                        : 'bg-emerald-50 border-emerald-500 text-emerald-900'
+                                }`}>
+                                    {data.isExpired || !isRequestStillValid(data.id) ? (
+                                        <>
+                                            <AlertCircle size={20} className="text-rose-600" />
+                                            <div>
+                                                <span className="text-sm font-bold">Expired</span>
+                                                <p className="text-xs font-medium opacity-75">This request was not approved before the deadline ({new Date(data.expirationDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}).</p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 size={20} className="text-emerald-600" />
+                                            <div>
+                                                <span className="text-sm font-bold">Valid</span>
+                                                <p className="text-xs font-medium opacity-75">Expires on {new Date(data.expirationDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Dynamic Content */}
                             {data.type === 'Shift Change' ? <ShiftComparison /> : (
