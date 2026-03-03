@@ -47,6 +47,7 @@ import NotificationCenter from './pages/NotificationCenter';
 import NotificationDetail from './pages/NotificationDetail';
 import SettingsOverview from './pages/settings/SettingsOverview';
 import AdjustmentSetup from './pages/settings/AdjustmentSetup';
+import EmployeeScheduleSettings from './pages/settings/EmployeeScheduleSettings';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { RequestProvider } from './context/RequestContext';
 
@@ -174,6 +175,7 @@ const AnimatedRoutes = () => {
         <Route path="/settings/employee-fields" element={<ProtectedRoute><PageWrapper><EmployeeFieldsSetup /></PageWrapper></ProtectedRoute>} />
         <Route path="/settings/notifications" element={<ProtectedRoute><PageWrapper><NotificationSettings /></PageWrapper></ProtectedRoute>} />
         <Route path="/settings/adjustments" element={<ProtectedRoute><PageWrapper><AdjustmentSetup /></PageWrapper></ProtectedRoute>} />
+        <Route path="/settings/employee-schedule" element={<ProtectedRoute><PageWrapper><EmployeeScheduleSettings /></PageWrapper></ProtectedRoute>} />
         <Route path="*" element={<PageWrapper><div className="p-8 text-gray-500">Page under development</div></PageWrapper>} />
       </Routes>
     </AnimatePresence>
