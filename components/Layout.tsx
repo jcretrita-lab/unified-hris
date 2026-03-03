@@ -99,6 +99,9 @@ const SEARCHABLE_PATHS: string[] = [
   '/manage/payroll/batch',
   '/manage/pay-schedule',
   '/manage/pay-structure',
+  '/manage/year-end/13th',
+  '/manage/year-end/tax',
+  '/manage/year-end/gov',
   // Monitor
   '/monitor/attendance',
   '/monitor/audit-logs',
@@ -139,7 +142,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
+
   const isSettingsPath = location.pathname.startsWith('/settings');
   const isStandalonePage = location.pathname === '/login' || location.pathname === '/new-organization';
   const employeeBasePath = user?.employeeId ? `/manage/employee/${user.employeeId}` : '/my-profile';
@@ -172,7 +175,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         { icon: <Wallet size={19} />, label: 'Payroll', path: '/manage/payroll' },
         { icon: <FileCheck size={19} />, label: 'Pay Schedule', path: '/manage/pay-schedule' },
         { icon: <LayoutGrid size={19} />, label: 'Pay Structure', path: '/manage/pay-structure' },
-        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end-prep' },
+        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end/13th' },
       ]
     },
     {
@@ -197,7 +200,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         { icon: <Calendar size={19} />, label: 'Schedule', path: '/manage/schedule' },
         { icon: <Wallet size={19} />, label: 'Payroll', path: '/manage/payroll' },
         { icon: <LayoutGrid size={19} />, label: 'Pay Structure', path: '/manage/pay-structure' },
-        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end-prep' },
+        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end/13th' },
       ]
     },
     {
@@ -220,7 +223,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         { icon: <Wallet size={19} />, label: 'Payroll', path: '/manage/payroll' },
         { icon: <FileCheck size={19} />, label: 'Pay Schedule', path: '/manage/pay-schedule' },
         { icon: <LayoutGrid size={19} />, label: 'Pay Structure', path: '/manage/pay-structure' },
-        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end-prep' },
+        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end/13th' },
       ]
     },
     {
@@ -359,37 +362,37 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       ]
     },
     {
-        section: 'Timekeeping',
-        items: [
-          { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
-          { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
-          { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
-          { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
-        ]
-      },
-      {
-        section: 'Pay Structure',
-        items: [
-          { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
-          { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
-          { icon: <Sliders size={19} />, label: 'Adjustments', path: '/settings/adjustments' },
-        ]
-      },
-      {
-        section: 'Organization',
-        items: [
-          { icon: <Building2 size={19} />, label: 'Structure', path: '/settings/structure' },
-          { icon: <BookOpen size={19} />, label: 'Policies & Rules', path: '/settings/policies' },
-          { icon: <ShieldAlert size={19} />, label: 'Approvals', path: '/settings/approvals' },
-        ]
-      },
-      {
-        section: 'System',
-        items: [
-          { icon: <UserCog size={19} />, label: 'User Management', path: '/settings/users' },
-          { icon: <BellRing size={19} />, label: 'Notifications', path: '/settings/notifications' },
-        ]
-      },
+      section: 'Timekeeping',
+      items: [
+        { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
+        { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
+        { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
+        { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
+      ]
+    },
+    {
+      section: 'Pay Structure',
+      items: [
+        { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
+        { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
+        { icon: <Sliders size={19} />, label: 'Adjustments', path: '/settings/adjustments' },
+      ]
+    },
+    {
+      section: 'Organization',
+      items: [
+        { icon: <Building2 size={19} />, label: 'Structure', path: '/settings/structure' },
+        { icon: <BookOpen size={19} />, label: 'Policies & Rules', path: '/settings/policies' },
+        { icon: <ShieldAlert size={19} />, label: 'Approvals', path: '/settings/approvals' },
+      ]
+    },
+    {
+      section: 'System',
+      items: [
+        { icon: <UserCog size={19} />, label: 'User Management', path: '/settings/users' },
+        { icon: <BellRing size={19} />, label: 'Notifications', path: '/settings/notifications' },
+      ]
+    },
   ];
 
   const payrollSettings = [
@@ -405,13 +408,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const attendanceSettings = [
     {
-        section: 'Timekeeping',
-        items: [
-          { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
-          { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
-          { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
-          { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
-        ]
+      section: 'Timekeeping',
+      items: [
+        { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
+        { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
+        { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
+        { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
+      ]
     },
   ];
 
@@ -471,7 +474,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Dynamic Sidebar */}
       <aside className={`border-r border-slate-200 flex flex-col fixed h-full z-20 overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} ${isSettingsPath ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
-        
+
         {/* Brand/Header Section */}
         <div className={`flex items-center gap-3 ${isSidebarOpen ? 'px-6 py-6' : 'py-6 justify-center'}`}>
           <div className={`${isSettingsPath ? 'bg-indigo-500' : 'bg-indigo-600'} p-2 rounded-xl shadow-lg shrink-0`}>
@@ -527,11 +530,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                           : 'justify-center w-10 h-10 mx-auto',
                         (isEmployeeProfileItem ? isEmployeeProfileActive : isActive)
                           ? (isSettingsPath
-                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                              : 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50')
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                            : 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50')
                           : (isSettingsPath
-                              ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'),
+                            ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'),
                       ].join(' ')}
                     >
                       <span className={isItemActiveNow ? (isSettingsPath ? 'text-white' : 'text-indigo-600') : 'text-slate-400'}>
@@ -544,9 +547,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             </div>
           )) : (
-             <div className="p-4 text-center text-slate-500 text-xs italic">
-                {isSidebarOpen ? 'No settings available for this role.' : ''}
-             </div>
+            <div className="p-4 text-center text-slate-500 text-xs italic">
+              {isSidebarOpen ? 'No settings available for this role.' : ''}
+            </div>
           )}
         </nav>
 
@@ -554,14 +557,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {user?.role !== 'Employee' && !isSettingsPath && (
           <div className={`border-t border-slate-100 mt-auto ${isSidebarOpen ? 'p-4' : 'p-3 flex justify-center'}`}>
             {user?.role !== 'Approver' && (
-                <button
-                  onClick={() => navigate('/settings/overview')}
-                  className={`flex items-center gap-3 rounded-xl transition-all text-slate-600 hover:bg-slate-100 hover:shadow-sm ${isSidebarOpen ? 'w-full px-3 py-2.5 text-sm font-bold' : 'p-2.5 justify-center w-10 h-10'}`}
-                  title={isSidebarOpen ? '' : 'System Settings'}
-                >
-                  <Settings size={19} className="text-slate-400 shrink-0" />
-                  {isSidebarOpen && 'System Settings'}
-                </button>
+              <button
+                onClick={() => navigate('/settings/overview')}
+                className={`flex items-center gap-3 rounded-xl transition-all text-slate-600 hover:bg-slate-100 hover:shadow-sm ${isSidebarOpen ? 'w-full px-3 py-2.5 text-sm font-bold' : 'p-2.5 justify-center w-10 h-10'}`}
+                title={isSidebarOpen ? '' : 'System Settings'}
+              >
+                <Settings size={19} className="text-slate-400 shrink-0" />
+                {isSidebarOpen && 'System Settings'}
+              </button>
             )}
           </div>
         )}
@@ -589,9 +592,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Global Search / Command Palette */}
             <div className="relative flex-1 max-w-lg hidden md:block" ref={searchRef}>
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search pages" 
+              <input
+                type="text"
+                placeholder="Search pages"
                 className="w-full bg-slate-50 border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -599,35 +602,35 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               />
               <AnimatePresence>
                 {isSearchFocused && searchQuery && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 max-h-80 overflow-y-auto"
-                    >
-                        {filteredSearchItems.length > 0 ? (
-                            <div className="py-2">
-                                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Search Results</div>
-                                {filteredSearchItems.map(item => (
-                                    <button 
-                                        key={item.id}
-                                        onClick={() => { navigate(item.path); setIsSearchFocused(false); setSearchInput(''); }}
-                                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between group transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${item.type === 'Page' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
-                                                {item.type}
-                                            </span>
-                                            <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{item.title}</span>
-                                        </div>
-                                        <ArrowLeft size={14} className="text-slate-300 opacity-0 group-hover:opacity-100 rotate-180 transition-all" />
-                                    </button>
-                                ))}
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    className="absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 max-h-80 overflow-y-auto"
+                  >
+                    {filteredSearchItems.length > 0 ? (
+                      <div className="py-2">
+                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Search Results</div>
+                        {filteredSearchItems.map(item => (
+                          <button
+                            key={item.id}
+                            onClick={() => { navigate(item.path); setIsSearchFocused(false); setSearchInput(''); }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between group transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${item.type === 'Page' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
+                                {item.type}
+                              </span>
+                              <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{item.title}</span>
                             </div>
+                            <ArrowLeft size={14} className="text-slate-300 opacity-0 group-hover:opacity-100 rotate-180 transition-all" />
+                          </button>
+                        ))}
+                      </div>
                     ) : (
                       <div className="p-4 text-center text-sm text-slate-400">No results found.</div>
                     )}
-                    </motion.div>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>

@@ -26,6 +26,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_YEAR_END_DATA, generate13thMonthHistory } from './payroll/mockData';
 import Modal from '../components/Modal';
 
+const ChevronRight = ({ size, className }: { size: number, className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6" /></svg>
+);
+
 const YearEndBatchTaxPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -48,8 +52,39 @@ const YearEndBatchTaxPage: React.FC = () => {
     // Get the current history for the active employee, prioritize overrides
     const monthlyHistory = useMemo(() => {
         if (!activeEmployee) return [];
-        return ledgerStates[activeId] || generate13thMonthHistory(activeEmployee.ytdGross, activeEmployee.id);
-    }, [activeEmployee, activeId, ledgerStates]);
+        const base = ledgerStates[activeId] || generate13thMonthHistory(activeEmployee.ytdGross, activeId, stage === 'assumed');
+
+        // Enrich with taxableIncome if not present or needs refresh
+        return base.map(m => {
+            const p1 = { ...m.p1 };
+            const p2 = { ...m.p2 };
+            const employeeCustomRows = customRows[activeId] || [];
+
+            const calcTaxable = (p: any) =>
+                (p.basicPay || 0) +
+                (p.otherTaxable || 0) +
+                (p.otherEarnings || 0) +
+                (p.restDayOt || 0) +
+                (p.nd2 || 0) +
+                (p.bonus || 0) +
+                (p.salaryDifferential || 0) +
+                employeeCustomRows.filter(r => !r.isDeduction).reduce((sum, r) => sum + (p[r.key] || 0), 0) -
+                (p.sss || 0) -
+                (p.philhealth || 0) -
+                (p.pagibig || 0) -
+                employeeCustomRows.filter(r => r.isDeduction && r.key !== 'tax').reduce((sum, r) => sum + (p[r.key] || 0), 0);
+
+            const p1Taxable = calcTaxable(p1);
+            const p2Taxable = calcTaxable(p2);
+
+            return {
+                ...m,
+                p1: { ...p1, taxableIncome: p1Taxable },
+                p2: { ...p2, taxableIncome: p2Taxable },
+                taxableIncome: p1Taxable + p2Taxable
+            };
+        });
+    }, [activeEmployee, activeId, ledgerStates, customRows]);
 
     const [tempHistory, setTempHistory] = useState<any[]>([]);
 
@@ -72,6 +107,10 @@ const YearEndBatchTaxPage: React.FC = () => {
         monthData[period].taxableIncome =
             (p.basicPay || 0) +
             (p.otherTaxable || 0) +
+            (p.otherEarnings || 0) +
+            (p.restDayOt || 0) +
+            (p.nd2 || 0) +
+            (p.bonus || 0) +
             (p.salaryDifferential || 0) +
             employeeCustomRows.filter(r => !r.isDeduction).reduce((sum, r) => sum + (p[r.key] || 0), 0) -
             (p.sss || 0) -
@@ -128,7 +167,8 @@ const YearEndBatchTaxPage: React.FC = () => {
     };
 
     const formatCurrency = (amount: number) => {
-        return `₱${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const val = amount || 0;
+        return `₱${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
     const handleComplete = (id: string) => {
@@ -139,7 +179,7 @@ const YearEndBatchTaxPage: React.FC = () => {
             setActiveId(employees[nextIndex].id);
         } else {
             alert(`Batch Tax Annualization (${stage.toUpperCase()}) Completed!`);
-            navigate('/manage/year-end-prep');
+            navigate('/manage/year-end/tax');
         }
     };
 
@@ -150,6 +190,9 @@ const YearEndBatchTaxPage: React.FC = () => {
             name: 'Taxable Income Details',
             rows: [
                 { label: 'Basic Salary', key: 'basicPay', color: 'text-slate-900', isDeduction: false },
+                { label: 'Overtime & Rest Day', key: 'otherEarnings', color: 'text-slate-600', isDeduction: false },
+                { label: 'Night Differential', key: 'nd2', color: 'text-slate-600', isDeduction: false },
+                { label: 'Bonuses & Incentives', key: 'bonus', color: 'text-emerald-600', isDeduction: false },
                 { label: 'Other Taxable Income', key: 'otherTaxable', color: 'text-slate-600', isDeduction: false },
                 { label: 'Salary Differential', key: 'salaryDifferential', color: 'text-indigo-600', isDeduction: false },
                 ...(customRows[activeId!]?.filter(r => !r.isDeduction) || [])
@@ -167,12 +210,32 @@ const YearEndBatchTaxPage: React.FC = () => {
         }
     ];
 
-    const formatVal = (v: number, isDeduction?: boolean) => {
-        if (v === 0) return '-';
+    const formatVal = (v: any, isDeduction?: boolean) => {
+        if (!v || v === 0) return '-';
         return `${isDeduction ? '-' : ''}${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
-    if (!activeEmployee) return null;
+    if (!activeEmployee) {
+        return (
+            <div className="fixed inset-0 bg-slate-50 flex items-center justify-center z-[110]">
+                <div className="text-center p-12 bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md">
+                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <Calculator size={32} className="text-slate-400" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Initializing Workspace...</h3>
+                    <p className="text-sm text-slate-500 font-medium mt-3 leading-relaxed">
+                        We're setting up the tax batch environment. If this takes longer than expected, the employee record might be missing.
+                    </p>
+                    <button
+                        onClick={() => navigate('/manage/year-end/tax')}
+                        className="mt-8 w-full py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                    >
+                        Return to Preparation
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const displayHistory = isEditingLedger ? tempHistory : monthlyHistory;
     const totalTaxableIncome = displayHistory.reduce((acc, curr: any) => acc + (curr.taxableIncome || 0), 0);
@@ -190,7 +253,7 @@ const YearEndBatchTaxPage: React.FC = () => {
             <div className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm shrink-0 z-30">
                 <div className="flex items-center gap-6">
                     <button
-                        onClick={() => navigate('/manage/year-end-prep')}
+                        onClick={() => navigate('/manage/year-end/tax')}
                         className="p-3 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200 group"
                     >
                         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -221,7 +284,7 @@ const YearEndBatchTaxPage: React.FC = () => {
                             <span className="text-xs font-black text-slate-700">{processedIds.size} / {employees.length}</span>
                         </div>
                     </div>
-                    <button onClick={() => navigate('/manage/year-end-prep')} className="bg-rose-50 text-rose-600 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] hover:bg-rose-600 hover:text-white transition-all border border-rose-100">Close & Save Draft</button>
+                    <button onClick={() => navigate('/manage/year-end/tax')} className="bg-rose-50 text-rose-600 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] hover:bg-rose-600 hover:text-white transition-all border border-rose-100">Close & Save Draft</button>
                 </div>
             </div>
 
@@ -616,7 +679,3 @@ const YearEndBatchTaxPage: React.FC = () => {
 };
 
 export default YearEndBatchTaxPage;
-
-const ChevronRight = ({ size, className }: { size: number, className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6" /></svg>
-);

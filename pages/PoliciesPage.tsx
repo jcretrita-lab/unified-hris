@@ -220,25 +220,80 @@ const INITIAL_STATE: PolicyState = {
 // Leave Monetization Types
 interface LeaveConfig {
     id: string;
+    name: string;
+    code: string;
+    isStatutory: boolean;
     enabled: boolean;
-    maxDays: number;
-    rate: number;
-    basis: 'Daily Rate' | 'Monthly Rate';
+    days: number;
+    icon: any;
+    color: string;
+    citation: string;
+    // Monetization
+    monetizationEnabled: boolean;
+    monetizationMaxDays: number;
+    monetizationRate: number;
+    monetizationBasis: 'Daily Rate' | 'Monthly Rate';
+    // Detailed Setup
+    eligibility: string[];
+    accrualPolicy: 'Immediate' | 'Monthly' | 'Yearly' | 'Upon regularization';
+    maxFiledPerMonth: number;
+    expiration: 'Never' | 'Every Year-End' | 'After 12 Months';
+    maxAccrued: number;
+    isForfeited: boolean;
 }
 
-const LEAVE_TYPES_LIST = [
-    { id: 'sil', name: 'Service Incentive Leave', code: 'SIL', isStatutory: true },
-    { id: 'vl', name: 'Vacation Leave', code: 'VL', isStatutory: false },
-    { id: 'sl', name: 'Sick Leave', code: 'SL', isStatutory: false },
-    { id: 'el', name: 'Emergency Leave', code: 'EL', isStatutory: false },
+const LEAVE_TYPES_LIST: LeaveConfig[] = [
+    {
+        id: 'sil', name: 'Service Incentive Leave', code: 'SIL', isStatutory: true, enabled: true, days: 5, icon: Calendar, color: 'text-slate-400', citation: 'Art. 95',
+        monetizationEnabled: true, monetizationMaxDays: 5, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Regular'], accrualPolicy: 'Yearly', maxFiledPerMonth: 5, expiration: 'Never', maxAccrued: 15, isForfeited: false
+    },
+    {
+        id: 'vl', name: 'Vacation Leave', code: 'VL', isStatutory: false, enabled: true, days: 10, icon: Gift, color: 'text-sky-400', citation: 'Company Policy',
+        monetizationEnabled: true, monetizationMaxDays: 10, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Regular', 'Full-time'], accrualPolicy: 'Monthly', maxFiledPerMonth: 10, expiration: 'Every Year-End', maxAccrued: 30, isForfeited: true
+    },
+    {
+        id: 'sl', name: 'Sick Leave', code: 'SL', isStatutory: false, enabled: true, days: 12, icon: Stethoscope, color: 'text-emerald-400', citation: 'Company Policy',
+        monetizationEnabled: false, monetizationMaxDays: 0, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Regular', 'Full-time', 'Probationary'], accrualPolicy: 'Monthly', maxFiledPerMonth: 15, expiration: 'Every Year-End', maxAccrued: 60, isForfeited: true
+    },
+    {
+        id: 'el', name: 'Emergency Leave', code: 'EL', isStatutory: false, enabled: true, days: 3, icon: AlertCircle, color: 'text-rose-400', citation: 'Company Policy',
+        monetizationEnabled: false, monetizationMaxDays: 0, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Regular'], accrualPolicy: 'Immediate', maxFiledPerMonth: 3, expiration: 'Every Year-End', maxAccrued: 3, isForfeited: true
+    },
+    {
+        id: 'maternity', name: 'Expanded Maternity', code: 'ML', isStatutory: true, enabled: true, days: 105, icon: Baby, color: 'text-pink-400', citation: 'RA 11210',
+        monetizationEnabled: false, monetizationMaxDays: 0, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Female', 'All status'], accrualPolicy: 'Immediate', maxFiledPerMonth: 105, expiration: 'Never', maxAccrued: 105, isForfeited: false
+    },
+    {
+        id: 'paternity', name: 'Paternity Leave', code: 'PL', isStatutory: true, enabled: true, days: 7, icon: Baby, color: 'text-blue-400', citation: 'RA 8187',
+        monetizationEnabled: false, monetizationMaxDays: 0, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Male', 'Married'], accrualPolicy: 'Immediate', maxFiledPerMonth: 7, expiration: 'Never', maxAccrued: 7, isForfeited: false
+    },
+    {
+        id: 'solo_parent', name: 'Solo Parent Leave', code: 'SPL', isStatutory: true, enabled: true, days: 7, icon: User, color: 'text-amber-400', citation: 'RA 8972',
+        monetizationEnabled: false, monetizationMaxDays: 0, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Solo Parent'], accrualPolicy: 'Yearly', maxFiledPerMonth: 7, expiration: 'Every Year-End', maxAccrued: 7, isForfeited: true
+    },
+    {
+        id: 'vawc', name: 'VAWC Leave', code: 'VAWC', isStatutory: true, enabled: true, days: 10, icon: ShieldCheck, color: 'text-purple-400', citation: 'RA 9262',
+        monetizationEnabled: false, monetizationMaxDays: 0, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Female'], accrualPolicy: 'Immediate', maxFiledPerMonth: 10, expiration: 'Never', maxAccrued: 10, isForfeited: false
+    },
+    {
+        id: 'magna_carta', name: 'Magna Carta (Surgery)', code: 'MCW', isStatutory: true, enabled: true, days: 60, icon: Heart, color: 'text-rose-500', citation: 'RA 9710',
+        monetizationEnabled: false, monetizationMaxDays: 0, monetizationRate: 100, monetizationBasis: 'Daily Rate',
+        eligibility: ['Female'], accrualPolicy: 'Immediate', maxFiledPerMonth: 60, expiration: 'Never', maxAccrued: 60, isForfeited: false
+    }
 ];
 
-const INITIAL_LEAVE_CONFIGS: Record<string, LeaveConfig> = {
-    'sil': { id: 'sil', enabled: true, maxDays: 5, rate: 100, basis: 'Daily Rate' },
-    'vl': { id: 'vl', enabled: true, maxDays: 10, rate: 100, basis: 'Daily Rate' },
-    'sl': { id: 'sl', enabled: false, maxDays: 0, rate: 100, basis: 'Daily Rate' },
-    'el': { id: 'el', enabled: false, maxDays: 0, rate: 100, basis: 'Daily Rate' },
-};
+const INITIAL_LEAVE_CONFIGS: Record<string, LeaveConfig> = LEAVE_TYPES_LIST.reduce((acc, current) => ({
+    ...acc,
+    [current.id]: current
+}), {});
 
 const PoliciesPage: React.FC = () => {
     const { shiftRequestApprovalDeadlineDays, setShiftRequestApprovalDeadlineDays } = useRequest();
@@ -281,6 +336,23 @@ const PoliciesPage: React.FC = () => {
             ...prev,
             [id]: { ...prev[id], [field]: value }
         }));
+
+        // Sync with legacy policies state for statutory leaves if days changed
+        if (field === 'days') {
+            const syncMap: Record<string, keyof PolicyState> = {
+                'sil': 'serviceIncentiveLeave',
+                'maternity': 'maternityLeave',
+                'paternity': 'paternityLeave',
+                'solo_parent': 'soloParentLeave',
+                'vawc': 'vawcLeave',
+                'magna_carta': 'magnaCartaLeave'
+            };
+
+            if (syncMap[id]) {
+                setPolicies(prev => ({ ...prev, [syncMap[id]]: value }));
+            }
+        }
+
         setHasChanges(true);
     };
 
@@ -711,18 +783,16 @@ const PoliciesPage: React.FC = () => {
                                                 <button
                                                     key={opt.value}
                                                     onClick={() => updatePolicy('workScheduleType', opt.value)}
-                                                    className={`p-5 rounded-2xl border-2 text-left transition-all ${
-                                                        policies.workScheduleType === opt.value
-                                                            ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
-                                                            : 'border-slate-200 bg-white hover:border-slate-300'
-                                                    }`}
+                                                    className={`p-5 rounded-2xl border-2 text-left transition-all ${policies.workScheduleType === opt.value
+                                                        ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
+                                                        : 'border-slate-200 bg-white hover:border-slate-300'
+                                                        }`}
                                                 >
                                                     <div className="flex items-center gap-3 mb-2">
-                                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                                            policies.workScheduleType === opt.value
-                                                                ? 'border-indigo-600 bg-indigo-600'
-                                                                : 'border-slate-300'
-                                                        }`}>
+                                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${policies.workScheduleType === opt.value
+                                                            ? 'border-indigo-600 bg-indigo-600'
+                                                            : 'border-slate-300'
+                                                            }`}>
                                                             {policies.workScheduleType === opt.value && <Check size={12} className="text-white" />}
                                                         </div>
                                                         <span className={`text-sm font-bold ${policies.workScheduleType === opt.value ? 'text-indigo-700' : 'text-slate-700'}`}>{opt.label}</span>
@@ -1602,248 +1672,410 @@ const PoliciesPage: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* --- SPECIAL LAWS & LEAVE MONETIZATION --- */}
+                            {/* --- MASTER LEAVE SETUP --- */}
                             {primaryTab === 'Government' && activeTab === 'Special' && (
                                 <div className="space-y-8">
                                     <SectionTitle
-                                        icon={Heart}
-                                        title="Statutory Leave Benefits"
-                                        description="Mandatory leave credits prescribed by Special Laws."
-                                        citation="Various RAs"
+                                        icon={BookMarked}
+                                        title="Master Leave Setup"
+                                        description="Unified configuration for statutory and company leave benefits, including monetization, eligibility, and accrual policies."
+                                        citation="Labor Code / Special Laws"
                                     />
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {/* SIL */}
-                                        <div className="p-5 border border-slate-200 rounded-2xl bg-white hover:shadow-md transition-shadow">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Calendar size={16} className="text-slate-400" />
-                                                <span className="text-sm font-bold text-slate-800">Service Incentive Leave</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <input type="number" className="w-16 p-1 border-b border-slate-300 font-bold text-lg text-center outline-none focus:border-indigo-500 bg-white" value={policies.serviceIncentiveLeave} onChange={(e) => updatePolicy('serviceIncentiveLeave', Number(e.target.value))} />
-                                                <span className="text-xs text-slate-500 font-bold">Days</span>
-                                            </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.serviceIncentiveLeave, LEGAL_STANDARDS.SIL_DAYS)} citation="Art. 95" />
-                                        </div>
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-[700px]">
+                                        {/* Left Panel: Leave Picker */}
+                                        <div className="lg:col-span-4 space-y-4">
+                                            <div className="bg-slate-900 rounded-[2.5rem] p-6 shadow-xl relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 p-8 opacity-10">
+                                                    <Calendar size={120} className="text-white" />
+                                                </div>
+                                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 relative z-10">Select Leave Type</h4>
 
-                                        {/* Maternity */}
-                                        <div className="p-5 border border-slate-200 rounded-2xl bg-white hover:shadow-md transition-shadow">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Baby size={16} className="text-pink-400" />
-                                                <span className="text-sm font-bold text-slate-800">Expanded Maternity</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <input type="number" className="w-16 p-1 border-b border-slate-300 font-bold text-lg text-center outline-none focus:border-indigo-500 bg-white" value={policies.maternityLeave} onChange={(e) => updatePolicy('maternityLeave', Number(e.target.value))} />
-                                                <span className="text-xs text-slate-500 font-bold">Days (Paid)</span>
-                                            </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.maternityLeave, LEGAL_STANDARDS.MATERNITY_DAYS)} citation="RA 11210" />
-                                        </div>
-
-                                        {/* Paternity */}
-                                        <div className="p-5 border border-slate-200 rounded-2xl bg-white hover:shadow-md transition-shadow">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Baby size={16} className="text-blue-400" />
-                                                <span className="text-sm font-bold text-slate-800">Paternity Leave</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <input type="number" className="w-16 p-1 border-b border-slate-300 font-bold text-lg text-center outline-none focus:border-indigo-500 bg-white" value={policies.paternityLeave} onChange={(e) => updatePolicy('paternityLeave', Number(e.target.value))} />
-                                                <span className="text-xs text-slate-500 font-bold">Days (Paid)</span>
-                                            </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.paternityLeave, LEGAL_STANDARDS.PATERNITY_DAYS)} citation="RA 8187" />
-                                        </div>
-
-                                        {/* Solo Parent */}
-                                        <div className="p-5 border border-slate-200 rounded-2xl bg-white hover:shadow-md transition-shadow">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <User size={16} className="text-amber-400" />
-                                                <span className="text-sm font-bold text-slate-800">Solo Parent Leave</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <input type="number" className="w-16 p-1 border-b border-slate-300 font-bold text-lg text-center outline-none focus:border-indigo-500 bg-white" value={policies.soloParentLeave} onChange={(e) => updatePolicy('soloParentLeave', Number(e.target.value))} />
-                                                <span className="text-xs text-slate-500 font-bold">Days (Paid)</span>
-                                            </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.soloParentLeave, LEGAL_STANDARDS.SOLO_PARENT_DAYS)} citation="RA 8972" />
-                                        </div>
-
-                                        {/* VAWC */}
-                                        <div className="p-5 border border-slate-200 rounded-2xl bg-white hover:shadow-md transition-shadow">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <ShieldCheck size={16} className="text-purple-400" />
-                                                <span className="text-sm font-bold text-slate-800">VAWC Leave</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <input type="number" className="w-16 p-1 border-b border-slate-300 font-bold text-lg text-center outline-none focus:border-indigo-500 bg-white" value={policies.vawcLeave} onChange={(e) => updatePolicy('vawcLeave', Number(e.target.value))} />
-                                                <span className="text-xs text-slate-500 font-bold">Days (Paid)</span>
-                                            </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.vawcLeave, LEGAL_STANDARDS.VAWC_DAYS)} citation="RA 9262" />
-                                        </div>
-
-                                        {/* Magna Carta Women */}
-                                        <div className="p-5 border border-slate-200 rounded-2xl bg-white hover:shadow-md transition-shadow">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Heart size={16} className="text-rose-400" />
-                                                <span className="text-sm font-bold text-slate-800">Magna Carta (Surgery)</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <input type="number" className="w-16 p-1 border-b border-slate-300 font-bold text-lg text-center outline-none focus:border-indigo-500 bg-white" value={policies.magnaCartaLeave} onChange={(e) => updatePolicy('magnaCartaLeave', Number(e.target.value))} />
-                                                <span className="text-xs text-slate-500 font-bold">Days (Paid)</span>
-                                            </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.magnaCartaLeave, LEGAL_STANDARDS.MAGNA_CARTA_WOMEN_DAYS)} citation="RA 9710" />
-                                        </div>
-                                    </div>
-
-                                    <div className="w-full h-px bg-slate-100 my-8"></div>
-
-                                    <SectionTitle
-                                        icon={DollarSign}
-                                        title="Leave Monetization Formula"
-                                        description="Configuration for converting unused leave credits to cash value per leave type."
-                                        citation="Art. 95 / RR 1-2015"
-                                    />
-
-                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[500px]">
-                                        {/* Left Panel: Leave Type List */}
-                                        <div className="lg:col-span-4 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
-                                            <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Select Leave Type</h4>
-                                            </div>
-                                            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                                                {LEAVE_TYPES_LIST.map(leave => (
-                                                    <button
-                                                        key={leave.id}
-                                                        onClick={() => setSelectedLeaveId(leave.id)}
-                                                        className={`w-full text-left p-3 rounded-xl border flex items-center justify-between transition-all group ${selectedLeaveId === leave.id
-                                                            ? 'bg-indigo-50 border-indigo-200 shadow-sm'
-                                                            : 'bg-white border-transparent hover:bg-slate-50'
-                                                            }`}
-                                                    >
-                                                        <div>
-                                                            <div className={`text-sm font-bold ${selectedLeaveId === leave.id ? 'text-indigo-900' : 'text-slate-700'}`}>{leave.name}</div>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{leave.code}</span>
-                                                                {leave.isStatutory && <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">Statutory</span>}
+                                                <div className="space-y-2 relative z-10">
+                                                    {LEAVE_TYPES_LIST.map(leave => (
+                                                        <button
+                                                            key={leave.id}
+                                                            onClick={() => setSelectedLeaveId(leave.id)}
+                                                            className={`w-full text-left p-4 rounded-2xl flex items-center justify-between transition-all group ${selectedLeaveId === leave.id
+                                                                ? 'bg-white text-slate-900 shadow-lg'
+                                                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                                                }`}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`p-2 rounded-xl ${selectedLeaveId === leave.id ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700'}`}>
+                                                                    <leave.icon size={18} />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-sm font-black text-inherit">{leave.name}</div>
+                                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${selectedLeaveId === leave.id ? 'bg-slate-100 text-slate-600' : 'bg-slate-800 text-slate-500'}`}>
+                                                                            {leave.code}
+                                                                        </span>
+                                                                        {leave.isStatutory && <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">Statutory</span>}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        {leaveSettings[leave.id].enabled ? (
-                                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></div>
-                                                        ) : (
-                                                            <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                                                        )}
-                                                    </button>
-                                                ))}
+                                                            <ArrowRight size={16} className={`transition-transform ${selectedLeaveId === leave.id ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0'}`} />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-[2rem]">
+                                                <h5 className="text-xs font-black text-indigo-900 uppercase tracking-widest mb-2">Policy Note</h5>
+                                                <p className="text-[11px] text-indigo-700/70 leading-relaxed font-medium">
+                                                    Standardizing these settings ensures consistency across automated payroll and leave management components.
+                                                </p>
                                             </div>
                                         </div>
 
                                         {/* Right Panel: Configuration */}
-                                        <div className="lg:col-span-8 space-y-6">
-                                            <div className="bg-white border border-slate-200 rounded-2xl p-6 h-full flex flex-col relative overflow-hidden">
-                                                <div className="flex justify-between items-center mb-6 z-10 relative">
-                                                    <div>
-                                                        <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                                                            <ArrowLeftRight size={16} className="text-indigo-600" />
-                                                            Configuring: <span className="text-indigo-700 underline decoration-indigo-200 underline-offset-4">{LEAVE_TYPES_LIST.find(l => l.id === selectedLeaveId)?.name}</span>
-                                                        </h4>
-                                                    </div>
-                                                    <label className={`flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg border transition-all ${currentLeaveConfig.enabled ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
-                                                        <span className={`text-xs font-bold ${currentLeaveConfig.enabled ? 'text-emerald-700' : 'text-slate-500'}`}>
-                                                            {currentLeaveConfig.enabled ? 'Monetization Active' : 'Monetization Disabled'}
-                                                        </span>
-                                                        <div className="relative">
-                                                            <input
-                                                                type="checkbox"
-                                                                className="sr-only"
-                                                                checked={currentLeaveConfig.enabled}
-                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'enabled', e.target.checked)}
-                                                            />
-                                                            <div className={`w-8 h-4 rounded-full shadow-inner transition-colors ${currentLeaveConfig.enabled ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
-                                                            <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${currentLeaveConfig.enabled ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                                        <div className="lg:col-span-8">
+                                            <div className="bg-white border-2 border-slate-100 rounded-[3.5rem] p-16 shadow-sm min-h-full">
+                                                {/* Panel Header */}
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-10 mb-16 pb-12 border-b-2 border-slate-50">
+                                                    <div className="flex items-center gap-8 text-left">
+                                                        <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center text-white shadow-2xl ${currentLeaveConfig.color.replace('text', 'bg')} transform -rotate-3 hover:rotate-0 transition-transform duration-500`}>
+                                                            <currentLeaveConfig.icon size={44} />
                                                         </div>
-                                                    </label>
+                                                        <div>
+                                                            <div className="flex items-center gap-5">
+                                                                <h3 className="text-3xl font-black text-slate-900 tracking-tight">{currentLeaveConfig.name}</h3>
+                                                                <span className="text-[11px] font-black bg-slate-100 text-slate-500 px-5 py-2 rounded-full uppercase tracking-[0.25em] border border-slate-200">{currentLeaveConfig.code}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 mt-3">
+                                                                <div className="p-1.5 bg-slate-100 rounded-lg">
+                                                                    <BookMarked size={16} className="text-slate-400" />
+                                                                </div>
+                                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em]">{currentLeaveConfig.citation}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-8 bg-slate-50 px-8 py-5 rounded-[2rem] border border-slate-100">
+                                                        <div className="text-right">
+                                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Benefit Status</div>
+                                                            <div className={`text-xs font-black tracking-[0.2em] ${currentLeaveConfig.enabled ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                                                {currentLeaveConfig.enabled ? 'ACTIVE' : 'DISABLED'}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => updateLeaveConfig(selectedLeaveId, 'enabled', !currentLeaveConfig.enabled)}
+                                                            className={`w-16 h-9 rounded-full relative transition-all duration-500 ${currentLeaveConfig.enabled ? 'bg-emerald-500 shadow-xl shadow-emerald-100' : 'bg-slate-300'}`}
+                                                        >
+                                                            <div className={`absolute top-1 w-7 h-7 bg-white rounded-full shadow-md transition-all duration-500 ease-spring ${currentLeaveConfig.enabled ? 'left-8' : 'left-1'}`} />
+                                                        </button>
+                                                    </div>
                                                 </div>
 
-                                                <div className={`space-y-6 transition-opacity duration-300 ${currentLeaveConfig.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Computation Basis</label>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <button
-                                                                onClick={() => updateLeaveConfig(selectedLeaveId, 'basis', 'Daily Rate')}
-                                                                className={`py-3 rounded-xl text-xs font-bold border transition-all ${currentLeaveConfig.basis === 'Daily Rate' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                                                            >
-                                                                Daily Rate
-                                                            </button>
-                                                            <button
-                                                                onClick={() => updateLeaveConfig(selectedLeaveId, 'basis', 'Monthly Rate')}
-                                                                className={`py-3 rounded-xl text-xs font-bold border transition-all ${currentLeaveConfig.basis === 'Monthly Rate' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                                                            >
-                                                                Monthly Rate
-                                                            </button>
-                                                        </div>
-                                                    </div>
+                                                <div className={`space-y-20 transition-all duration-700 ${currentLeaveConfig.enabled ? 'opacity-100 scale-100' : 'opacity-20 scale-[0.98] pointer-events-none'}`}>
 
-                                                    <div className="grid grid-cols-2 gap-6">
-                                                        <div>
-                                                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Max Convertible Days</label>
-                                                            <div className="relative">
-                                                                <input
-                                                                    type="number"
-                                                                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-                                                                    value={currentLeaveConfig.maxDays}
-                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxDays', Number(e.target.value))}
-                                                                />
-                                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Days</span>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Cash Value Rate</label>
-                                                            <div className="relative">
-                                                                <input
-                                                                    type="number"
-                                                                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-                                                                    value={currentLeaveConfig.rate}
-                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'rate', Number(e.target.value))}
-                                                                />
-                                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">%</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Preview Card */}
-                                                    <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl p-6 text-white relative overflow-hidden mt-4">
-                                                        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                                                            <Calculator size={80} />
-                                                        </div>
-                                                        <div className="relative z-10 flex justify-between items-end">
-                                                            <div>
-                                                                <div className="text-xs text-indigo-300 font-bold mb-1">Preview Calculation</div>
-                                                                <div className="text-[10px] text-indigo-200">
-                                                                    Based on Daily Rate: ₱1,000
+                                                    {/* Row 1: Credits & Accrual */}
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 text-left">
+                                                        <div className="space-y-10">
+                                                            <div className="flex items-center gap-4 mb-2">
+                                                                <div className="p-2.5 bg-indigo-50 rounded-2xl shadow-sm">
+                                                                    <CalendarCheck size={22} className="text-indigo-600" />
                                                                 </div>
+                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Allowance & Accrual</h4>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <div className="text-2xl font-bold text-white tracking-tight">
-                                                                    ₱ {(1000 * (currentLeaveConfig.rate / 100) * currentLeaveConfig.maxDays).toLocaleString()}
-                                                                </div>
-                                                                <div className="text-[10px] text-indigo-400 mt-1">Total Conversion Value</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
 
-                                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mt-4">
-                                                        <div className="flex justify-between items-start">
-                                                            <div className="flex gap-2">
-                                                                <Info size={14} className="text-slate-400 mt-0.5" />
+                                                            <div className="bg-slate-50/50 rounded-[3rem] p-12 space-y-10 border border-slate-100 shadow-inner">
                                                                 <div>
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Tax Exemption Note</span>
-                                                                    <p className="text-[10px] text-slate-500 leading-relaxed">
-                                                                        Converted leave credits exceeding <strong>{policies.leaveConversionTaxExemptDays} days</strong> are subject to withholding tax unless total benefits are below the PHP 90,000 threshold.
-                                                                    </p>
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Annual Leave Credits</label>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-32 p-6 bg-white border-2 border-slate-200 rounded-[1.5rem] text-4xl font-black text-slate-900 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-50 outline-none transition-all shadow-sm"
+                                                                            value={currentLeaveConfig.days}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'days', Number(e.target.value))}
+                                                                        />
+                                                                        <div>
+                                                                            <div className="text-sm font-black text-slate-900 uppercase tracking-widest leading-none">Days / Year</div>
+                                                                            <div className="text-[11px] font-bold text-slate-400 mt-2 tracking-tight">Main statutory benefit</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Accrual Strategy</label>
+                                                                    <div className="grid grid-cols-1 gap-3">
+                                                                        {['Immediate', 'Monthly', 'Yearly', 'Upon regularization'].map(policy => (
+                                                                            <button
+                                                                                key={policy}
+                                                                                onClick={() => updateLeaveConfig(selectedLeaveId, 'accrualPolicy', policy)}
+                                                                                className={`p-6 rounded-2xl border-2 text-xs font-black text-left transition-all ${currentLeaveConfig.accrualPolicy === policy ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xl shadow-indigo-100 translate-x-2' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                                                                            >
+                                                                                <div className="flex items-center justify-between">
+                                                                                    {policy}
+                                                                                    {currentLeaveConfig.accrualPolicy === policy && (
+                                                                                        <div className="bg-white/20 p-1 rounded-full">
+                                                                                            <Check size={16} className="text-white" />
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <div className="text-right shrink-0 ml-4">
-                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Legal Basis</span>
-                                                                <span className="text-xs text-indigo-600 font-medium">RR 1-2015</span>
+                                                        </div>
+
+                                                        <div className="space-y-10">
+                                                            <div className="flex items-center gap-4 mb-2">
+                                                                <div className="p-2.5 bg-amber-50 rounded-2xl shadow-sm">
+                                                                    <History size={22} className="text-amber-600" />
+                                                                </div>
+                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Retention & Limits</h4>
+                                                            </div>
+
+                                                            <div className="bg-slate-50/50 rounded-[3rem] p-12 space-y-12 border border-slate-100 shadow-inner">
+                                                                <div>
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-5">Accumulation Cap</label>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-32 p-6 bg-white border-2 border-slate-200 rounded-[1.5rem] text-4xl font-black text-slate-900 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-50 outline-none transition-all shadow-sm"
+                                                                            value={currentLeaveConfig.maxAccrued}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxAccrued', Number(e.target.value))}
+                                                                        />
+                                                                        <div>
+                                                                            <div className="text-sm font-black text-slate-900 uppercase tracking-widest leading-none">Max Days</div>
+                                                                            <div className="text-[11px] font-bold text-slate-400 mt-2 tracking-tight">Total audit accumulation</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="space-y-6">
+                                                                    <div className="relative group">
+                                                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 pr-2">Expiration Frequency</label>
+                                                                        <select
+                                                                            className="w-full p-6 bg-white border-2 border-slate-200 rounded-[1.5rem] font-black text-slate-800 focus:border-indigo-500 outline-none appearance-none cursor-pointer shadow-sm transition-all"
+                                                                            value={currentLeaveConfig.expiration}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'expiration', e.target.value)}
+                                                                        >
+                                                                            <option>Never</option>
+                                                                            <option>Every Year-End</option>
+                                                                            <option>After 12 Months</option>
+                                                                        </select>
+                                                                        <div className="absolute right-6 bottom-6 pointer-events-none text-slate-400">
+                                                                            <ArrowRight size={18} className="rotate-90" />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <button
+                                                                        onClick={() => updateLeaveConfig(selectedLeaveId, 'isForfeited', !currentLeaveConfig.isForfeited)}
+                                                                        className={`w-full p-8 rounded-[1.5rem] border-2 flex items-center justify-between transition-all group ${currentLeaveConfig.isForfeited ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-md translate-y-[-2px]' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                                                                    >
+                                                                        <div className="flex items-center gap-5">
+                                                                            <div className={`p-3 rounded-2xl transition-colors ${currentLeaveConfig.isForfeited ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
+                                                                                {currentLeaveConfig.isForfeited ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                                                                            </div>
+                                                                            <div className="text-left">
+                                                                                <span className="text-xs font-black uppercase tracking-[0.15em] block">Unused Credits</span>
+                                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 leading-none">Auto-Forfeiture Policy</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <span className={`text-[10px] font-black uppercase tracking-widest px-5 py-2 rounded-full ${currentLeaveConfig.isForfeited ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                                                            {currentLeaveConfig.isForfeited ? 'FORFEITED' : 'RETAINED'}
+                                                                        </span>
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                    </div>
+
+                                                    {/* Row 2: Eligibility & Filing */}
+                                                    <div className="border-t-2 border-slate-50 pt-20">
+                                                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20 text-left">
+                                                            <div className="lg:col-span-8 space-y-10">
+                                                                <div className="flex items-center gap-4 mb-2">
+                                                                    <div className="p-2.5 bg-purple-50 rounded-2xl shadow-sm">
+                                                                        <Users size={22} className="text-purple-600" />
+                                                                    </div>
+                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Eligibility Matrix</h4>
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-4 p-2 relative">
+                                                                    {['Regular', 'Probationary', 'Full-time', 'Part-time', 'Male', 'Female', 'Solo Parent', 'Married'].map(tag => (
+                                                                        <button
+                                                                            key={tag}
+                                                                            onClick={() => {
+                                                                                const exists = currentLeaveConfig.eligibility.includes(tag);
+                                                                                const newVal = exists
+                                                                                    ? currentLeaveConfig.eligibility.filter((t: string) => t !== tag)
+                                                                                    : [...currentLeaveConfig.eligibility, tag];
+                                                                                updateLeaveConfig(selectedLeaveId, 'eligibility', newVal);
+                                                                            }}
+                                                                            className={`px-8 py-5 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all border-2 ${currentLeaveConfig.eligibility.includes(tag) ? 'bg-indigo-600 border-indigo-600 text-white shadow-[0_15px_40px_rgba(79,70,229,0.25)] scale-110 z-10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
+                                                                        >
+                                                                            {tag}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                                <div className="flex items-center gap-3 pl-3">
+                                                                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></div>
+                                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.15em]">Selected groups are automatically entitled to this benefit.</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="lg:col-span-4 space-y-10">
+                                                                <div className="flex items-center gap-4 mb-2">
+                                                                    <div className="p-2.5 bg-rose-50 rounded-2xl shadow-sm">
+                                                                        <Clock size={22} className="text-rose-600" />
+                                                                    </div>
+                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Filing Constraints</h4>
+                                                                </div>
+                                                                <div className="bg-rose-50/50 rounded-[3rem] p-12 border border-rose-100 flex flex-col items-center shadow-inner">
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center w-full">Max Filed Per Month</label>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-28 p-6 bg-white border-2 border-rose-200 rounded-[2rem] text-4xl font-black text-rose-600 focus:border-rose-500 focus:ring-8 focus:ring-rose-50 outline-none transition-all shadow-sm text-center"
+                                                                            value={currentLeaveConfig.maxFiledPerMonth}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxFiledPerMonth', Number(e.target.value))}
+                                                                        />
+                                                                        <div className="text-[11px] font-black text-rose-400 uppercase tracking-[0.2em] leading-tight">Days<br />Limit</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Row 3: Monetization Setup */}
+                                                    <div className="bg-slate-900 rounded-[4rem] p-20 text-white shadow-2xl relative overflow-hidden text-left mt-10">
+                                                        <div className="absolute top-0 right-0 p-32 opacity-[0.02] transform rotate-12 scale-150 pointer-events-none">
+                                                            <DollarSign size={500} />
+                                                        </div>
+
+                                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20 relative z-10 border-b border-white/10 pb-16">
+                                                            <div className="flex items-center gap-10">
+                                                                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[2rem] shadow-[0_25px_60px_rgba(79,70,229,0.3)] flex items-center justify-center transform hover:rotate-6 transition-transform duration-500">
+                                                                    <Coins size={44} className="text-white" />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-4xl font-black tracking-tighter">Monetization Engine</h4>
+                                                                    <p className="text-base text-indigo-400/80 font-bold uppercase tracking-[0.3em] mt-2">Cash Conversion Rules & Policy</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <button
+                                                                onClick={() => updateLeaveConfig(selectedLeaveId, 'monetizationEnabled', !currentLeaveConfig.monetizationEnabled)}
+                                                                className={`flex items-center gap-6 px-12 py-6 rounded-[3rem] border transition-all duration-500 ${currentLeaveConfig.monetizationEnabled ? 'bg-indigo-600 border-indigo-400 shadow-[0_30px_70px_rgba(79,70,229,0.4)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                                                            >
+                                                                <span className={`text-xs font-black uppercase tracking-[0.25em] ${currentLeaveConfig.monetizationEnabled ? 'text-white' : 'text-slate-500'}`}>
+                                                                    {currentLeaveConfig.monetizationEnabled ? 'MONETIZATION ACTIVE' : 'NO CASH VALUE'}
+                                                                </span>
+                                                                <div className="relative">
+                                                                    <div className={`w-16 h-8 rounded-full transition-colors ${currentLeaveConfig.monetizationEnabled ? 'bg-indigo-400' : 'bg-slate-800'}`}></div>
+                                                                    <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-2xl transition-all duration-500 ease-spring ${currentLeaveConfig.monetizationEnabled ? 'translate-x-[2rem]' : 'translate-x-0'}`}></div>
+                                                                </div>
+                                                            </button>
+                                                        </div>
+
+                                                        {currentLeaveConfig.monetizationEnabled ? (
+                                                            <div className="space-y-20 relative z-10 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+                                                                    <div className="space-y-6">
+                                                                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] mb-3">Computation Basis</label>
+                                                                        <div className="flex flex-col gap-3">
+                                                                            {['Daily Rate', 'Monthly Rate'].map(b => (
+                                                                                <button
+                                                                                    key={b}
+                                                                                    onClick={() => updateLeaveConfig(selectedLeaveId, 'monetizationBasis', b as 'Daily Rate' | 'Monthly Rate')}
+                                                                                    className={`p-6 rounded-2xl border-2 font-black text-[11px] uppercase tracking-widest transition-all ${currentLeaveConfig.monetizationBasis === b ? 'bg-white text-slate-900 border-white shadow-2xl scale-105 z-10' : 'bg-transparent border-white/10 text-slate-500 hover:border-white/30'}`}
+                                                                                >
+                                                                                    {b}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="space-y-6">
+                                                                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] mb-3">Cash Value Rate</label>
+                                                                        <div className="flex items-center gap-6 bg-white/5 p-4 rounded-[2.5rem] border border-white/10 focus-within:border-indigo-400 transition-all shadow-inner group">
+                                                                            <input
+                                                                                type="number"
+                                                                                className="w-full p-6 bg-transparent text-5xl font-black text-white outline-none text-center"
+                                                                                value={currentLeaveConfig.monetizationRate}
+                                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationRate', Number(e.target.value))}
+                                                                            />
+                                                                            <span className="text-4xl font-black text-indigo-400 pr-10 group-focus-within:animate-pulse">%</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="space-y-6">
+                                                                        <label className="block text-[11px] font-black text-slate-500 uppercase tracking-[0.25em] mb-3">Max Conversion</label>
+                                                                        <div className="flex items-center gap-6 bg-white/5 p-4 rounded-[2.5rem] border border-white/10 focus-within:border-indigo-400 transition-all shadow-inner group">
+                                                                            <input
+                                                                                type="number"
+                                                                                className="w-full p-6 bg-transparent text-5xl font-black text-white outline-none text-center"
+                                                                                value={currentLeaveConfig.monetizationMaxDays}
+                                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationMaxDays', Number(e.target.value))}
+                                                                            />
+                                                                            <span className="text-xs font-black text-slate-500 uppercase tracking-[0.25em] pr-10">Days</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center bg-indigo-600/10 p-16 rounded-[4rem] border border-indigo-500/20 shadow-inner">
+                                                                    <div className="flex items-center gap-10">
+                                                                        <div className="p-6 bg-indigo-500/20 rounded-[2rem] shadow-2xl border border-indigo-500/20">
+                                                                            <Calculator size={50} className="text-indigo-300" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="text-[12px] font-black text-indigo-300 uppercase tracking-[0.3em] mb-3">Policy Calculation</div>
+                                                                            <div className="text-xl font-bold font-mono text-indigo-100 flex items-center gap-4">
+                                                                                <span className="bg-white/10 px-4 py-2 rounded-xl">Rate</span>
+                                                                                <span className="text-indigo-500 font-black">×</span>
+                                                                                <span className="bg-white/10 px-4 py-2 rounded-xl">{currentLeaveConfig.monetizationRate}%</span>
+                                                                                <span className="text-indigo-500 font-black">×</span>
+                                                                                <span className="bg-white/10 px-4 py-2 rounded-xl">{currentLeaveConfig.monetizationMaxDays}d</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="lg:text-right">
+                                                                        <div className="text-[12px] font-black text-indigo-300 uppercase tracking-[0.3em] mb-3">Estimated Value</div>
+                                                                        <div className="text-7xl font-black text-white tracking-tighter shadow-indigo-500/20">
+                                                                            ₱ <span className="text-indigo-100 italic transition-colors">{(1500 * (currentLeaveConfig.monetizationRate / 100) * currentLeaveConfig.monetizationMaxDays).toLocaleString()}</span>
+                                                                        </div>
+                                                                        <div className="text-[11px] font-bold text-slate-500 mt-5 italic flex items-center lg:justify-end gap-4 opacity-70">
+                                                                            <div className="w-2 h-2 rounded-full bg-slate-700"></div>
+                                                                            Calculated on sample ₱1,500 Daily Rate
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Global Tax Exemption */}
+                                                                <div className="bg-gradient-to-r from-amber-500/10 to-transparent rounded-[4rem] p-12 border border-dashed border-amber-500/30 flex flex-col md:flex-row items-center justify-between gap-12">
+                                                                    <div className="flex gap-10 items-center">
+                                                                        <div className="p-6 bg-amber-500/10 rounded-[2rem] border border-amber-500/10 shadow-xl">
+                                                                            <Scale size={40} className="text-amber-500 shrink-0" />
+                                                                        </div>
+                                                                        <div className="text-left">
+                                                                            <h5 className="text-2xl font-black text-white tracking-tight">Global Tax Exemption Limit</h5>
+                                                                            <p className="text-sm text-slate-500 leading-relaxed max-w-sm mt-3 font-medium">
+                                                                                Converted leave credits within this de minimis limit are non-taxable (Revenue Regulation 1-2015).
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-8 bg-white/5 px-10 py-6 rounded-[2rem] border border-white/10 group focus-within:border-amber-500 transition-all shadow-inner">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-24 bg-transparent text-5xl font-black text-amber-500 text-center outline-none"
+                                                                            value={policies.leaveConversionTaxExemptDays}
+                                                                            onChange={(e) => updatePolicy('leaveConversionTaxExemptDays', Number(e.target.value))}
+                                                                        />
+                                                                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] shrink-0">Days Limit</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="py-32 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-1000">
+                                                                <div className="w-32 h-32 rounded-[2.5rem] bg-white/5 flex items-center justify-center mb-12 border border-white/10 shadow-2xl transform -rotate-6">
+                                                                    <FileMinus size={64} className="text-slate-700" />
+                                                                </div>
+                                                                <h5 className="text-4xl font-black text-white mb-5 tracking-tight">Non-Monetizable Benefit</h5>
+                                                                <p className="text-base text-slate-500 max-w-lg mx-auto leading-relaxed font-medium">This policy is strictly for employee time-off and does not accrue any cash conversion value according to current company standards.</p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

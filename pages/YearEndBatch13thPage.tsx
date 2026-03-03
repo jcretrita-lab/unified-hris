@@ -48,8 +48,8 @@ const YearEndBatch13thPage: React.FC = () => {
     // Get the current history for the active employee, prioritize overrides
     const monthlyHistory = useMemo(() => {
         if (!activeEmployee) return [];
-        return ledgerStates[activeId] || generate13thMonthHistory(activeEmployee.ytdGross, activeEmployee.id);
-    }, [activeEmployee, activeId, ledgerStates]);
+        return ledgerStates[activeId] || generate13thMonthHistory(activeEmployee.ytdGross, activeEmployee.id, stage === 'assumed');
+    }, [activeEmployee, activeId, ledgerStates, stage]);
 
     const [tempHistory, setTempHistory] = useState<any[]>([]);
 
@@ -129,7 +129,8 @@ const YearEndBatch13thPage: React.FC = () => {
     };
 
     const formatCurrency = (amount: number) => {
-        return `₱${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const val = amount || 0;
+        return `₱${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
     const handleComplete = (id: string) => {
@@ -175,12 +176,32 @@ const YearEndBatch13thPage: React.FC = () => {
         }
     ];
 
-    const formatVal = (v: number, isDeduction?: boolean) => {
-        if (v === 0) return '-';
+    const formatVal = (v: any, isDeduction?: boolean) => {
+        if (!v || v === 0) return '-';
         return `${isDeduction ? '-' : ''}${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
-    if (!activeEmployee) return null;
+    if (!activeEmployee) {
+        return (
+            <div className="fixed inset-0 bg-slate-50 flex items-center justify-center z-[110]">
+                <div className="text-center p-12 bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md">
+                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <Wallet size={32} className="text-slate-400" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Initializing Workspace...</h3>
+                    <p className="text-sm text-slate-500 font-medium mt-3 leading-relaxed">
+                        We're setting up the 13th month batch environment.
+                    </p>
+                    <button
+                        onClick={() => navigate('/manage/year-end/13th')}
+                        className="mt-8 w-full py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                    >
+                        Return to Preparation
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const displayHistory = isEditingLedger ? tempHistory : monthlyHistory;
     const totalEarnedBasic = displayHistory.reduce((acc, curr: any) => acc + curr.earnedBasic, 0);
@@ -194,7 +215,7 @@ const YearEndBatch13thPage: React.FC = () => {
             <div className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm shrink-0 z-30">
                 <div className="flex items-center gap-6">
                     <button
-                        onClick={() => navigate('/manage/year-end-prep')}
+                        onClick={() => navigate('/manage/year-end/13th')}
                         className="p-3 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200 group"
                     >
                         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -225,7 +246,7 @@ const YearEndBatch13thPage: React.FC = () => {
                             <span className="text-xs font-black text-slate-700">{processedIds.size} / {employees.length}</span>
                         </div>
                     </div>
-                    <button onClick={() => navigate('/manage/year-end-prep')} className="bg-rose-50 text-rose-600 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] hover:bg-rose-600 hover:text-white transition-all border border-rose-100">Close & Save Draft</button>
+                    <button onClick={() => navigate('/manage/year-end/13th')} className="bg-rose-50 text-rose-600 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] hover:bg-rose-600 hover:text-white transition-all border border-rose-100">Close & Save Draft</button>
                 </div>
             </div>
 
