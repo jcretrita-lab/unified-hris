@@ -213,28 +213,32 @@ const PayComponents: React.FC<PayComponentsProps> = ({
 
   // Filter and sort components
   const filteredAndSortedComponents = useMemo(() => {
-    let filtered = components.filter(c => 
+    let filtered = components.filter(c =>
       viewMode === 'active' ? !c.isArchived : c.isArchived
     );
-    
+
     if (searchTerm.trim() !== "") {
       filtered = filtered.filter((comp) =>
         comp.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     filtered.sort((a, b) => {
       // System components always on top
       if (a.isSystem && !b.isSystem) return -1;
       if (!a.isSystem && b.isSystem) return 1;
+      // Group: earnings before deductions
+      if (a.type !== b.type) return a.type === 'earning' ? -1 : 1;
 
       const aName = a.name.toLowerCase();
       const bName = b.name.toLowerCase();
       return sortOrder === "asc" ? aName.localeCompare(bName) : bName.localeCompare(aName);
     });
-    
+
     return filtered;
   }, [components, searchTerm, sortOrder, viewMode]);
+
+  const firstDeductionIndex = filteredAndSortedComponents.findIndex(c => c.type === 'deduction' && !c.isSystem);
 
   const toggleSortOrder = () => {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -370,7 +374,16 @@ const PayComponents: React.FC<PayComponentsProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredAndSortedComponents.map((comp) => (
+            {filteredAndSortedComponents.map((comp, idx) => (<>
+              {idx === firstDeductionIndex && firstDeductionIndex > 0 && (
+                <div key="divider" className="col-span-full flex items-center gap-3 py-2">
+                  <div className="flex-1 border-t border-dashed border-rose-200" />
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-rose-400 bg-rose-50 border border-rose-100 px-3 py-1 rounded-full">
+                    <Banknote size={11} /> Deductions
+                  </span>
+                  <div className="flex-1 border-t border-dashed border-rose-200" />
+                </div>
+              )}
               <div
                 key={comp.id}
                 className={`border rounded-2xl p-5 transition-all group relative flex flex-col justify-between
@@ -450,7 +463,7 @@ const PayComponents: React.FC<PayComponentsProps> = ({
                   </div>
                 </div>
               </div>
-            ))}
+            </>))}
           </div>
         )}
       </div>
