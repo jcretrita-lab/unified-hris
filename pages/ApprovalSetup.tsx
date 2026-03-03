@@ -137,6 +137,20 @@ const MOCK_SETUPS: ApprovalSetup[] = [
     autoRejectDays: 3,
     approvers: []
   },
+  {
+    id: '4',
+    name: 'PAF Request',
+    connectedEmployees: 6,
+    dateAdded: 'Mar 2, 2026',
+    lastModifiedBy: 'Louis Panganiban',
+    lastModified: 'Mar 2, 2026 09:00',
+    feature: 'PAF Request',
+    autoRejectDays: 5,
+    department: 'HR Department',
+    unitType: 'Department',
+    startDate: '2026-01-01',
+    approvers: []
+  },
 ];
 
 const INITIAL_ASSIGNED_EMPLOYEES = [
