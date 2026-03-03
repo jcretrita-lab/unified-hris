@@ -263,9 +263,9 @@ const EmployeeSchedule: React.FC = () => {
             </div>
 
             {/* Table */}
-            <div className="flex-1 overflow-x-auto">
+            <div className="overflow-auto max-h-[calc(100vh-340px)]">
                 <table className="min-w-full divide-y divide-slate-50">
-                    <thead className="bg-slate-50/20 text-left">
+                    <thead className="bg-slate-50 text-left sticky top-0 z-10">
                         <tr>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-600 group">
                                 Employee Name <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">↓</span>
@@ -371,9 +371,9 @@ const EmployeeSchedule: React.FC = () => {
             </div>
 
             {/* Leave Table */}
-            <div className="flex-1 overflow-x-auto">
+            <div className="overflow-auto max-h-[calc(100vh-340px)]">
                 <table className="min-w-full divide-y divide-slate-50">
-                    <thead className="bg-slate-50/20 text-left">
+                    <thead className="bg-slate-50 text-left sticky top-0 z-10">
                         <tr>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-600 group">
                                 Employee Name <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">↓</span>
