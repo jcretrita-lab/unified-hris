@@ -463,7 +463,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
 
             <div className="col-span-1 text-right font-mono text-slate-400 text-xs">
                 {row.stdVal !== null ? (
-                    <span>{row.type === 'earning' ? '+' : '-'}₱{row.stdVal.toLocaleString()}</span>
+                    <span>{row.type === 'earning' ? '+' : '-'}₱{row.stdVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 ) : <span className="text-slate-200">--</span>}
             </div>
 
@@ -473,7 +473,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                         row.status === 'added' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                             'text-slate-700'
                         }`}>
-                        {row.type === 'earning' ? '+' : '-'}₱{row.actVal.toLocaleString()}
+                        {row.type === 'earning' ? '+' : '-'}₱{row.actVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                 ) : <span className="text-slate-300 italic text-[10px] px-2">Removed</span>}
             </div>
@@ -552,7 +552,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                         <h4 className="text-xs font-bold text-slate-400 mb-1 flex items-center gap-2 uppercase tracking-widest"><User size={14} /> Base Pay (Context)</h4>
                                         <p className="text-xs text-slate-400 mb-6 max-w-md">This is the starting salary derived from the {basePayInfo?.source}. All components below are added/deducted from this amount.</p>
                                         <div className="flex items-end gap-3">
-                                            <div className="text-3xl font-mono font-bold text-white">{basePayInfo && basePayInfo.amount > 0 ? `₱${basePayInfo.amount.toLocaleString()}` : <span className="text-white/50 text-xl">Varies by Role</span>}</div>
+                                            <div className="text-3xl font-mono font-bold text-white">{basePayInfo && basePayInfo.amount > 0 ? `₱${basePayInfo.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : <span className="text-white/50 text-xl">Varies by Role</span>}</div>
                                             {activeTemplate.targetType === 'Position' && (<div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-1 rounded-lg text-white">{basePayInfo?.label}</div>)}
                                         </div>
 
@@ -670,7 +670,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                                     </td>
                                                     <td className="px-6 py-4 text-right font-mono text-slate-600 font-bold">
                                                         {inst.isCustomized ? (
-                                                            <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">+ ₱{inst.netDiff.toLocaleString()}</span>
+                                                            <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">+ ₱{inst.netDiff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                         ) : (
                                                             <span className="text-slate-300">-</span>
                                                         )}
@@ -840,17 +840,17 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                 <div className="grid grid-cols-3 gap-4 mb-6">
                                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Template Standard</div>
-                                        <div className="text-lg font-mono font-bold text-slate-700">₱{comparisonData.summary.defNet.toLocaleString()}</div>
+                                        <div className="text-lg font-mono font-bold text-slate-700">₱{comparisonData.summary.defNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                     </div>
                                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
                                         <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-bl-full -mr-4 -mt-4"></div>
                                         <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-1 relative z-10">Employee Actual</div>
-                                        <div className="text-lg font-mono font-bold text-indigo-900 relative z-10">₱{comparisonData.summary.actNet.toLocaleString()}</div>
+                                        <div className="text-lg font-mono font-bold text-indigo-900 relative z-10">₱{comparisonData.summary.actNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                     </div>
                                     <div className={`p-4 rounded-xl border shadow-sm ${comparisonData.summary.diff > 0 ? 'bg-emerald-50 border-emerald-100' : comparisonData.summary.diff < 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-200'}`}>
                                         <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${comparisonData.summary.diff > 0 ? 'text-emerald-600' : comparisonData.summary.diff < 0 ? 'text-rose-600' : 'text-slate-400'}`}>Net Difference</div>
                                         <div className={`text-lg font-mono font-bold flex items-center gap-1 ${comparisonData.summary.diff > 0 ? 'text-emerald-700' : comparisonData.summary.diff < 0 ? 'text-rose-700' : 'text-slate-500'}`}>
-                                            {comparisonData.summary.diff > 0 ? '+' : ''}{comparisonData.summary.diff !== 0 ? `₱${comparisonData.summary.diff.toLocaleString()}` : '--'}
+                                            {comparisonData.summary.diff > 0 ? '+' : ''}{comparisonData.summary.diff !== 0 ? `₱${comparisonData.summary.diff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '--'}
                                         </div>
                                     </div>
                                 </div>
@@ -915,7 +915,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                     )}
                 </div>
             </Modal>
-        </div>
+        </div >
     );
 };
 

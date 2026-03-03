@@ -27,6 +27,7 @@ export interface AppRequest {
     leaveBalanceAfter?: number;
     leaveReason?: string;
     leaveAttachment?: string;
+    isPaid?: boolean; // Payment status for leave
     // Shift-specific
     shiftFromName?: string;
     shiftToId?: string;
@@ -67,6 +68,7 @@ const SEED_REQUESTS: AppRequest[] = [
         leaveBalanceAfter: 3,
         leaveReason: 'I want to have a vacation with my family',
         leaveAttachment: 'flight_ticket.pdf',
+        isPaid: true,
         timeline: [
             { id: 1, title: '1. Submit Leave', description: 'Submitted leave request', timestamp: 'September 5, 2025 10:09:07 AM', status: 'completed' },
             { id: 2, title: '2. Department Approval', description: 'Pending approval from Alex Thompson', timestamp: '', status: 'current' },
@@ -106,7 +108,7 @@ interface RequestContextType {
     requests: AppRequest[];
     submitLeaveRequest: (req: Omit<AppRequest, 'id' | 'status' | 'timeline' | 'dateModified' | 'lastModifiedBy' | 'setupName'>) => AppRequest;
     submitShiftRequest: (req: Omit<AppRequest, 'id' | 'status' | 'timeline' | 'dateModified' | 'lastModifiedBy' | 'setupName'>) => AppRequest;
-    approveRequest: (id: string, approverName: string) => void;
+    approveRequest: (id: string, approverName: string, isPaid?: boolean) => void;
     rejectRequest: (id: string, approverName: string, reason: string) => void;
     getRequestById: (id: string) => AppRequest | undefined;
 }
@@ -173,7 +175,7 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
         return newReq;
     };
 
-    const approveRequest = (id: string, approverName: string) => {
+    const approveRequest = (id: string, approverName: string, isPaid?: boolean) => {
         const timestamp = new Date().toLocaleString('en-US', {
             month: 'long', day: 'numeric', year: 'numeric',
             hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
@@ -181,19 +183,22 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
         setRequests(prev =>
             prev.map(r => {
                 if (r.id !== id) return r;
+                const payStatus = isPaid !== undefined ? (isPaid ? 'With Pay' : 'Without Pay') : '';
                 return {
                     ...r,
                     status: 'Approved',
+                    isPaid: isPaid !== undefined ? isPaid : r.isPaid,
                     lastModifiedBy: approverName,
                     dateModified: now(),
                     timeline: r.timeline.map(step => {
-                        if (step.status === 'current') return { ...step, status: 'completed' as const, description: `Approved by ${approverName}`, timestamp };
+                        const baseDesc = r.type === 'Leave Request' && payStatus ? `Approved ${payStatus} by ${approverName}` : `Approved by ${approverName}`;
+                        if (step.status === 'current') return { ...step, status: 'completed' as const, description: baseDesc, timestamp };
                         if (step.status === 'pending') {
                             // Cascade approvals
                             const isLast = step.id === r.timeline[r.timeline.length - 1].id;
                             return isLast
                                 ? { ...step, status: 'completed' as const, description: 'Request applied — record updated', timestamp }
-                                : { ...step, status: 'completed' as const, description: `Approved by ${approverName}`, timestamp };
+                                : { ...step, status: 'completed' as const, description: baseDesc, timestamp };
                         }
                         return step;
                     }),

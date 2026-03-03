@@ -43,6 +43,14 @@ const ApprovalDetail: React.FC = () => {
         approveRequest(data.id, user?.name || 'Approver');
     };
 
+    const handleApproveWithPay = () => {
+        approveRequest(data.id, user?.name || 'Approver', true);
+    };
+
+    const handleApproveWithoutPay = () => {
+        approveRequest(data.id, user?.name || 'Approver', false);
+    };
+
     const handleReject = () => {
         const reason = prompt('Please enter rejection reason:');
         if (reason) {
@@ -279,6 +287,12 @@ const ApprovalDetail: React.FC = () => {
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Leave Type</label>
                                         <div className="p-3 bg-slate-50 rounded-xl text-sm font-bold text-slate-700">{data.leaveType || 'General Leave'}</div>
                                     </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment Type</label>
+                                        <div className="p-3 bg-slate-50 rounded-xl text-sm font-bold text-slate-700">
+                                            {data.isPaid === undefined ? 'Not Specified' : (data.isPaid ? 'With Pay' : 'Without Pay')}
+                                        </div>
+                                    </div>
                                     <div className="col-span-full space-y-1">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Reason for Leave</label>
                                         <div className="p-4 bg-slate-50 rounded-xl text-sm font-medium text-slate-600 italic">
@@ -307,16 +321,40 @@ const ApprovalDetail: React.FC = () => {
 
                             {/* Action Buttons if Pending */}
                             {data.status === 'Submitted' && (
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        onClick={handleApprove}
-                                        className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 active:scale-95 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <CheckCircle2 size={18} /> Approve Request
-                                    </button>
+                                <div className="flex flex-col gap-4 pt-4">
+                                    {data.type === 'Leave Request' ? (
+                                        <div className="flex gap-4">
+                                            <button
+                                                onClick={handleApproveWithPay}
+                                                className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 active:scale-95 transition-all flex flex-col items-center justify-center gap-1"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <CheckCircle2 size={18} /> Approve
+                                                </div>
+                                                <span className="text-[10px] opacity-80 uppercase tracking-widest">With Pay</span>
+                                            </button>
+                                            <button
+                                                onClick={handleApproveWithoutPay}
+                                                className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 active:scale-95 transition-all flex flex-col items-center justify-center gap-1"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <CheckCircle2 size={18} /> Approve
+                                                </div>
+                                                <span className="text-[10px] opacity-80 uppercase tracking-widest">Without Pay</span>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={handleApprove}
+                                            className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <CheckCircle2 size={18} /> Approve Request
+                                        </button>
+                                    )}
+
                                     <button
                                         onClick={handleReject}
-                                        className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-lg shadow-rose-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-lg shadow-rose-200 active:scale-95 transition-all flex items-center justify-center gap-2"
                                     >
                                         <X size={18} /> Reject Request
                                     </button>

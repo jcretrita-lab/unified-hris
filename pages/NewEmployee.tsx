@@ -604,7 +604,7 @@ const NewEmployee: React.FC = () => {
                                                 <span className={`font-bold text-sm ${formData.payTemplateId === template.id ? 'text-indigo-900' : 'text-slate-700'}`}>{template.name}</span>
                                                 {formData.payTemplateId === template.id && <Check size={16} className="text-indigo-600" strokeWidth={3} />}
                                             </div>
-                                            <span className="text-xs font-mono font-bold text-slate-500">Base: ₱{template.basePay.toLocaleString()}</span>
+                                            <span className="text-xs font-mono font-bold text-slate-500">Base: ₱{template.basePay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             {template.linkedPosition && (
                                                 <div className="mt-2 text-[10px] text-indigo-600 bg-indigo-100/50 px-2 py-1 rounded inline-flex items-center gap-1 font-bold border border-indigo-100">
                                                     <Zap size={10} />
@@ -649,7 +649,7 @@ const NewEmployee: React.FC = () => {
                                                     onChange={e => setFormData({ ...formData, customBasePay: parseFloat(e.target.value) })}
                                                 />
                                             ) : (
-                                                <span className="font-mono font-bold text-slate-800">₱{formData.customBasePay.toLocaleString()}</span>
+                                                <span className="font-mono font-bold text-slate-800">₱{formData.customBasePay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             )}
                                         </div>
 
@@ -666,7 +666,7 @@ const NewEmployee: React.FC = () => {
                                                             onChange={e => handleComponentChange(comp.id, parseFloat(e.target.value))}
                                                         />
                                                     ) : (
-                                                        <span className="font-mono font-bold text-slate-600">₱{comp.value.toLocaleString()}</span>
+                                                        <span className="font-mono font-bold text-slate-600">₱{comp.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                     )}
                                                 </div>
                                             ))}
@@ -675,7 +675,7 @@ const NewEmployee: React.FC = () => {
                                         <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
                                             <span className="text-xs font-bold text-slate-900 uppercase">Gross Estimate</span>
                                             <span className="text-lg font-mono font-bold text-indigo-600">
-                                                ₱{(formData.customBasePay + formData.customComponents.filter(c => c.type === 'Earning').reduce((acc, c) => acc + c.value, 0)).toLocaleString()}
+                                                ₱{(formData.customBasePay + formData.customComponents.filter(c => c.type === 'Earning').reduce((acc, c) => acc + c.value, 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                         </div>
                                     </div>
@@ -1066,14 +1066,14 @@ const NewEmployee: React.FC = () => {
 
                                         <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                                             <span className="text-sm font-bold text-slate-600">Basic Salary</span>
-                                            <span className="text-base font-mono font-bold text-slate-900">₱{formData.customBasePay.toLocaleString()}</span>
+                                            <span className="text-base font-mono font-bold text-slate-900">₱{formData.customBasePay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="space-y-2">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Allowances</p>
                                             {formData.customComponents.filter(c => c.type === 'Earning').map(c => (
                                                 <div key={c.id} className="flex justify-between text-sm">
                                                     <span className="text-slate-600">{c.name}</span>
-                                                    <span className="font-mono font-bold text-emerald-600">+₱{c.value.toLocaleString()}</span>
+                                                    <span className="font-mono font-bold text-emerald-600">+₱{c.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
                                             ))}
                                             {formData.customComponents.filter(c => c.type === 'Earning').length === 0 && <p className="text-xs text-slate-400 italic">None</p>}
@@ -1083,7 +1083,7 @@ const NewEmployee: React.FC = () => {
                                             {formData.customComponents.filter(c => c.type === 'Deduction').map(c => (
                                                 <div key={c.id} className="flex justify-between text-sm">
                                                     <span className="text-slate-600">{c.name}</span>
-                                                    <span className="font-mono font-bold text-rose-600">-₱{c.value.toLocaleString()}</span>
+                                                    <span className="font-mono font-bold text-rose-600">-₱{c.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
                                             ))}
                                             {formData.customComponents.filter(c => c.type === 'Deduction').length === 0 && <p className="text-xs text-slate-400 italic">None</p>}

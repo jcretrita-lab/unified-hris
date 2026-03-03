@@ -37,7 +37,8 @@ import {
     Building2,
     Plus,
     Trash2,
-    Edit
+    Edit,
+    TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -142,6 +143,9 @@ interface PolicyState {
     vawcLeave: number;
     magnaCartaLeave: number;
     nonCompressedWorkWeek: boolean;
+    isProbationExtensionEnabled: boolean;
+    isApprenticeshipEnabled: boolean;
+    isTollingEnabled: boolean;
 }
 
 const INITIAL_STATE: PolicyState = {
@@ -192,7 +196,10 @@ const INITIAL_STATE: PolicyState = {
     soloParentLeave: 7,
     vawcLeave: 10,
     magnaCartaLeave: 60,
-    nonCompressedWorkWeek: false
+    nonCompressedWorkWeek: false,
+    isProbationExtensionEnabled: false,
+    isApprenticeshipEnabled: false,
+    isTollingEnabled: false
 };
 
 // Leave Monetization Types
@@ -304,6 +311,26 @@ const PoliciesPage: React.FC = () => {
             return { status: 'compliant', msg: 'Compliant' };
         }
         return { status: 'neutral', msg: '' };
+    };
+
+    const getProbationStatus = () => {
+        const value = policies.probationaryDays;
+        const standard = LEGAL_STANDARDS.PROBATIONARY_DAYS;
+
+        if (policies.isApprenticeshipEnabled && value <= 730) {
+            return { status: 'compliant', msg: 'Compliant (Apprentice)', citation: 'Art. 61' };
+        }
+        if (policies.isProbationExtensionEnabled && value > standard) {
+            return { status: 'compliant', msg: 'Compliant (By Agreement)', citation: 'Mariwasa Doctrine' };
+        }
+        if (policies.isTollingEnabled && value > standard) {
+            return { status: 'compliant', msg: 'Compliant (Tolled)', citation: 'RA 11210' };
+        }
+
+        return {
+            ...getComplianceStatus(value, standard, 'max'),
+            citation: 'Art. 296'
+        };
     };
 
     const ComplianceBadge = ({ status, msg, citation }: { status: string, msg: string, citation?: string }) => {
@@ -1015,18 +1042,170 @@ const PoliciesPage: React.FC = () => {
                                         citation="Book I & II"
                                     />
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-indigo-200 transition-colors">
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Max Probationary Period</label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
-                                                    value={policies.probationaryDays}
-                                                    onChange={(e) => updatePolicy('probationaryDays', Number(e.target.value))}
-                                                />
-                                                <span className="text-sm font-bold text-slate-700">Days</span>
+                                        <div className="md:col-span-2 p-10 border border-slate-200 rounded-[32px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all">
+                                            <div className="flex flex-col lg:flex-row gap-12">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-4 mb-8">
+                                                        <div className="p-3 bg-indigo-600/10 rounded-2xl text-indigo-600 ring-4 ring-indigo-50">
+                                                            <Clock size={24} />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="text-xl font-black text-slate-900 tracking-tight">Probationary Standards</h4>
+                                                            <div className="flex items-center gap-2 mt-0.5">
+                                                                <span className="text-xs text-slate-400 font-medium">Labor Code Art. 296 Compliance</span>
+                                                                <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                                                                <span className="text-xs text-indigo-600 font-bold uppercase tracking-widest text-[10px]">Statutory</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="bg-slate-50 border border-slate-100 p-8 rounded-[24px] mb-10 group transition-all hover:bg-white hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5">
+                                                        <div className="flex flex-col md:flex-row items-center gap-6">
+                                                            <div className="flex-1">
+                                                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Maximum Allowed Period</label>
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-32 p-4 border-2 border-slate-200 rounded-2xl font-black text-slate-900 text-2xl text-center bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
+                                                                            value={policies.probationaryDays}
+                                                                            onChange={(e) => updatePolicy('probationaryDays', Number(e.target.value))}
+                                                                        />
+                                                                        <div className="absolute -top-3 -right-3 bg-indigo-600 text-white text-[9px] px-2 py-1 rounded-lg font-black shadow-lg shadow-indigo-200">CODE Art 296</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="text-lg font-black text-slate-900">Days <span className="text-slate-400">/ 180</span></div>
+                                                                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Calendar Days Only</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="w-full md:w-fit">
+                                                                <ComplianceBadge {...getProbationStatus()} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Exception Scenarios Container */}
+                                                    <div>
+                                                        <div className="flex items-center gap-3 mb-6">
+                                                            <Scale size={18} className="text-slate-400" />
+                                                            <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Legal Exceptions & Scenarios</h5>
+                                                        </div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                                            {/* Performance Extension */}
+                                                            <div className={`p-5 rounded-[20px] border-2 transition-all group relative overflow-hidden ${policies.isProbationExtensionEnabled ? 'bg-indigo-50 border-indigo-200 shadow-md ring-4 ring-indigo-500/5' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
+                                                                <div className="flex items-center justify-between relative z-10 mb-4">
+                                                                    <div className={`p-2 rounded-lg ${policies.isProbationExtensionEnabled ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                                                        <TrendingUp size={16} />
+                                                                    </div>
+                                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="sr-only peer"
+                                                                            checked={policies.isProbationExtensionEnabled}
+                                                                            onChange={e => updatePolicy('isProbationExtensionEnabled', e.target.checked)}
+                                                                        />
+                                                                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                                    </label>
+                                                                </div>
+                                                                <div className="relative z-10">
+                                                                    <h6 className={`text-xs font-black uppercase tracking-wider mb-2 ${policies.isProbationExtensionEnabled ? 'text-indigo-900' : 'text-slate-800'}`}>Performance Ext.</h6>
+                                                                    <p className="text-[10px] text-slate-500 leading-relaxed font-bold">Requires mutual written agreement for a second evaluation.</p>
+                                                                </div>
+                                                                <div className="mt-4 pt-3 border-t border-indigo-100/50 flex justify-between items-center relative z-10">
+                                                                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-tighter">Mariwasa SC</span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Apprenticeship */}
+                                                            <div className={`p-5 rounded-[20px] border-2 transition-all group relative overflow-hidden ${policies.isApprenticeshipEnabled ? 'bg-emerald-50 border-emerald-200 shadow-md ring-4 ring-emerald-500/5' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
+                                                                <div className="flex items-center justify-between relative z-10 mb-4">
+                                                                    <div className={`p-2 rounded-lg ${policies.isApprenticeshipEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                                                        <GraduationCap size={16} />
+                                                                    </div>
+                                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="sr-only peer"
+                                                                            checked={policies.isApprenticeshipEnabled}
+                                                                            onChange={e => updatePolicy('isApprenticeshipEnabled', e.target.checked)}
+                                                                        />
+                                                                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                                                                    </label>
+                                                                </div>
+                                                                <div className="relative z-10">
+                                                                    <h6 className={`text-xs font-black uppercase tracking-wider mb-2 ${policies.isApprenticeshipEnabled ? 'text-emerald-900' : 'text-slate-800'}`}>Apprentice Prog.</h6>
+                                                                    <p className="text-[10px] text-slate-500 leading-relaxed font-bold">Programs exceeding 6 months for specialized technical trades.</p>
+                                                                </div>
+                                                                <div className="mt-4 pt-3 border-t border-emerald-100/50 flex justify-between items-center relative z-10">
+                                                                    <span className="text-[9px] font-black text-emerald-400 uppercase tracking-tighter">Art. 61 / TESDA</span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Tolling */}
+                                                            <div className={`p-5 rounded-[20px] border-2 transition-all group relative overflow-hidden ${policies.isTollingEnabled ? 'bg-amber-50 border-amber-200 shadow-md ring-4 ring-amber-500/5' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
+                                                                <div className="flex items-center justify-between relative z-10 mb-4">
+                                                                    <div className={`p-2 rounded-lg ${policies.isTollingEnabled ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                                                        <AlertCircle size={16} />
+                                                                    </div>
+                                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="sr-only peer"
+                                                                            checked={policies.isTollingEnabled}
+                                                                            onChange={e => updatePolicy('isTollingEnabled', e.target.checked)}
+                                                                        />
+                                                                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                                                                    </label>
+                                                                </div>
+                                                                <div className="relative z-10">
+                                                                    <h6 className={`text-xs font-black uppercase tracking-wider mb-2 ${policies.isTollingEnabled ? 'text-amber-900' : 'text-slate-800'}`}>Absence Tolling</h6>
+                                                                    <p className="text-[10px] text-slate-500 leading-relaxed font-bold">Suspends clock for Maternity (105d) or prolonged medical leaves.</p>
+                                                                </div>
+                                                                <div className="mt-4 pt-3 border-t border-amber-100/50 flex justify-between items-center relative z-10">
+                                                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-tighter">RA 11210 / Tolling</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="w-full lg:w-72 bg-slate-900 p-8 rounded-[24px] text-white overflow-hidden relative shadow-2xl">
+                                                    <div className="absolute top-0 right-0 p-8 opacity-5">
+                                                        <Gavel size={150} />
+                                                    </div>
+                                                    <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6">Statutory Framework</h5>
+                                                    <div className="space-y-8 relative z-10">
+                                                        <div className="flex gap-4">
+                                                            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                                                                <Check size={12} className="text-emerald-400" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[11px] font-black text-white leading-tight mb-1 uppercase tracking-wider">Performance Disclosure</p>
+                                                                <p className="text-[10px] text-slate-400 leading-relaxed">Reasonable standards must be communicated at <strong>Day 1</strong> of hire.</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-4">
+                                                            <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/30">
+                                                                <Check size={12} className="text-blue-400" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[11px] font-black text-white leading-tight mb-1 uppercase tracking-wider">Automatic Status</p>
+                                                                <p className="text-[10px] text-slate-400 leading-relaxed">Employees are regularized by operation of law after <strong>6 months</strong> of service.</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-white/5 border border-white/10 p-5 rounded-2xl">
+                                                            <div className="flex items-center gap-2 text-rose-400 mb-2">
+                                                                <AlertTriangle size={14} />
+                                                                <span className="text-[10px] font-black uppercase tracking-widest">Termination Guard</span>
+                                                            </div>
+                                                            <p className="text-[10px] text-slate-300 leading-relaxed font-bold italic">
+                                                                "Pregnant employees or those on leave are protected against non-regularization based on absence."
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.probationaryDays, LEGAL_STANDARDS.PROBATIONARY_DAYS, 'max')} citation="Art. 296" />
                                         </div>
 
                                         <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-indigo-200 transition-colors">
