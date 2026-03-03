@@ -137,42 +137,6 @@ const MOCK_SETUPS: ApprovalSetup[] = [
     autoRejectDays: 3,
     approvers: []
   },
-  {
-    id: '4',
-    name: 'Shift Change Request',
-    connectedEmployees: 20,
-    dateAdded: 'Oct 1, 2025',
-    lastModifiedBy: 'Louis Panganiban',
-    lastModified: 'Oct 5, 2025 14:30',
-    feature: 'Time & Attendance',
-    autoRejectDays: 5,
-    department: 'IT Department',
-    unitType: 'Department',
-    startDate: '2025-01-01',
-    endDate: '2025-12-31',
-    approvers: [
-      {
-        id: 'a3',
-        orderLabel: 'Approver 1',
-        name: 'Sarah Geronimo',
-        role: 'Team Lead',
-        avatar: 'SG',
-        department: 'IT Department',
-        lastModifiedBy: 'Louis Panganiban',
-        lastModified: 'Oct 5, 2025'
-      },
-      {
-        id: 'a4',
-        orderLabel: 'Verifier 1',
-        name: 'Alex Thompson',
-        role: 'HR Manager',
-        avatar: 'AT',
-        department: 'HR Department',
-        lastModifiedBy: 'Louis Panganiban',
-        lastModified: 'Oct 5, 2025'
-      }
-    ]
-  },
 ];
 
 const INITIAL_ASSIGNED_EMPLOYEES = [

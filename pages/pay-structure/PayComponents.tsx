@@ -563,6 +563,91 @@ const PayComponents: React.FC<PayComponentsProps> = ({
                             {formulas.map((f) => (<option key={f.id} value={f.id}>{f.name}</option>))}
                             </select>
                         )}
+                        {editor.type === 'deduction' && (
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                              Deduction Category
+                            </label>
+
+                            <select
+                              className="w-full border border-slate-200 p-3 rounded-xl bg-white text-sm font-bold"
+                              value={editor.category || ''}
+                              onChange={(e) => setEditor({ ...editor, category: e.target.value as any })}
+                            >
+                              <option value="">Standard Deduction</option>
+                              <option value="loan">Loan</option>
+                              <option value="government">Government</option>
+                              <option value="other">Other</option>
+                            </select>
+                          </div>
+                        )}
+                        {editor.type === 'deduction' && editor.category === 'loan' && (
+                          <div className="space-y-4 border border-amber-200 bg-amber-50/50 p-4 rounded-2xl">
+                            <div className="text-[11px] font-bold text-amber-700 uppercase tracking-widest">
+                              Loan Configuration
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">
+                                  Loan Principal Amount
+                                </label>
+                                <input
+                                  type="number"
+                                  className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
+                                  value={editor.loanPrincipalAmount ?? ''}
+                                  onChange={(e) =>
+                                    setEditor({ ...editor, loanPrincipalAmount: Number(e.target.value) })
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">
+                                  Installment per Cutoff
+                                </label>
+                                <input
+                                  type="number"
+                                  className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
+                                  value={editor.loanInstallmentAmount ?? editor.fixedValue ?? ''}
+                                  onChange={(e) =>
+                                    setEditor({ ...editor, loanInstallmentAmount: Number(e.target.value) })
+                                  }
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">
+                                  Start Date
+                                </label>
+                                <input
+                                  type="date"
+                                  className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
+                                  value={editor.loanStartDate || ''}
+                                  onChange={(e) =>
+                                    setEditor({ ...editor, loanStartDate: e.target.value })
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">
+                                  End Date (optional)
+                                </label>
+                                <input
+                                  type="date"
+                                  className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
+                                  value={editor.loanEndDate || ''}
+                                  onChange={(e) =>
+                                    setEditor({ ...editor, loanEndDate: e.target.value })
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         </div>
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">

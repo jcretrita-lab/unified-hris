@@ -4,6 +4,7 @@ import {
   Search,
   Plus,
   Clock,
+  CalendarDays,
   MoreHorizontal,
   Edit2,
   Trash2,
@@ -16,6 +17,8 @@ import {
   CornerDownRight,
   Users,
   UserPlus,
+  AlertCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Modal from '../components/Modal';
@@ -30,6 +33,7 @@ interface SubShift {
   startTime: string;
   endTime: string;
   condition: string; // e.g. "Detected Entry 07:00 - 08:00"
+  workDays: string[];
 }
 
 interface Shift {
@@ -38,6 +42,7 @@ interface Shift {
   workHours: number;
   startTime: string;
   endTime: string;
+  workDays: string[];
   lastModifiedBy: string;
   lastModified: string;
   isDefault?: boolean;
@@ -53,6 +58,7 @@ const MOCK_SHIFTS: Shift[] = [
     workHours: 8,
     startTime: '08:00',
     endTime: '17:00',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     lastModifiedBy: 'Louis Panganiban',
     lastModified: 'Aug 8, 2025 23:56',
     isDefault: true,
@@ -64,7 +70,8 @@ const MOCK_SHIFTS: Shift[] = [
         name: 'Early Bird Entry',
         startTime: '07:00',
         endTime: '16:00',
-        condition: 'Clock-in between 06:30 AM - 07:30 AM'
+        condition: 'Clock-in between 06:30 AM - 07:30 AM',
+        workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
       }
     ]
   },
@@ -74,6 +81,7 @@ const MOCK_SHIFTS: Shift[] = [
     workHours: 9,
     startTime: '09:00',
     endTime: '18:00',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     lastModifiedBy: 'Juan Dela Cruz',
     lastModified: 'Aug 8, 2025 12:05',
     isDefault: false,
@@ -85,7 +93,8 @@ const MOCK_SHIFTS: Shift[] = [
         name: 'Client Visit Mode',
         startTime: '08:00',
         endTime: '17:00',
-        condition: 'Approved OB Application'
+        condition: 'Approved OB Application',
+        workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
       }
     ]
   },
@@ -95,21 +104,11 @@ const MOCK_SHIFTS: Shift[] = [
     workHours: 8,
     startTime: '09:00',
     endTime: '18:00',
+    workDays: ['Sat', 'Sun'],
     lastModifiedBy: 'System Admin',
     lastModified: 'Aug 1, 2025 09:00',
     isDefault: false,
     assignedEmployees: 12
-  },
-  {
-    id: '4',
-    name: 'NSWP',
-    workHours: 8,
-    startTime: '08:00',
-    endTime: '17:00',
-    lastModifiedBy: 'System Admin',
-    lastModified: 'Sep 15, 2025 10:00',
-    isDefault: false,
-    assignedEmployees: 28
   }
 ];
 
@@ -120,6 +119,8 @@ const MOCK_EMPLOYEES_FOR_ASSIGN = [
   { id: '4', name: 'Mike Brown', role: 'Payroll Specialist', dept: 'Finance' },
   { id: '5', name: 'Alice Guo', role: 'Marketing Lead', dept: 'Marketing' },
 ];
+
+const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const ShiftManagement: React.FC = () => {
   const [shifts, setShifts] = useState<Shift[]>(MOCK_SHIFTS);
@@ -137,6 +138,7 @@ const ShiftManagement: React.FC = () => {
     name: '',
     startTime: '09:00',
     endTime: '18:00',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     isDefault: false,
     subShifts: []
   });
@@ -154,6 +156,7 @@ const ShiftManagement: React.FC = () => {
         name: '',
         startTime: '09:00',
         endTime: '18:00',
+        workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
         isDefault: false,
         subShifts: []
       });
@@ -181,6 +184,7 @@ const ShiftManagement: React.FC = () => {
       workHours: hours,
       startTime: formData.startTime,
       endTime: formData.endTime,
+      workDays: formData.workDays || [],
       lastModifiedBy: 'Current User',
       lastModified: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' }),
       isDefault: formData.isDefault,
@@ -202,6 +206,15 @@ const ShiftManagement: React.FC = () => {
     setIsAssignModalOpen(false);
   };
 
+  const toggleDay = (day: string) => {
+    const current = formData.workDays || [];
+    if (current.includes(day)) {
+      setFormData({ ...formData, workDays: current.filter(d => d !== day) });
+    } else {
+      setFormData({ ...formData, workDays: [...current, day] });
+    }
+  };
+
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this shift group?')) {
       setShifts(shifts.filter(s => s.id !== id));
@@ -216,7 +229,8 @@ const ShiftManagement: React.FC = () => {
       name: type === 'Biometric' ? 'Biometric Match' : 'OB Schedule',
       startTime: formData.startTime || '09:00',
       endTime: formData.endTime || '18:00',
-      condition: type === 'Biometric' ? 'Detected Entry range...' : 'Approved Application'
+      condition: type === 'Biometric' ? 'Detected Entry range...' : 'Approved Application',
+      workDays: [...(formData.workDays || [])]
     };
     setFormData({ ...formData, subShifts: [...(formData.subShifts || []), newSub] });
   };
@@ -224,6 +238,18 @@ const ShiftManagement: React.FC = () => {
   const updateSubShift = (id: string, field: keyof SubShift, value: any) => {
     const updated = formData.subShifts?.map(s => s.id === id ? { ...s, [field]: value } : s);
     setFormData({ ...formData, subShifts: updated });
+  };
+
+  const toggleSubShiftDay = (subId: string, day: string) => {
+    const sub = formData.subShifts?.find(s => s.id === subId);
+    if (!sub) return;
+
+    const current = sub.workDays || [];
+    const updatedDays = current.includes(day)
+      ? current.filter(d => d !== day)
+      : [...current, day];
+
+    updateSubShift(subId, 'workDays', updatedDays);
   };
 
   const removeSubShift = (id: string) => {
@@ -285,6 +311,7 @@ const ShiftManagement: React.FC = () => {
               <tr>
                 <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Shift Group / Scenarios</th>
                 <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Schedule</th>
+                <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Active Days</th>
                 <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Assignments</th>
                 <th className="px-8 py-5 text-right"></th>
               </tr>
@@ -346,6 +373,36 @@ const ShiftManagement: React.FC = () => {
                               {formatTime(sub.startTime)} - {formatTime(sub.endTime)}
                             </span>
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+
+                  <td className="px-8 py-5 align-top">
+                    <div className="flex flex-col gap-6">
+                      {/* Parent Days */}
+                      <div className="flex gap-1 h-[40px] items-center">
+                        {DAYS_OF_WEEK.map(day => (
+                          <div
+                            key={day}
+                            className={`w-5 h-5 flex items-center justify-center rounded text-[8px] font-bold ${shift.workDays.includes(day) ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-300'}`}
+                          >
+                            {day[0]}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Sub Shift Days */}
+                      {shift.subShifts && shift.subShifts.map(sub => (
+                        <div key={sub.id} className="flex gap-1 h-[40px] items-center">
+                          {DAYS_OF_WEEK.map(day => (
+                            <div
+                              key={day}
+                              className={`w-4 h-4 flex items-center justify-center rounded text-[7px] font-bold ${sub.workDays.includes(day) ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-200'}`}
+                            >
+                              {day[0]}
+                            </div>
+                          ))}
                         </div>
                       ))}
                     </div>
@@ -438,6 +495,23 @@ const ShiftManagement: React.FC = () => {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Work Days</label>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS_OF_WEEK.map(day => (
+                      <button
+                        key={day}
+                        onClick={() => toggleDay(day)}
+                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${formData.workDays?.includes(day)
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
+                          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                          }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -488,6 +562,43 @@ const ShiftManagement: React.FC = () => {
                     </div>
                   </div>
 
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 uppercase block mb-2">Variant Work Days</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DAYS_OF_WEEK.map(day => {
+                        const isParentDay = formData.workDays?.includes(day);
+                        const isSelected = sub.workDays.includes(day);
+                        // Simple overlap check within sub-shifts
+                        const isOverlapping = formData.subShifts?.some(other => other.id !== sub.id && other.workDays.includes(day));
+
+                        return (
+                          <button
+                            key={day}
+                            disabled={!isParentDay}
+                            onClick={() => toggleSubShiftDay(sub.id, day)}
+                            className={`px-2 py-1 rounded-md text-[9px] font-bold transition-all border ${isSelected
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                              : isParentDay
+                                ? 'bg-white text-slate-600 border-slate-200 hover:border-indigo-200'
+                                : 'bg-slate-50 text-slate-300 border-transparent cursor-not-allowed opacity-50'
+                              } ${isSelected && isOverlapping ? 'ring-2 ring-rose-400 border-rose-400' : ''}`}
+                          >
+                            {day}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {sub.workDays.some(d => !formData.workDays?.includes(d)) && (
+                      <p className="mt-2 text-[9px] text-rose-500 font-bold flex items-center gap-1">
+                        <AlertCircle size={10} /> Some days are outside main shift schedule.
+                      </p>
+                    )}
+                    {formData.subShifts?.some(other => other.id !== sub.id && other.workDays.some(d => sub.workDays.includes(d))) && (
+                      <p className="mt-1 text-[9px] text-amber-600 font-bold flex items-center gap-1">
+                        <AlertTriangle size={10} /> Day overlap detected between sub-shifts.
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))}
               {(!formData.subShifts || formData.subShifts.length === 0) && (
