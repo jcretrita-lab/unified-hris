@@ -39,24 +39,44 @@ const MOCK_DIVISORS = [
 
 const INITIAL_SCHEDULES: PaySchedule[] = [
     {
-        id: '1',
-        name: 'Regular Employees',
+        id: 'ps-001',
+        name: 'Corporate Employees — Semi-Monthly',
         frequency: 'Semi-Monthly',
         targetType: 'Global',
         targetId: null,
-        firstCutoff: 10,
-        firstPayDate: 15,
-        secondCutoff: 25,
-        secondPayDate: 30,
-        divisorId: 'div-1'
+        firstCutoff: 15,
+        firstPayDate: 20,
+        secondCutoff: 30,
+        secondPayDate: 5,
+        divisorId: 'div-1',
+        firstCutoffRange: { startDay: 1, endDay: 15, payDay: 20 },
+        secondCutoffRange: { startDay: 16, endDay: 30, payDay: 5 },
+        applyToAllMonths: true,
+        monthOverrides: []
     },
     {
-        id: '2',
-        name: 'Contractors Weekly',
+        id: 'ps-002',
+        name: 'Project & Contractual Workers — Weekly',
         frequency: 'Weekly',
-        targetType: 'Global', // Changed to Global as per new requirement
-        targetId: null,
-        firstPayDate: 'Friday'
+        targetType: 'Department',
+        targetId: 'dept-ops',
+        firstPayDate: 'Friday',
+        divisorId: 'div-2',
+        applyToAllMonths: true,
+        monthOverrides: []
+    },
+    {
+        id: 'ps-003',
+        name: 'Executive & Senior Management — Monthly',
+        frequency: 'Monthly',
+        targetType: 'Department',
+        targetId: 'dept-exec',
+        firstCutoff: 31,
+        firstPayDate: 31,
+        divisorId: 'div-1',
+        firstCutoffRange: { startDay: 1, endDay: 31, payDay: 31 },
+        applyToAllMonths: true,
+        monthOverrides: []
     }
 ];
 
