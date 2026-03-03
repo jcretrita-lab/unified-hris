@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  Wallet, 
-  Clock, 
-  ShieldCheck, 
-  FileCheck, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  Wallet,
+  Clock,
+  ShieldCheck,
+  FileCheck,
+  Settings,
   ChevronDown,
   UserCircle,
   LayoutGrid,
@@ -26,7 +26,9 @@ import {
   ClipboardList,
   BellRing,
   Building2,
-  Sliders
+  Sliders,
+  Menu,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { BreadcrumbProvider } from '../context/BreadcrumbContext';
@@ -133,6 +135,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [searchInput, setSearchInput] = useState('');
   const searchQuery = useDebounce(searchInput, 300);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Sidebar State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   const isSettingsPath = location.pathname.startsWith('/settings');
   const isStandalonePage = location.pathname === '/login' || location.pathname === '/new-organization';
@@ -305,39 +310,40 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         { icon: <ClipboardList size={19} />, label: 'Employee', path: '/settings/employee-fields' },
       ]
     },
-    { 
-      section: 'Timekeeping', 
+    {
+      section: 'Timekeeping',
       items: [
         { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
+        { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
         { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
         { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
-      ] 
+      ]
     },
-    { 
-      section: 'Pay Structure', 
+    {
+      section: 'Pay Structure',
       items: [
         { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
         { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
         { icon: <Sliders size={19} />, label: 'Adjustments', path: '/settings/adjustments' },
-      ] 
+      ]
     },
-    { 
-      section: 'Organization', 
+    {
+      section: 'Organization',
       items: [
         { icon: <Building2 size={19} />, label: 'Structure', path: '/settings/structure' },
         { icon: <BookOpen size={19} />, label: 'Policies & Rules', path: '/settings/policies' },
         { icon: <ShieldAlert size={19} />, label: 'Approvals', path: '/settings/approvals' },
-      ] 
+      ]
     },
-    { 
-      section: 'System', 
+    {
+      section: 'System',
       items: [
         { icon: <UserCog size={19} />, label: 'User Management', path: '/settings/users' },
         { icon: <Lock size={19} />, label: 'Permissions', path: '/settings/permissions' },
         { icon: <ShieldCheck size={19} />, label: 'Role Overview', path: '/settings/roles' },
         { icon: <BellRing size={19} />, label: 'Notifications', path: '/settings/notifications' },
         { icon: <History size={19} />, label: 'Audit Logs', path: '/settings/audit' },
-      ] 
+      ]
     },
   ];
 
@@ -348,36 +354,37 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         { icon: <ClipboardList size={19} />, label: 'Employee', path: '/settings/employee-fields' },
       ]
     },
-    { 
-        section: 'Timekeeping', 
+    {
+        section: 'Timekeeping',
         items: [
           { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
+          { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
           { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
           { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
-        ] 
+        ]
       },
-      { 
-        section: 'Pay Structure', 
+      {
+        section: 'Pay Structure',
         items: [
           { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
           { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
           { icon: <Sliders size={19} />, label: 'Adjustments', path: '/settings/adjustments' },
-        ] 
+        ]
       },
-      { 
-        section: 'Organization', 
+      {
+        section: 'Organization',
         items: [
           { icon: <Building2 size={19} />, label: 'Structure', path: '/settings/structure' },
           { icon: <BookOpen size={19} />, label: 'Policies & Rules', path: '/settings/policies' },
           { icon: <ShieldAlert size={19} />, label: 'Approvals', path: '/settings/approvals' },
-        ] 
+        ]
       },
-      { 
-        section: 'System', 
+      {
+        section: 'System',
         items: [
           { icon: <UserCog size={19} />, label: 'User Management', path: '/settings/users' },
           { icon: <BellRing size={19} />, label: 'Notifications', path: '/settings/notifications' },
-        ] 
+        ]
       },
   ];
 
@@ -393,13 +400,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   const attendanceSettings = [
-    { 
-        section: 'Timekeeping', 
+    {
+        section: 'Timekeeping',
         items: [
           { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
+          { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
           { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
           { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
-        ] 
+        ]
     },
   ];
 
@@ -458,37 +466,44 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Dynamic Sidebar */}
-      <aside className={`w-64 border-r border-slate-200 flex flex-col fixed h-full z-20 overflow-hidden transition-colors duration-300 ${isSettingsPath ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
+      <aside className={`border-r border-slate-200 flex flex-col fixed h-full z-20 overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} ${isSettingsPath ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
         
         {/* Brand/Header Section */}
-        <div className="p-7 flex items-center gap-3">
-          <div className={`${isSettingsPath ? 'bg-indigo-500' : 'bg-indigo-600'} p-2 rounded-xl shadow-lg`}>
+        <div className={`flex items-center gap-3 ${isSidebarOpen ? 'px-6 py-6' : 'py-6 justify-center'}`}>
+          <div className={`${isSettingsPath ? 'bg-indigo-500' : 'bg-indigo-600'} p-2 rounded-xl shadow-lg shrink-0`}>
             <ShieldCheck className="text-white" size={22} />
           </div>
-          <span className={`text-xl font-bold tracking-tight ${isSettingsPath ? 'text-white' : 'text-slate-900'}`}>HRIS</span>
+          {isSidebarOpen && (
+            <span className={`text-xl font-bold tracking-tight ${isSettingsPath ? 'text-white' : 'text-slate-900'}`}>HRIS</span>
+          )}
         </div>
 
         {/* Back Button for Settings (Admin Only) */}
         {isSettingsPath && user?.role !== 'Employee' && (
-          <div className="px-4 pb-4">
-            <button 
+          <div className={`pb-3 ${isSidebarOpen ? 'px-4' : 'px-2 flex justify-center'}`}>
+            <button
               onClick={() => navigate('/dashboard')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-all border border-slate-800"
+              className={`flex items-center gap-3 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition-all border border-slate-800 ${isSidebarOpen ? 'w-full px-3 py-2.5' : 'p-2.5 justify-center'}`}
+              title={isSidebarOpen ? '' : 'Return to App'}
             >
               <ArrowLeft size={16} />
-              Return to App
+              {isSidebarOpen && 'Return to App'}
             </button>
           </div>
         )}
 
         {/* Navigation List */}
-        <nav className="flex-1 px-4 py-2 space-y-7 overflow-y-auto no-scrollbar">
+        <nav className={`flex-1 overflow-y-auto no-scrollbar ${isSidebarOpen ? 'px-4 py-2 space-y-6' : 'px-3 py-3 space-y-1'}`}>
           {activeNavSet.length > 0 ? activeNavSet.map((group) => (
             <div key={group.section}>
-              <h3 className={`text-[11px] font-bold uppercase tracking-[0.15em] mb-3 px-3 ${isSettingsPath ? 'text-slate-500' : 'text-slate-400'}`}>
-                {group.section}
-              </h3>
-              <div className="space-y-1">
+              {isSidebarOpen ? (
+                <h3 className={`text-[11px] font-bold uppercase tracking-[0.15em] mb-3 px-3 ${isSettingsPath ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {group.section}
+                </h3>
+              ) : (
+                <div className={`my-2 h-px mx-1 ${isSettingsPath ? 'bg-slate-700' : 'bg-slate-100'}`} />
+              )}
+              <div className={isSidebarOpen ? 'space-y-1' : 'space-y-1'}>
                 {group.items.map((item) => {
                   const profileTab = (item as { profileTab?: string }).profileTab;
                   const isEmployeeProfileItem = user?.role === 'Employee' && Boolean(profileTab);
@@ -500,17 +515,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <NavLink
                       key={item.label}
                       to={item.path}
-                      className={({ isActive }) => `
-                        flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200
-                        ${(isEmployeeProfileItem ? isEmployeeProfileActive : isActive)
-                          ? (isSettingsPath ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50')
-                          : (isSettingsPath ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900')}
-                      `}
+                      title={isSidebarOpen ? '' : item.label}
+                      className={({ isActive }) => [
+                        'flex items-center rounded-xl transition-all duration-200',
+                        isSidebarOpen
+                          ? 'gap-3 px-3 py-2.5 text-sm font-semibold'
+                          : 'justify-center w-10 h-10 mx-auto',
+                        (isEmployeeProfileItem ? isEmployeeProfileActive : isActive)
+                          ? (isSettingsPath
+                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                              : 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50')
+                          : (isSettingsPath
+                              ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'),
+                      ].join(' ')}
                     >
                       <span className={isItemActiveNow ? (isSettingsPath ? 'text-white' : 'text-indigo-600') : 'text-slate-400'}>
                         {item.icon}
                       </span>
-                      {item.label}
+                      {isSidebarOpen && item.label}
                     </NavLink>
                   );
                 })}
@@ -518,24 +541,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           )) : (
              <div className="p-4 text-center text-slate-500 text-xs italic">
-                No settings available for this role.
+                {isSidebarOpen ? 'No settings available for this role.' : ''}
              </div>
           )}
         </nav>
 
         {/* Bottom Action Area (Admin Only) */}
         {user?.role !== 'Employee' && !isSettingsPath && (
-          <div className="p-4 bg-slate-50/50 border-t border-slate-100 mt-auto">
-            {/* Logic: Only show System Settings button if user has access to at least one settings page */}
+          <div className={`border-t border-slate-100 mt-auto ${isSidebarOpen ? 'p-4' : 'p-3 flex justify-center'}`}>
             {user?.role !== 'Approver' && (
-                <button 
-                onClick={() => {
-                    navigate('/settings/overview');
-                }}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all text-slate-600 hover:bg-white hover:shadow-sm"
+                <button
+                  onClick={() => navigate('/settings/overview')}
+                  className={`flex items-center gap-3 rounded-xl transition-all text-slate-600 hover:bg-slate-100 hover:shadow-sm ${isSidebarOpen ? 'w-full px-3 py-2.5 text-sm font-bold' : 'p-2.5 justify-center w-10 h-10'}`}
+                  title={isSidebarOpen ? '' : 'System Settings'}
                 >
-                <Settings size={19} className="text-slate-400" />
-                System Settings
+                  <Settings size={19} className="text-slate-400 shrink-0" />
+                  {isSidebarOpen && 'System Settings'}
                 </button>
             )}
           </div>
@@ -543,10 +564,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-64 min-h-screen relative">
+      <main className={`flex-1 min-h-screen relative transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
         {/* Universal Header */}
         <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-30">
           <div className="flex items-center gap-4">
+            {/* Sidebar Toggle */}
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+              title={isSidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            >
+              <Menu size={20} />
+            </button>
+
             {isSettingsPath && (
                <div className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-200">
                 System Mode

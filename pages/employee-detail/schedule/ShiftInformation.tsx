@@ -19,6 +19,7 @@ const AVAILABLE_SHIFTS = [
     { id: '1', name: 'Standard Regular Shift', time: '08:00 AM - 05:00 PM' },
     { id: '2', name: 'Sales Flexi Group', time: '09:00 AM - 06:00 PM' },
     { id: '3', name: 'Weekend Support', time: '09:00 AM - 06:00 PM' },
+    { id: '4', name: 'NSWP', time: '08:00 AM - 05:00 PM' },
 ];
 
 const MOCK_SHIFT_HISTORY = [
@@ -27,7 +28,7 @@ const MOCK_SHIFT_HISTORY = [
 ];
 
 const ShiftInformation: React.FC = () => {
-    const { requests, submitShiftRequest } = useRequest();
+    const { requests, submitShiftRequest, shiftRequestApprovalDeadlineDays } = useRequest();
     const { user } = useAuth();
 
     const [expandedShiftHistory, setExpandedShiftHistory] = useState<string | null>(null);
@@ -49,7 +50,9 @@ const ShiftInformation: React.FC = () => {
     const fullHistory = [...globalShiftRequests, ...MOCK_SHIFT_HISTORY];
     const [requestData, setRequestData] = useState({
         shiftId: '',
-        reason: ''
+        reason: '',
+        shiftChangeType: 'Full Cutoff' as 'Full Cutoff' | 'Single Day',
+        shiftChangeDate: ''
     });
     const MotionDiv = motion.div as any;
 
@@ -69,10 +72,12 @@ const ShiftInformation: React.FC = () => {
             shiftToId: requestData.shiftId,
             shiftToName: targetShift?.name || 'New Shift',
             shiftReason: requestData.reason,
+            shiftChangeType: requestData.shiftChangeType,
+            shiftChangeDate: requestData.shiftChangeType === 'Single Day' ? requestData.shiftChangeDate : undefined,
         });
 
         setIsChangeShiftModalOpen(false);
-        setRequestData({ shiftId: '', reason: '' });
+        setRequestData({ shiftId: '', reason: '', shiftChangeType: 'Full Cutoff', shiftChangeDate: '' });
         alert('Shift change request submitted successfully!');
     };
 
@@ -254,6 +259,42 @@ const ShiftInformation: React.FC = () => {
                         </div>
 
                         <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Change Type</label>
+                            <div className="flex gap-3">
+                                {(['Full Cutoff', 'Single Day'] as const).map(type => (
+                                    <button
+                                        key={type}
+                                        onClick={() => setRequestData({ ...requestData, shiftChangeType: type, shiftChangeDate: type === 'Full Cutoff' ? '' : requestData.shiftChangeDate })}
+                                        className={`flex-1 p-3 rounded-xl border-2 text-sm font-bold transition-all ${
+                                            requestData.shiftChangeType === type
+                                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                                : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="mt-2 text-[10px] text-slate-400 italic">
+                                {requestData.shiftChangeType === 'Full Cutoff'
+                                    ? 'Shift change will apply starting from the next cutoff period.'
+                                    : 'Shift change will apply only on the selected date.'}
+                            </p>
+                        </div>
+
+                        {requestData.shiftChangeType === 'Single Day' && (
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Effective Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
+                                    value={requestData.shiftChangeDate}
+                                    onChange={(e) => setRequestData({ ...requestData, shiftChangeDate: e.target.value })}
+                                />
+                            </div>
+                        )}
+
+                        <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Reason for Change</label>
                             <textarea
                                 className="w-full border border-slate-200 p-4 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-medium text-slate-700 transition-all min-h-[120px]"
@@ -266,9 +307,10 @@ const ShiftInformation: React.FC = () => {
 
                     <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex gap-3 text-amber-800">
                         <AlertCircle size={20} className="shrink-0" />
-                        <p className="text-xs leading-relaxed">
-                            <strong>Note:</strong> Shift change requests are subject to approval by your immediate supervisor and HR department.
-                        </p>
+                        <div className="text-xs leading-relaxed space-y-1">
+                            <p><strong>Note:</strong> Shift change requests are subject to approval by your immediate supervisor and HR department.</p>
+                            <p><strong>Deadline:</strong> Requests must be approved within <strong>{shiftRequestApprovalDeadlineDays} days</strong> or they will expire automatically.</p>
+                        </div>
                     </div>
 
                     <div className="flex gap-3 pt-2">
