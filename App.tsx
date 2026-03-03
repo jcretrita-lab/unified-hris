@@ -41,6 +41,8 @@ import ReportsPage from './pages/ReportsPage';
 import ReportDetail from './pages/ReportDetail';
 import EmployeeFieldsSetup from './pages/settings/EmployeeFieldsSetup';
 import NotificationSettings from './pages/settings/NotificationSettings';
+import YearEndPrepPage from './pages/YearEndPrepPage';
+import YearEndBatch13thPage from './pages/YearEndBatch13thPage';
 import NotificationCenter from './pages/NotificationCenter';
 import NotificationDetail from './pages/NotificationDetail';
 import SettingsOverview from './pages/settings/SettingsOverview';
@@ -139,6 +141,8 @@ const AnimatedRoutes = () => {
 
         <Route path="/manage/pay-schedule" element={<ProtectedRoute><PageWrapper><PaySchedulePage /></PageWrapper></ProtectedRoute>} />
         <Route path="/manage/pay-structure" element={<ProtectedRoute><PageWrapper><PayStructure /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/year-end-prep" element={<ProtectedRoute><PageWrapper><YearEndPrepPage /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/year-end-prep/batch-13th" element={<ProtectedRoute><PageWrapper><YearEndBatch13thPage /></PageWrapper></ProtectedRoute>} />
         <Route path="/monitor/audit-logs" element={<ProtectedRoute><PageWrapper><AuditLogsPage /></PageWrapper></ProtectedRoute>} />
         <Route path="/monitor/approvals" element={<ProtectedRoute><PageWrapper><ApprovalList /></PageWrapper></ProtectedRoute>} />
         <Route path="/monitor/approvals/:id" element={<ProtectedRoute><PageWrapper><ApprovalDetail /></PageWrapper></ProtectedRoute>} />
