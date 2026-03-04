@@ -45,6 +45,318 @@ interface DashboardConfig {
     notifications: boolean;
 }
 
+// ─── Dashboard Chart Data ──────────────────────────────────────────────────
+
+const PAYROLL_MONTHLY = {
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  values: [13.2, 13.5, 13.8, 14.1, 13.9, 14.3, 14.7, 14.5, 15.1, 15.3, 15.8, 29.4],
+};
+
+const DEPT_HEADCOUNT = [
+  { dept: 'Operations',      count: 94, color: '#3b82f6' },
+  { dept: 'IT / Dev',        count: 87, color: '#6366f1' },
+  { dept: 'Sales & Mktg',    count: 76, color: '#8b5cf6' },
+  { dept: 'Finance',         count: 41, color: '#10b981' },
+  { dept: 'Human Resources', count: 38, color: '#f59e0b' },
+  { dept: 'Admin',           count: 32, color: '#f97316' },
+  { dept: 'Others',          count: 60, color: '#94a3b8' },
+];
+
+const ATTENDANCE_TREND = [
+  { month: 'Oct', rate: 94.2 },
+  { month: 'Nov', rate: 93.8 },
+  { month: 'Dec', rate: 91.5 },
+  { month: 'Jan', rate: 93.1 },
+  { month: 'Feb', rate: 94.5 },
+  { month: 'Mar', rate: 95.2 },
+];
+
+// ─── Chart 1: Gross Payroll Cost (12-month area chart) ────────────────────
+
+const PayrollTrendChart: React.FC = () => {
+  const W = 560, H = 170;
+  const pl = 52, pr = 16, pt = 14, pb = 30;
+  const cW = W - pl - pr, cH = H - pt - pb;
+  const vals = PAYROLL_MONTHLY.values;
+  const minV = 12, maxV = 32;
+  const cx = (i: number) => pl + (i / (vals.length - 1)) * cW;
+  const cy = (v: number) => pt + (1 - (v - minV) / (maxV - minV)) * cH;
+  const linePath = 'M' + vals.map((v, i) => `${cx(i)},${cy(v)}`).join('L');
+  const areaPath = `${linePath}L${cx(11)},${H - pb}L${cx(0)},${H - pb}Z`;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 170 }}>
+      <defs>
+        <linearGradient id="dash-ptGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
+        </linearGradient>
+      </defs>
+      {[12, 16, 20, 24, 28, 32].map(v => (
+        <g key={v}>
+          <line x1={pl} y1={cy(v)} x2={W - pr} y2={cy(v)} stroke="#f1f5f9" strokeWidth={1} />
+          <text x={pl - 6} y={cy(v) + 4} textAnchor="end" fontSize={9} fill="#94a3b8">₱{v}M</text>
+        </g>
+      ))}
+      <path d={areaPath} fill="url(#dash-ptGrad)" />
+      <path d={linePath} fill="none" stroke="#6366f1" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+      {vals.map((v, i) => (
+        <circle key={i} cx={cx(i)} cy={cy(v)} r={i === 11 ? 5 : 3.5}
+          fill={i === 11 ? '#ef4444' : '#6366f1'} stroke="white" strokeWidth={2} />
+      ))}
+      {PAYROLL_MONTHLY.labels.map((m, i) => (
+        <text key={m} x={cx(i)} y={H - 4} textAnchor="middle" fontSize={9} fill="#94a3b8">{m}</text>
+      ))}
+      <text x={cx(11)} y={cy(29.4) - 9} textAnchor="middle" fontSize={8} fill="#ef4444" fontWeight="bold">
+        13th Mo.+
+      </text>
+    </svg>
+  );
+};
+
+// ─── Chart 2: Headcount by Department (horizontal bars) ───────────────────
+
+const HeadcountChart: React.FC = () => {
+  const total = DEPT_HEADCOUNT.reduce((s, d) => s + d.count, 0);
+  return (
+    <div className="space-y-3 pt-1">
+      {DEPT_HEADCOUNT.map((d, i) => {
+        const pct = Math.round((d.count / total) * 100);
+        return (
+          <div key={d.dept}>
+            <div className="flex justify-between items-baseline mb-1">
+              <span className="text-xs font-bold text-slate-700">{d.dept}</span>
+              <span className="text-xs text-slate-400 font-medium">
+                {d.count} <span className="text-slate-300 text-[10px]">({pct}%)</span>
+              </span>
+            </div>
+            <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 0.7, delay: i * 0.07, ease: 'easeOut' }}
+                className="h-full rounded-full"
+                style={{ backgroundColor: d.color }}
+              />
+            </div>
+          </div>
+        );
+      })}
+      <div className="pt-2 border-t border-slate-50 flex justify-between items-center">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Headcount</span>
+        <span className="text-sm font-bold text-slate-700">{total}</span>
+      </div>
+    </div>
+  );
+};
+
+// ─── Chart 3: Monthly Attendance Rate (area, zoomed Y-axis) ───────────────
+
+const AttendanceRateChart: React.FC = () => {
+  const W = 560, H = 150;
+  const pl = 44, pr = 16, pt = 20, pb = 28;
+  const cW = W - pl - pr, cH = H - pt - pb;
+  const data = ATTENDANCE_TREND;
+  const minV = 88, maxV = 97;
+  const cx = (i: number) => pl + (i / (data.length - 1)) * cW;
+  const cy = (v: number) => pt + (1 - (v - minV) / (maxV - minV)) * cH;
+  const linePath = 'M' + data.map((d, i) => `${cx(i)},${cy(d.rate)}`).join('L');
+  const areaPath = `${linePath}L${cx(data.length - 1)},${H - pb}L${cx(0)},${H - pb}Z`;
+  const targetY = cy(95);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 150 }}>
+      <defs>
+        <linearGradient id="dash-attGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
+        </linearGradient>
+      </defs>
+      {[88, 90, 92, 94, 96].map(v => (
+        <g key={v}>
+          <line x1={pl} y1={cy(v)} x2={W - pr} y2={cy(v)} stroke="#f1f5f9" strokeWidth={1} />
+          <text x={pl - 6} y={cy(v) + 4} textAnchor="end" fontSize={9} fill="#94a3b8">{v}%</text>
+        </g>
+      ))}
+      <line x1={pl} y1={targetY} x2={W - pr} y2={targetY}
+        stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="6,3" />
+      <text x={W - pr - 4} y={targetY - 6} textAnchor="end" fontSize={8} fill="#f59e0b" fontWeight="bold">
+        Target 95%
+      </text>
+      <path d={areaPath} fill="url(#dash-attGrad)" />
+      <path d={linePath} fill="none" stroke="#10b981" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+      {data.map((d, i) => (
+        <g key={i}>
+          <circle cx={cx(i)} cy={cy(d.rate)} r={4.5}
+            fill={d.rate >= 95 ? '#10b981' : d.rate < 92 ? '#ef4444' : '#f59e0b'}
+            stroke="white" strokeWidth={2} />
+          <text x={cx(i)} y={cy(d.rate) - 10} textAnchor="middle" fontSize={9}
+            fill={d.rate < 92 ? '#ef4444' : '#475569'} fontWeight="bold">
+            {d.rate}%
+          </text>
+        </g>
+      ))}
+      {data.map((d, i) => (
+        <text key={d.month} x={cx(i)} y={H - 4} textAnchor="middle" fontSize={9} fill="#94a3b8">
+          {d.month}
+        </text>
+      ))}
+    </svg>
+  );
+};
+
+// ─── Analytics Section wrapper (all 3 charts) ─────────────────────────────
+
+const AnalyticsSection: React.FC = () => (
+  <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      {/* Chart 1 — Payroll Cost Trend (2/3) */}
+      <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
+          <div>
+            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <BarChart3 size={16} className="text-indigo-600" /> Gross Payroll Cost — FY 2025
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">Monthly employer disbursement incl. 13th month pay (₱M).</p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0 text-[10px] font-bold text-slate-500">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-1.5 rounded-full bg-indigo-500 inline-block" /> Regular</span>
+            <span className="flex items-center gap-1.5 text-rose-500"><span className="w-3 h-1.5 rounded-full bg-rose-400 inline-block" /> 13th Mo.</span>
+          </div>
+        </div>
+        <PayrollTrendChart />
+        <div className="mt-3 grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-50 pt-3">
+          <div className="text-center">
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">YTD Total</p>
+            <p className="text-sm font-bold text-slate-700 mt-0.5">₱189.9M</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Avg / Month</p>
+            <p className="text-sm font-bold text-slate-700 mt-0.5">₱15.8M</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Peak (Dec)</p>
+            <p className="text-sm font-bold text-rose-600 mt-0.5">₱29.4M</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart 2 — Headcount by Department (1/3) */}
+      <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+        <div className="mb-4">
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <PieChart size={16} className="text-emerald-600" /> Headcount by Department
+          </h3>
+          <p className="text-xs text-slate-400 mt-0.5">Active employee distribution as of today.</p>
+        </div>
+        <HeadcountChart />
+      </div>
+    </div>
+
+    {/* Chart 3 — Monthly Attendance Rate (full width) */}
+    <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <LineChart size={16} className="text-emerald-600" /> Monthly Attendance Rate — Last 6 Months
+          </h3>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Company-wide present rate (%). Dashed line = 95% target. Y-axis zoomed 88–97% for visibility.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0 text-[10px] font-bold">
+          <span className="flex items-center gap-1.5 text-emerald-600"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> ≥95%</span>
+          <span className="flex items-center gap-1.5 text-amber-500"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" /> 92–95%</span>
+          <span className="flex items-center gap-1.5 text-rose-500"><span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" /> &lt;92%</span>
+        </div>
+      </div>
+      <AttendanceRateChart />
+    </div>
+  </div>
+);
+
+// ─── System Activity Traffic Data (24-hour, hourly) ──────────────────────
+// Active concurrent user sessions + normalized API requests/min
+const SYSTEM_TRAFFIC_DATA = {
+  labels: ['12A','1A','2A','3A','4A','5A','6A','7A','8A','9A','10A','11A',
+           '12P','1P','2P','3P','4P','5P','6P','7P','8P','9P','10P','11P'],
+  // Active sessions (0–100 scale, peak ~84 at 10 AM)
+  sessions: [4, 3, 3, 2, 3, 8, 22, 58, 71, 82, 84, 80, 52, 66, 79, 77, 69, 46, 28, 18, 12, 9, 7, 5],
+  // API requests/min, normalized to 0–100 (actual max ≈ 361 req/min at 10 AM)
+  apiNorm:  [5, 3, 3, 2, 4, 10, 26, 69, 85, 98, 100, 95, 62, 78, 94, 92, 82, 55, 33, 22, 14, 11, 9, 6],
+};
+
+const SystemTrafficChart: React.FC = () => {
+  const W = 540, H = 210;
+  const pl = 40, pr = 16, pt = 24, pb = 28;
+  const cW = W - pl - pr, cH = H - pt - pb;
+  const n = SYSTEM_TRAFFIC_DATA.sessions.length;
+  const cx = (i: number) => pl + (i / (n - 1)) * cW;
+  const cy = (v: number) => pt + (1 - v / 100) * cH;
+
+  const sessLine = 'M' + SYSTEM_TRAFFIC_DATA.sessions.map((v, i) => `${cx(i)},${cy(v)}`).join('L');
+  const sessArea = `${sessLine}L${cx(n - 1)},${H - pb}L${cx(0)},${H - pb}Z`;
+  const apiLine  = 'M' + SYSTEM_TRAFFIC_DATA.apiNorm.map((v, i) => `${cx(i)},${cy(v)}`).join('L');
+
+  // X-axis: show every 3 hours + last point
+  const xTicks = [0, 3, 6, 9, 12, 15, 18, 21, 23];
+  const peakIdx = 10; // 10 AM
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full">
+      <defs>
+        <linearGradient id="stGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
+        </linearGradient>
+      </defs>
+
+      {/* Business hours shading (8 AM – 6 PM, indices 8–18) */}
+      <rect x={cx(8)} y={pt} width={cx(18) - cx(8)} height={cH} fill="#eef0ff" rx={3} opacity={0.7} />
+      <text x={(cx(8) + cx(18)) / 2} y={pt + 9} textAnchor="middle" fontSize={7.5} fill="#a5b4fc">
+        Business Hours  08:00–18:00
+      </text>
+
+      {/* Y-axis grid */}
+      {[0, 25, 50, 75, 100].map(v => (
+        <g key={v}>
+          <line x1={pl} y1={cy(v)} x2={W - pr} y2={cy(v)} stroke="#f1f5f9" strokeWidth={1} />
+          <text x={pl - 5} y={cy(v) + 4} textAnchor="end" fontSize={8.5} fill="#94a3b8">{v}</text>
+        </g>
+      ))}
+
+      {/* Area fill (sessions) */}
+      <path d={sessArea} fill="url(#stGrad)" />
+
+      {/* API req/min line (dashed, secondary) */}
+      <path d={apiLine} fill="none" stroke="#cbd5e1" strokeWidth={1.5}
+        strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,2" />
+
+      {/* Sessions line */}
+      <path d={sessLine} fill="none" stroke="#6366f1" strokeWidth={2.5}
+        strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Peak annotation */}
+      <line x1={cx(peakIdx)} y1={pt} x2={cx(peakIdx)} y2={H - pb}
+        stroke="#6366f1" strokeWidth={1} strokeDasharray="3,2" opacity={0.35} />
+      <circle cx={cx(peakIdx)} cy={cy(84)} r={5.5} fill="#6366f1" stroke="white" strokeWidth={2.5} />
+      <text x={cx(peakIdx)} y={cy(84) - 11} textAnchor="middle" fontSize={8.5} fill="#4f46e5" fontWeight="bold">
+        Peak 84
+      </text>
+
+      {/* Lunch dip annotation */}
+      <circle cx={cx(12)} cy={cy(52)} r={4} fill="#f59e0b" stroke="white" strokeWidth={2} />
+      <text x={cx(12) + 6} y={cy(52) + 4} fontSize={8} fill="#d97706" fontWeight="bold">Lunch</text>
+
+      {/* X-axis labels */}
+      {xTicks.map(i => (
+        <text key={i} x={cx(i)} y={H - 5} textAnchor="middle" fontSize={8.5} fill="#94a3b8">
+          {SYSTEM_TRAFFIC_DATA.labels[i]}
+        </text>
+      ))}
+    </svg>
+  );
+};
+
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -66,21 +378,7 @@ const Dashboard: React.FC = () => {
   };
 
   // --- Mock Charts (Visual Components) ---
-  const AttendanceLineChart = () => (
-      <div className="h-64 w-full flex items-end justify-between gap-2 pt-4 px-2">
-          {[40, 65, 55, 80, 75, 90, 85, 95, 88, 70, 92, 98, 85, 90, 78].map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                  <div className="w-full bg-slate-100 rounded-t-lg relative h-full flex items-end overflow-hidden">
-                       <motion.div 
-                          initial={{ height: 0 }} 
-                          animate={{ height: `${h}%` }} 
-                          className="w-full bg-indigo-500 opacity-80 group-hover:opacity-100 transition-opacity"
-                       ></motion.div>
-                  </div>
-              </div>
-          ))}
-      </div>
-  );
+  const AttendanceLineChart = () => <SystemTrafficChart />;
 
   const DepartmentBarChart = () => (
       <div className="space-y-5">
@@ -157,26 +455,52 @@ const Dashboard: React.FC = () => {
         <div className="space-y-6">
             {/* Stats Grid */}
             {visibleWidgets.stats && <StatsGrid stats={stats} />}
-            
-            {/* Top Row: Attendance & Notifications */}
+
+            {/* Analytics Charts */}
+            <AnalyticsSection />
+
+            {/* Top Row: Activity & Notifications */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 {/* Attendance Chart - Takes up 2/3 */}
                 {visibleWidgets.attendanceTrend && (
                     <div className={`bg-white border border-slate-100 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col ${visibleWidgets.notifications ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                    <LineChart className="text-indigo-600" size={20} /> System Activity Traffic
+                                    <LineChart className="text-indigo-600" size={20} /> System Activity Traffic — Today
                                 </h2>
-                                <p className="text-xs text-slate-500">Real-time server load and user concurrency.</p>
+                                <p className="text-xs text-slate-500 mt-0.5">Hourly concurrent user sessions and API request volume. Y-axis = sessions (0–100).</p>
                             </div>
-                            <div className="flex gap-2">
-                                <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> Traffic</span>
+                            <div className="flex items-center gap-3 shrink-0 text-[10px] font-bold">
+                                <span className="flex items-center gap-1.5 text-slate-600">
+                                    <span className="w-3 h-1.5 rounded-full bg-indigo-500 inline-block" /> Active Sessions
+                                </span>
+                                <span className="flex items-center gap-1.5 text-slate-400">
+                                    <span className="w-4 border-t-2 border-dashed border-slate-400 inline-block" /> API Req/min
+                                </span>
                             </div>
                         </div>
-                        <div className="flex-1 flex items-end">
+                        <div className="flex-1">
                             <AttendanceLineChart />
+                        </div>
+                        <div className="mt-3 grid grid-cols-4 divide-x divide-slate-100 border-t border-slate-50 pt-3">
+                            <div className="text-center">
+                                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Peak Sessions</p>
+                                <p className="text-sm font-bold text-slate-700 mt-0.5">84 <span className="text-[10px] font-medium text-slate-400">@ 10 AM</span></p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Current Active</p>
+                                <p className="text-sm font-bold text-indigo-600 mt-0.5">84 <span className="text-[10px] font-medium text-emerald-500">● Live</span></p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Peak API Req/min</p>
+                                <p className="text-sm font-bold text-slate-700 mt-0.5">361 <span className="text-[10px] font-medium text-slate-400">@ 10 AM</span></p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Total Logins Today</p>
+                                <p className="text-sm font-bold text-slate-700 mt-0.5">428</p>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -277,6 +601,7 @@ const Dashboard: React.FC = () => {
     return (
         <div className="space-y-8">
             <StatsGrid stats={stats} />
+            <AnalyticsSection />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
                     <div className="flex justify-between items-center mb-6">
