@@ -552,9 +552,6 @@ const ShiftManagement: React.FC = () => {
                   Schedule
                 </th>
                 <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                  Active Days
-                </th>
-                <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                   Assignments
                 </th>
                 <th className="px-8 py-5 text-right" />
@@ -668,43 +665,6 @@ const ShiftManagement: React.FC = () => {
                               {formatTime(sub.startTime)} – {formatTime(sub.endTime)}
                             </span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-
-                  {/* Active Days */}
-                  <td className="px-8 py-5 align-top">
-                    <div className="flex flex-col gap-6">
-                      <div className="flex gap-1 h-[40px] items-center">
-                        {DAYS_OF_WEEK.map((day) => (
-                          <div
-                            key={day}
-                            className={`w-5 h-5 flex items-center justify-center rounded text-[8px] font-bold ${
-                              shift.workDays.includes(day)
-                                ? 'bg-slate-800 text-white'
-                                : 'bg-slate-100 text-slate-300'
-                            }`}
-                          >
-                            {day[0]}
-                          </div>
-                        ))}
-                      </div>
-
-                      {shift.subShifts?.map((sub) => (
-                        <div key={sub.id} className="flex gap-1 h-[40px] items-center">
-                          {DAYS_OF_WEEK.map((day) => (
-                            <div
-                              key={day}
-                              className={`w-4 h-4 flex items-center justify-center rounded text-[7px] font-bold ${
-                                sub.workDays.includes(day)
-                                  ? 'bg-indigo-600 text-white'
-                                  : 'bg-slate-50 text-slate-200'
-                              }`}
-                            >
-                              {day[0]}
-                            </div>
-                          ))}
                         </div>
                       ))}
                     </div>
@@ -1034,27 +994,6 @@ const ShiftManagement: React.FC = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                      Active Days
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {DAYS_OF_WEEK.map((day) => (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => toggleSubShiftDay(sub.id, day)}
-                          className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
-                            sub.workDays.includes(day)
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
-                              : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                          }`}
-                        >
-                          {day}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               ))}
             </div>
