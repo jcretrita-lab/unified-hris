@@ -252,6 +252,26 @@ const MOCK_SHIFTS: Shift[] = [
     lastModified: 'Feb 3, 2026 14:30',
     isDefault: false,
     assignedEmployees: 56
+  },
+  {
+    id: '11',
+    name: 'Diwa Employees',
+    isCompressible: true,
+    // Non-compressed (9-hour workday, Mon–Fri)
+    workHours: 9,
+    startTime: '08:00',
+    endTime: '17:00',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    workdays: 'Mon – Fri',
+    // Compressed (10-hour workday, Mon–Fri)
+    compressedWorkHours: 10,
+    compressedStartTime: '08:00',
+    compressedEndTime: '18:00',
+    compressedWorkdays: 'Mon – Fri',
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Mar 4, 2026 10:15',
+    isDefault: false,
+    assignedEmployees: 42
   }
 ];
 
