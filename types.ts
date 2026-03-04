@@ -238,3 +238,19 @@ export interface PayTemplate {
   isTaxExempt?: boolean;
   taxRate?: number;
 }
+
+export interface DailyPayTemplateComponent {
+  name: string;
+  amount: number;
+  type: 'earning' | 'deduction';
+}
+
+export interface DailyPayTemplate {
+  id: string;
+  name: string;
+  dailyRate: number;
+  targetType: 'Global' | 'Department' | 'Position';
+  targetId: string | null;
+  additionalComponents: DailyPayTemplateComponent[];
+  isActive: boolean;
+}
