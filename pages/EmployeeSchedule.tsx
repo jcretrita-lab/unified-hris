@@ -235,7 +235,7 @@ const EmployeeSchedule: React.FC = () => {
 
       {/* Schedule Management Tab */}
       {activeTab === 'Schedule Management' && (
-        <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm min-h-[600px] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Toolbar */}
             <div className="p-5 border-b border-slate-50 flex flex-col lg:flex-row gap-4 items-center justify-between bg-white">
                 <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
@@ -263,7 +263,7 @@ const EmployeeSchedule: React.FC = () => {
             </div>
 
             {/* Table */}
-            <div className="overflow-auto max-h-[calc(100vh-340px)]">
+            <div className="overflow-auto max-h-[480px]">
                 <table className="min-w-full divide-y divide-slate-50">
                     <thead className="bg-slate-50 text-left sticky top-0 z-10">
                         <tr>
@@ -343,7 +343,7 @@ const EmployeeSchedule: React.FC = () => {
 
       {/* Leave Management Tab */}
       {activeTab === 'Leave Management' && (
-        <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm min-h-[600px] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Toolbar */}
             <div className="p-5 border-b border-slate-50 flex flex-col lg:flex-row gap-4 items-center justify-between bg-white">
                 <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
@@ -371,7 +371,7 @@ const EmployeeSchedule: React.FC = () => {
             </div>
 
             {/* Leave Table */}
-            <div className="overflow-auto max-h-[calc(100vh-340px)]">
+            <div className="overflow-auto max-h-[480px]">
                 <table className="min-w-full divide-y divide-slate-50">
                     <thead className="bg-slate-50 text-left sticky top-0 z-10">
                         <tr>

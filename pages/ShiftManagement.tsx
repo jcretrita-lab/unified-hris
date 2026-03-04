@@ -26,23 +26,31 @@ type ShiftType = 'Default' | 'Biometric' | 'Official Business';
 interface SubShift {
   id: string;
   type: ShiftType;
-  name: string; // e.g. "Early In Variant" or "Client Meeting Schedule"
+  name: string;
   startTime: string;
   endTime: string;
-  condition: string; // e.g. "Detected Entry 07:00 - 08:00"
+  condition: string;
 }
 
 interface Shift {
   id: string;
   name: string;
+  isCompressible: boolean;
+  // Regular / Non-compressed schedule
   workHours: number;
   startTime: string;
   endTime: string;
+  workdays: string;
+  // Compressed schedule (only when isCompressible = true)
+  compressedWorkHours?: number;
+  compressedStartTime?: string;
+  compressedEndTime?: string;
+  compressedWorkdays?: string;
   lastModifiedBy: string;
   lastModified: string;
   isDefault?: boolean;
-  subShifts?: SubShift[]; // The "Delegated" shifts
-  assignedEmployees: number; // Count of employees assigned to this group
+  subShifts?: SubShift[];
+  assignedEmployees: number;
 }
 
 // --- Mock Data ---
@@ -50,9 +58,11 @@ const MOCK_SHIFTS: Shift[] = [
   {
     id: '1',
     name: 'Standard Regular Shift',
+    isCompressible: false,
     workHours: 8,
     startTime: '08:00',
     endTime: '17:00',
+    workdays: 'Mon – Fri',
     lastModifiedBy: 'Louis Panganiban',
     lastModified: 'Aug 8, 2025 23:56',
     isDefault: true,
@@ -64,16 +74,18 @@ const MOCK_SHIFTS: Shift[] = [
         name: 'Early Bird Entry',
         startTime: '07:00',
         endTime: '16:00',
-        condition: 'Clock-in between 06:30 AM - 07:30 AM'
+        condition: 'Clock-in between 06:30 AM – 07:30 AM'
       }
     ]
   },
   {
     id: '2',
     name: 'Sales Flexi Group',
+    isCompressible: false,
     workHours: 9,
     startTime: '09:00',
     endTime: '18:00',
+    workdays: 'Mon – Fri',
     lastModifiedBy: 'Juan Dela Cruz',
     lastModified: 'Aug 8, 2025 12:05',
     isDefault: false,
@@ -92,9 +104,11 @@ const MOCK_SHIFTS: Shift[] = [
   {
     id: '3',
     name: 'Weekend Support',
+    isCompressible: false,
     workHours: 8,
     startTime: '09:00',
     endTime: '18:00',
+    workdays: 'Sat – Sun',
     lastModifiedBy: 'System Admin',
     lastModified: 'Aug 1, 2025 09:00',
     isDefault: false,
@@ -103,13 +117,102 @@ const MOCK_SHIFTS: Shift[] = [
   {
     id: '4',
     name: 'NSWP',
+    isCompressible: false,
     workHours: 8,
     startTime: '08:00',
     endTime: '17:00',
+    workdays: 'Mon – Fri',
     lastModifiedBy: 'System Admin',
     lastModified: 'Sep 15, 2025 10:00',
     isDefault: false,
     assignedEmployees: 28
+  },
+  {
+    id: '5',
+    name: 'CWS Production Group',
+    isCompressible: true,
+    // Non-compressed version (10-hour workday, Mon–Fri)
+    workHours: 10,
+    startTime: '08:00',
+    endTime: '18:00',
+    workdays: 'Mon – Fri',
+    // Compressed version (12-hour workday, Mon–Thu)
+    compressedWorkHours: 12,
+    compressedStartTime: '06:00',
+    compressedEndTime: '18:00',
+    compressedWorkdays: 'Mon – Thu',
+    lastModifiedBy: 'Louis Panganiban',
+    lastModified: 'Jan 10, 2026 08:00',
+    isDefault: false,
+    assignedEmployees: 64
+  },
+  {
+    id: '6',
+    name: 'Night Shift',
+    isCompressible: false,
+    workHours: 8,
+    startTime: '22:00',
+    endTime: '06:00',
+    workdays: 'Mon – Fri',
+    lastModifiedBy: 'System Admin',
+    lastModified: 'Oct 5, 2025 09:00',
+    isDefault: false,
+    assignedEmployees: 35
+  },
+  {
+    id: '7',
+    name: 'Mid Shift',
+    isCompressible: false,
+    workHours: 8,
+    startTime: '14:00',
+    endTime: '22:00',
+    workdays: 'Mon – Fri',
+    lastModifiedBy: 'System Admin',
+    lastModified: 'Oct 5, 2025 09:15',
+    isDefault: false,
+    assignedEmployees: 22
+  },
+  {
+    id: '8',
+    name: 'Early Morning Shift',
+    isCompressible: false,
+    workHours: 8,
+    startTime: '06:00',
+    endTime: '14:00',
+    workdays: 'Mon – Fri',
+    lastModifiedBy: 'System Admin',
+    lastModified: 'Oct 5, 2025 09:30',
+    isDefault: false,
+    assignedEmployees: 18
+  },
+  {
+    id: '9',
+    name: 'IT Support CWS',
+    isCompressible: true,
+    // Non-compressed (9-hour workday, Mon–Fri)
+    workHours: 9,
+    startTime: '09:00',
+    endTime: '18:00',
+    workdays: 'Mon – Fri',
+    // Compressed (12-hour workday, Mon–Thu)
+    compressedWorkHours: 12,
+    compressedStartTime: '07:00',
+    compressedEndTime: '19:00',
+    compressedWorkdays: 'Mon – Thu',
+    lastModifiedBy: 'Juan Dela Cruz',
+    lastModified: 'Feb 1, 2026 10:00',
+    isDefault: false,
+    assignedEmployees: 17,
+    subShifts: [
+      {
+        id: 'sub-9',
+        type: 'Official Business',
+        name: 'On-Site Support',
+        startTime: '08:00',
+        endTime: '20:00',
+        condition: 'Approved OB Application'
+      }
+    ]
   }
 ];
 
@@ -135,8 +238,13 @@ const ShiftManagement: React.FC = () => {
   // Create/Edit Form State
   const [formData, setFormData] = useState<Partial<Shift>>({
     name: '',
+    isCompressible: false,
     startTime: '09:00',
     endTime: '18:00',
+    workdays: 'Mon – Fri',
+    compressedStartTime: '06:00',
+    compressedEndTime: '18:00',
+    compressedWorkdays: 'Mon – Thu',
     isDefault: false,
     subShifts: []
   });
@@ -152,8 +260,13 @@ const ShiftManagement: React.FC = () => {
       setEditingId(null);
       setFormData({
         name: '',
+        isCompressible: false,
         startTime: '09:00',
         endTime: '18:00',
+        workdays: 'Mon – Fri',
+        compressedStartTime: '06:00',
+        compressedEndTime: '18:00',
+        compressedWorkdays: 'Mon – Thu',
         isDefault: false,
         subShifts: []
       });
@@ -167,20 +280,31 @@ const ShiftManagement: React.FC = () => {
     setIsAssignModalOpen(true);
   };
 
+  const calcHours = (start: string, end: string) => {
+    const s = parseInt(start.split(':')[0]) * 60 + parseInt(start.split(':')[1]);
+    const e = parseInt(end.split(':')[0]) * 60 + parseInt(end.split(':')[1]);
+    let mins = e - s;
+    if (mins < 0) mins += 24 * 60;
+    return Math.round(mins / 60);
+  };
+
   const handleSave = () => {
     if (!formData.name || !formData.startTime || !formData.endTime) return;
-
-    const start = parseInt(formData.startTime.split(':')[0]);
-    const end = parseInt(formData.endTime.split(':')[0]);
-    let hours = end - start;
-    if (hours < 0) hours += 24;
 
     const payload: Shift = {
       id: editingId || Math.random().toString(36).substr(2, 9),
       name: formData.name,
-      workHours: hours,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
+      isCompressible: formData.isCompressible || false,
+      workHours: calcHours(formData.startTime!, formData.endTime!),
+      startTime: formData.startTime!,
+      endTime: formData.endTime!,
+      workdays: formData.workdays || 'Mon – Fri',
+      ...(formData.isCompressible && {
+        compressedWorkHours: calcHours(formData.compressedStartTime!, formData.compressedEndTime!),
+        compressedStartTime: formData.compressedStartTime,
+        compressedEndTime: formData.compressedEndTime,
+        compressedWorkdays: formData.compressedWorkdays || 'Mon – Thu',
+      }),
       lastModifiedBy: 'Current User',
       lastModified: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' }),
       isDefault: formData.isDefault,
@@ -300,11 +424,14 @@ const ShiftManagement: React.FC = () => {
                           <Clock size={16} />
                         </div>
                         <div>
-                          <span className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <span className="text-sm font-bold text-slate-900 flex items-center gap-2 flex-wrap">
                             {shift.name}
                             {shift.isDefault && <span className="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">Default</span>}
+                            {shift.isCompressible && <span className="text-[9px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded border border-amber-100 uppercase tracking-wider">CWS</span>}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Standard Config</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                            {shift.isCompressible ? 'Compressed Work Schedule' : 'Standard Config'}
+                          </span>
                         </div>
                       </div>
 
@@ -328,22 +455,45 @@ const ShiftManagement: React.FC = () => {
                   </td>
 
                   <td className="px-8 py-5 align-top">
-                    <div className="flex flex-col gap-6">
-                      {/* Default Time */}
-                      <div className="flex items-center h-[40px]">
-                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
-                          <span className="text-xs font-mono font-bold text-slate-700">
-                            {formatTime(shift.startTime)} - {formatTime(shift.endTime)}
-                          </span>
+                    <div className="flex flex-col gap-3">
+                      {shift.isCompressible ? (
+                        <>
+                          {/* Compressed */}
+                          <div>
+                            <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider block mb-1">Compressed · {shift.compressedWorkdays} · {shift.compressedWorkHours}h</span>
+                            <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 w-fit">
+                              <span className="text-xs font-mono font-bold text-amber-700">
+                                {formatTime(shift.compressedStartTime!)} – {formatTime(shift.compressedEndTime!)}
+                              </span>
+                            </div>
+                          </div>
+                          {/* Non-Compressed */}
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Non-Compressed · {shift.workdays} · {shift.workHours}h</span>
+                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
+                              <span className="text-xs font-mono font-bold text-slate-700">
+                                {formatTime(shift.startTime)} – {formatTime(shift.endTime)}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">{shift.workdays} · {shift.workHours}h</span>
+                          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
+                            <span className="text-xs font-mono font-bold text-slate-700">
+                              {formatTime(shift.startTime)} – {formatTime(shift.endTime)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Sub Shift Times */}
                       {shift.subShifts && shift.subShifts.map(sub => (
-                        <div key={sub.id} className="flex items-center h-[40px]">
+                        <div key={sub.id}>
                           <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-lg w-fit shadow-sm">
                             <span className="text-xs font-mono font-bold text-slate-600">
-                              {formatTime(sub.startTime)} - {formatTime(sub.endTime)}
+                              {formatTime(sub.startTime)} – {formatTime(sub.endTime)}
                             </span>
                           </div>
                         </div>
@@ -402,44 +552,136 @@ const ShiftManagement: React.FC = () => {
           </div>
 
           <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
-            {/* Default Shift Config */}
-            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Default Configuration</h4>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Group Name</label>
-                  <input
-                    className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
-                    placeholder="e.g. Regular Day Shift"
-                    value={formData.name}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Default Start</label>
-                    <input
-                      type="time"
-                      className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
-                      value={formData.startTime}
-                      onChange={e => setFormData({ ...formData, startTime: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Default End</label>
-                    <input
-                      type="time"
-                      className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
-                      value={formData.endTime}
-                      onChange={e => setFormData({ ...formData, endTime: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-              </div>
+            {/* Group Name */}
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Group Name</label>
+              <input
+                className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
+                placeholder="e.g. Regular Day Shift"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+              />
             </div>
+
+            {/* Compressible Toggle */}
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, isCompressible: !formData.isCompressible })}
+              className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${formData.isCompressible ? 'bg-amber-50 border-amber-300' : 'bg-white border-slate-200 hover:border-slate-300'}`}
+            >
+              <div className="text-left">
+                <span className="text-sm font-bold text-slate-800 block">Compressible Work Schedule (CWS)</span>
+                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                  {formData.isCompressible
+                    ? 'Define both a compressed and a non-compressed version of this shift.'
+                    : 'Enable to configure a compressed and non-compressed variant of this shift.'}
+                </span>
+              </div>
+              <div className={`relative w-10 h-6 rounded-full transition-all shrink-0 ml-4 ${formData.isCompressible ? 'bg-amber-500' : 'bg-slate-200'}`}>
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${formData.isCompressible ? 'left-5' : 'left-1'}`} />
+              </div>
+            </button>
+
+            {formData.isCompressible ? (
+              <div className="space-y-4">
+                {/* Compressed Schedule */}
+                <div className="bg-amber-50 p-5 rounded-2xl border border-amber-200">
+                  <h4 className="text-xs font-bold text-amber-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                    Compressed Schedule
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">Start Time</label>
+                        <input type="time" className="w-full border border-amber-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-sm font-bold text-slate-900"
+                          value={formData.compressedStartTime} onChange={e => setFormData({ ...formData, compressedStartTime: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">End Time</label>
+                        <input type="time" className="w-full border border-amber-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-sm font-bold text-slate-900"
+                          value={formData.compressedEndTime} onChange={e => setFormData({ ...formData, compressedEndTime: e.target.value })} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">Work Days</label>
+                      <input className="w-full border border-amber-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-sm font-bold text-slate-900"
+                        placeholder="e.g. Mon – Thu"
+                        value={formData.compressedWorkdays} onChange={e => setFormData({ ...formData, compressedWorkdays: e.target.value })} />
+                    </div>
+                    {formData.compressedStartTime && formData.compressedEndTime && (
+                      <p className="text-[11px] text-amber-600 font-bold">
+                        ≈ {calcHours(formData.compressedStartTime, formData.compressedEndTime)} hrs/day
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Non-Compressed Schedule */}
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
+                    Non-Compressed Schedule
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Start Time</label>
+                        <input type="time" className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-900"
+                          value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">End Time</label>
+                        <input type="time" className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-900"
+                          value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Work Days</label>
+                      <input className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-900"
+                        placeholder="e.g. Mon – Fri"
+                        value={formData.workdays} onChange={e => setFormData({ ...formData, workdays: e.target.value })} />
+                    </div>
+                    {formData.startTime && formData.endTime && (
+                      <p className="text-[11px] text-slate-500 font-bold">
+                        ≈ {calcHours(formData.startTime, formData.endTime)} hrs/day
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Regular (non-compressible) config */
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Schedule Configuration</h4>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Start Time</label>
+                      <input type="time" className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
+                        value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">End Time</label>
+                      <input type="time" className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
+                        value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Work Days</label>
+                    <input className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
+                      placeholder="e.g. Mon – Fri"
+                      value={formData.workdays} onChange={e => setFormData({ ...formData, workdays: e.target.value })} />
+                  </div>
+                  {formData.startTime && formData.endTime && (
+                    <p className="text-[11px] text-slate-500 font-bold">
+                      ≈ {calcHours(formData.startTime, formData.endTime)} hrs/day
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Sub Shifts */}
             <div className="space-y-4">
