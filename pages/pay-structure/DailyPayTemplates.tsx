@@ -25,7 +25,6 @@ const MOCK_DAILY_PAY_TEMPLATES: DailyPayTemplate[] = [
         additionalComponents: [
             { name: 'Meal Allowance', amount: 100, type: 'earning' },
             { name: 'Transportation', amount: 75, type: 'earning' },
-            { name: 'SSS Deduction', amount: 36.30, type: 'deduction' },
         ],
         isActive: true,
     },
@@ -38,8 +37,6 @@ const MOCK_DAILY_PAY_TEMPLATES: DailyPayTemplate[] = [
         additionalComponents: [
             { name: 'Hazard Pay', amount: 150, type: 'earning' },
             { name: 'Meal Allowance', amount: 120, type: 'earning' },
-            { name: 'SSS Deduction', amount: 36.30, type: 'deduction' },
-            { name: 'PhilHealth Premium', amount: 18.00, type: 'deduction' },
         ],
         isActive: true,
     },
@@ -51,7 +48,6 @@ const MOCK_DAILY_PAY_TEMPLATES: DailyPayTemplate[] = [
         targetId: 'pos-helper',
         additionalComponents: [
             { name: 'Meal Allowance', amount: 80, type: 'earning' },
-            { name: 'SSS Deduction', amount: 36.30, type: 'deduction' },
         ],
         isActive: false,
     },
@@ -80,6 +76,9 @@ const DailyPayTemplates: React.FC<DailyPayTemplatesProps> = ({ templates, setTem
     const [editingTemplate, setEditingTemplate] = useState<DailyPayTemplate | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedComponentId, setSelectedComponentId] = useState('');
+
+    // ── Show/Hide Deductions ──────────────────────────────────────────────────────
+    const [showDeductions, setShowDeductions] = useState(false);
 
     const filtered = templates.filter(t =>
         t.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -168,7 +167,7 @@ const DailyPayTemplates: React.FC<DailyPayTemplatesProps> = ({ templates, setTem
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="relative max-w-sm w-full">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
@@ -179,13 +178,29 @@ const DailyPayTemplates: React.FC<DailyPayTemplatesProps> = ({ templates, setTem
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <button
-                    onClick={handleOpenCreate}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95"
-                >
-                    <Plus size={16} />
-                    New Template
-                </button>
+
+                <div className="flex items-center gap-3">
+                    {/* Deduction Components Toggle */}
+                    <button
+                        onClick={() => setShowDeductions(!showDeductions)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2 ${
+                            showDeductions
+                                ? 'bg-rose-50 border-rose-300 text-rose-700 shadow-md shadow-rose-100'
+                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                        }`}
+                    >
+                        {showDeductions ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                        Deductions {showDeductions ? 'ON' : 'OFF'}
+                    </button>
+
+                    <button
+                        onClick={handleOpenCreate}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95"
+                    >
+                        <Plus size={16} />
+                        New Template
+                    </button>
+                </div>
             </div>
 
             <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
@@ -217,7 +232,9 @@ const DailyPayTemplates: React.FC<DailyPayTemplatesProps> = ({ templates, setTem
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex flex-wrap gap-1">
-                                        {t.additionalComponents.map((c, i) => (
+                                        {t.additionalComponents
+                                            .filter(c => showDeductions || c.type === 'earning')
+                                            .map((c, i) => (
                                             <span
                                                 key={i}
                                                 className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
@@ -229,7 +246,7 @@ const DailyPayTemplates: React.FC<DailyPayTemplatesProps> = ({ templates, setTem
                                                 {c.name}
                                             </span>
                                         ))}
-                                        {t.additionalComponents.length === 0 && (
+                                        {t.additionalComponents.filter(c => showDeductions || c.type === 'earning').length === 0 && (
                                             <span className="text-[10px] text-slate-300 italic">None</span>
                                         )}
                                     </div>

@@ -1,7 +1,5 @@
-
 import React, { useState } from 'react';
 import { Divisor } from '../types';
-import { useRequest } from '../context/RequestContext';
 import {
     BookOpen,
     Clock,
@@ -140,6 +138,7 @@ interface PolicyState {
     retirementAgeMax: number;
     retirementPayMultiplier: number;
     noticePeriodDays: number;
+    
 
     // Special Laws
     maternityLeave: number;
@@ -168,7 +167,11 @@ interface PolicyState {
     performanceBonusEnabled: boolean;
     performanceBonusBasis: '13th Month' | 'Basic Salary';
     performanceBonusRequiresAppraisal: boolean;
-}
+
+    lastPayHoldMonths: number;
+    requireAttendanceBeforeAfterHoliday: boolean;
+
+};
 
 const INITIAL_STATE: PolicyState = {
     // Book I & II
@@ -210,6 +213,7 @@ const INITIAL_STATE: PolicyState = {
     retirementAgeMin: 60,
     retirementAgeMax: 65,
     retirementPayMultiplier: 22.5,
+    lastPayHoldMonths: 1,
     noticePeriodDays: 30,
 
     // Special Laws
@@ -239,6 +243,8 @@ const INITIAL_STATE: PolicyState = {
     performanceBonusEnabled: false,
     performanceBonusBasis: '13th Month',
     performanceBonusRequiresAppraisal: false,
+    requireAttendanceBeforeAfterHoliday: false
+
 };
 
 // Leave Monetization Types
@@ -320,7 +326,6 @@ const INITIAL_LEAVE_CONFIGS: Record<string, LeaveConfig> = LEAVE_TYPES_LIST.redu
 }), {});
 
 const PoliciesPage: React.FC = () => {
-    const { shiftRequestApprovalDeadlineDays, setShiftRequestApprovalDeadlineDays } = useRequest();
     const [primaryTab, setPrimaryTab] = useState<'Government' | 'Company'>('Government');
     const [activeTab, setActiveTab] = useState<string>('Book3');
     const [policies, setPolicies] = useState<PolicyState>(INITIAL_STATE);
@@ -867,9 +872,9 @@ const PoliciesPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Work Schedule Type Selection (MR1) */}
-                                    <div className="p-8 border border-slate-200 rounded-3xl bg-slate-50">
-                                        <div className="flex items-center gap-3 mb-6">
+                                    {/* Work Schedule Type */}
+                                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                                        <div className="flex items-center gap-3">
                                             <Calendar size={24} className="text-indigo-600" />
                                             <div>
                                                 <h4 className="font-bold text-slate-900">Work Schedule Type</h4>
@@ -877,7 +882,6 @@ const PoliciesPage: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* Radio Cards */}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                             {([
                                                 { value: 'Standard', label: 'Standard', desc: 'Regular 5-day work week with fixed daily hours.' },
@@ -906,9 +910,7 @@ const PoliciesPage: React.FC = () => {
                                             ))}
                                         </div>
 
-                                        {/* Conditional Sections */}
                                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-                                            {/* Standard Config */}
                                             {policies.workScheduleType === 'Standard' && (
                                                 <div className="flex items-center gap-4">
                                                     <label className="text-sm font-bold text-slate-700">Standard Daily Hours</label>
@@ -923,7 +925,6 @@ const PoliciesPage: React.FC = () => {
                                                 </div>
                                             )}
 
-                                            {/* Compressed Config */}
                                             {policies.workScheduleType === 'Compressed' && (
                                                 <div className="space-y-5">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -951,14 +952,9 @@ const PoliciesPage: React.FC = () => {
                                                             <span className="text-sm text-slate-500">hrs</span>
                                                         </div>
                                                     </div>
-
-                                                    {/* Holiday Auto-Decompression Toggle */}
                                                     <div className="border border-amber-200 bg-amber-50 rounded-xl p-5">
                                                         <label className="flex items-center gap-3 cursor-pointer">
-                                                            <button
-                                                                onClick={() => updatePolicy('holidayDecompressionEnabled', !policies.holidayDecompressionEnabled)}
-                                                                className="shrink-0"
-                                                            >
+                                                            <button onClick={() => updatePolicy('holidayDecompressionEnabled', !policies.holidayDecompressionEnabled)} className="shrink-0">
                                                                 {policies.holidayDecompressionEnabled ? (
                                                                     <ToggleRight size={28} className="text-amber-600" />
                                                                 ) : (
@@ -979,7 +975,6 @@ const PoliciesPage: React.FC = () => {
                                                 </div>
                                             )}
 
-                                            {/* Flexible Config */}
                                             {policies.workScheduleType === 'Flexible' && (
                                                 <div className="flex items-center gap-4">
                                                     <label className="text-sm font-bold text-slate-700">Minimum Daily Hours</label>
@@ -990,37 +985,56 @@ const PoliciesPage: React.FC = () => {
                                                         value={policies.flexibleMinimumHours}
                                                         onChange={(e) => updatePolicy('flexibleMinimumHours', Number(e.target.value))}
                                                     />
-                                                    <span className="text-sm text-slate-500">hours/day minimum</span>
+                                                    <span className="text-sm text-slate-500">hours/day</span>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* Shift Request Expiration Policy */}
-                                    <div className="p-8 border border-slate-200 rounded-3xl bg-slate-50">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <Clock size={24} className="text-amber-600" />
-                                            <div>
-                                                <h4 className="font-bold text-slate-900">Shift Request Approval Deadline</h4>
-                                                <p className="text-xs text-slate-500">Set the number of days before the next cutoff that a shift change request must be approved, otherwise it expires automatically.</p>
-                                            </div>
-                                        </div>
-                                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                                            <div className="flex items-center gap-4">
-                                                <label className="text-sm font-bold text-slate-700">Deadline (days before cutoff)</label>
-                                                <input
-                                                    type="number"
-                                                    min={1}
-                                                    max={30}
-                                                    className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
-                                                    value={shiftRequestApprovalDeadlineDays}
-                                                    onChange={(e) => setShiftRequestApprovalDeadlineDays(Number(e.target.value))}
-                                                />
-                                                <span className="text-sm text-slate-500">days</span>
-                                            </div>
-                                            <p className="mt-3 text-[10px] text-slate-400 italic">
-                                                Shift change requests not approved within {shiftRequestApprovalDeadlineDays} days will automatically expire.
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {/* Require Attendance Before/After Holiday */}
+                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors flex flex-col justify-between">
+                                        <label className="flex items-start gap-4 cursor-pointer">
+                                            <input
+                                            type="checkbox"
+                                            className="mt-1 w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                                            checked={policies.requireAttendanceBeforeAfterHoliday}
+                                            onChange={(e) => updatePolicy('requireAttendanceBeforeAfterHoliday', e.target.checked)}
+                                            />
+
+                                            <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">
+                                                Require attendance before and after holiday
+                                            </span>
+                                            <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                                Employees must be present on the working day before and after a holiday to qualify for holiday pay.
                                             </p>
+                                            </div>
+                                        </label>
+                                        </div>
+
+                                        {/* Last Pay Hold Duration */}
+                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors flex flex-col justify-between">
+                                        <label className="block">
+                                            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-3 block">
+                                            Last Pay Hold Duration
+                                            </span>
+
+                                            <div className="flex items-center gap-3">
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                value={policies.lastPayHoldMonths}
+                                                onChange={(e) => updatePolicy('lastPayHoldMonths', Number(e.target.value))}
+                                            />
+                                            <span className="text-sm font-bold text-slate-700">Months</span>
+                                            </div>
+
+                                            <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
+                                            Final pay will be released after the specified number of months. Clearance from Accounting is required for negative last pay scenarios.
+                                            </p>
+                                        </label>
                                         </div>
                                     </div>
 

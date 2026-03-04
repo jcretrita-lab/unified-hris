@@ -1,4 +1,3 @@
-
 export enum EmployeeStatus {
   ACTIVE = 'Active',
   INACTIVE = 'Inactive'
@@ -18,6 +17,7 @@ export interface Employee {
   positionId?: string;
   firstName?: string;
   lastName?: string;
+  payScheduleId?: string; // links employee to a PaySchedule
 }
 
 export interface User {
@@ -68,8 +68,7 @@ export interface PaySchedule {
   firstPayDate?: number | string;
   secondCutoff?: number;
   secondPayDate?: number;
-  divisorId?: string; // Links to a Divisor
-  // Airbnb-style range fields
+  divisorId?: string;
   firstCutoffRange?: CutoffRange;
   secondCutoffRange?: CutoffRange;
   monthOverrides?: MonthOverride[];
@@ -129,6 +128,15 @@ export interface PayComponent {
   isTaxable: boolean;
   valueType: 'fixed' | 'formula' | 'table';
   fixedValue?: number;
+
+  // added to know loans exist
+  category?: 'loan' | 'government' | 'other';
+  loanPrincipalAmount?: number;
+  loanInstallmentAmount?: number;
+  loanRemainingBalance?: number;
+  loanStartDate?: string;
+  loanEndDate?: string;
+
   formulaId?: string;
   tableId?: string;
   archiveAfterDays?: number;
@@ -163,6 +171,22 @@ export interface OrgUnitType {
   name: string;
   level: number;
 }
+
+export interface OrganizationStructureConfig {
+  level1Label: string;
+  level2Label: string;
+  level3Label: string;
+  level4Label: string;
+  level5Label?: string;
+}
+
+export const defaultOrgStructureConfig: OrganizationStructureConfig = {
+  level1Label: "Division",
+  level2Label: "Department",
+  level3Label: "Unit",
+  level4Label: "Team",
+  level5Label: "Sub-Team",
+};
 
 export interface SalaryStep {
   id: string;
@@ -220,12 +244,18 @@ export interface PayTemplate {
   taxRate?: number;
 }
 
+export interface DailyPayTemplateComponent {
+  name: string;
+  amount: number;
+  type: 'earning' | 'deduction';
+}
+
 export interface DailyPayTemplate {
   id: string;
   name: string;
   dailyRate: number;
   targetType: 'Global' | 'Department' | 'Position';
   targetId: string | null;
-  additionalComponents: { name: string; amount: number; type: 'earning' | 'deduction' }[];
+  additionalComponents: DailyPayTemplateComponent[];
   isActive: boolean;
 }

@@ -25,7 +25,7 @@ import Modal from '../components/Modal';
 import { MASTER_SCHEMAS } from './ReportDetail';
 
 // --- Types ---
-type ReportCategory = 'Core HR' | 'Time & Attendance' | 'Payroll' | 'System';
+type ReportCategory = 'Employee Masterlist' | 'Time & Attendance' | 'Payroll';
 type ReportType = 'Standard' | 'Custom';
 
 interface ReportDef {
@@ -51,113 +51,680 @@ const UserPlusIcon = ({ size, className }: { size: number, className?: string })
 
 // --- Mock Data ---
 const INITIAL_REPORTS: ReportDef[] = [
-  // ── STANDARD REPORTS (Immutable) ──────────────────────────────────────────
+  // ── EMPLOYEE MASTERLIST REPORTS (Standard / Immutable) ────────────────────
   {
-    id: 'rep-hr-1',
-    title: 'Employee Master List',
-    description: 'Complete demographic and employment data for all active, inactive, and separated personnel including position, department, hire date, and employment status.',
-    category: 'Core HR',
+    id: 'rep-em-01',
+    title: 'Masterlist of Level 5 And Up',
+    description: 'Lists employees from managerial levels and above; used for management reporting or executive reviews.',
+    category: 'Employee Masterlist',
     type: 'Standard',
     lastGenerated: 'Today, 9:00 AM',
     icon: <Users size={24} className="text-blue-600" />,
-    tags: ['Directory', 'Masterfile', 'Compliance']
+    tags: ['Management', 'Executives']
   },
   {
-    id: 'rep-hr-2',
-    title: 'Headcount Summary by Department',
-    description: 'Aggregated employee count grouped by department, rank, employment type, and status. Includes headcount variance vs. prior period.',
-    category: 'Core HR',
+    id: 'rep-hr-1',
+    title: 'Masterlist ALL',
+    description: 'Comprehensive list of all active employees with complete details.',
+    category: 'Employee Masterlist',
     type: 'Standard',
-    lastGenerated: 'Feb 28, 2026',
+    lastGenerated: 'Today, 8:30 AM',
     icon: <Users size={24} className="text-blue-600" />,
-    tags: ['Workforce', 'Planning']
+    tags: ['Masterfile', 'Directory', 'Compliance']
   },
   {
-    id: 'rep-hr-3',
-    title: 'New Hire & Separation Report',
-    description: 'Period-based movement report listing all employees onboarded or separated within the selected date range, including separation reason codes.',
-    category: 'Core HR',
+    id: 'rep-em-03',
+    title: 'Masterlist ALL w/out Salary',
+    description: 'Same as Masterlist ALL but excludes salary data; useful for non-confidential use.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 3, 2026',
+    icon: <Users size={24} className="text-blue-600" />,
+    tags: ['Masterfile', 'Non-Confidential']
+  },
+  {
+    id: 'rep-em-04',
+    title: 'Masterlist of Indirect Labor',
+    description: 'Lists employees categorized under indirect labor.',
+    category: 'Employee Masterlist',
     type: 'Standard',
     lastGenerated: 'Mar 1, 2026',
-    icon: <UserPlusIcon size={24} className="text-blue-600" />,
-    tags: ['Attrition', 'Onboarding']
+    icon: <Users size={24} className="text-blue-600" />,
+    tags: ['Indirect Labor', 'Masterfile']
   },
   {
-    id: 'rep-pay-1',
-    title: 'Payroll Register',
-    description: 'Full gross-to-net payroll computation per cut-off period covering basic pay, taxable and non-taxable allowances, statutory deductions, and net disbursement per employee.',
-    category: 'Payroll',
-    type: 'Standard',
-    lastGenerated: 'Feb 15, 2026',
-    icon: <Wallet size={24} className="text-emerald-600" />,
-    tags: ['Finance', 'Ledger', 'BIR']
-  },
-  {
-    id: 'rep-pay-2',
-    title: 'Government Remittance Summary',
-    description: 'Consolidated employer and employee share computation for SSS, PhilHealth, and Pag-IBIG (HDMF) per remittance period, formatted for agency submission.',
-    category: 'Payroll',
+    id: 'rep-em-05',
+    title: 'Masterlist w/ SSS/TIN of Direct Labor',
+    description: 'Includes SSS and TIN details for Direct Labor; used for submissions to SSS, BIR, etc.',
+    category: 'Employee Masterlist',
     type: 'Standard',
     lastGenerated: 'Feb 28, 2026',
-    icon: <ShieldCheck size={24} className="text-emerald-600" />,
-    tags: ['SSS', 'PhilHealth', 'Pag-IBIG', 'Statutory']
+    icon: <ShieldCheck size={24} className="text-blue-600" />,
+    tags: ['Direct Labor', 'SSS', 'BIR']
   },
   {
-    id: 'rep-pay-3',
-    title: '13th Month Pay Computation',
-    description: 'Annualized 13th month pay report per employee based on total basic salary earned year-to-date, adjusted for absences and unpaid leaves in accordance with PD 851.',
-    category: 'Payroll',
+    id: 'rep-em-06',
+    title: 'Masterlist w/ SSS/TIN of Indirect Labor',
+    description: 'Includes SSS and TIN details for Indirect Labor; used for submissions to SSS, BIR, etc.',
+    category: 'Employee Masterlist',
     type: 'Standard',
-    lastGenerated: 'Dec 1, 2025',
-    icon: <Wallet size={24} className="text-emerald-600" />,
-    tags: ['13th Month', 'Annualization', 'PD 851']
+    lastGenerated: 'Feb 28, 2026',
+    icon: <ShieldCheck size={24} className="text-blue-600" />,
+    tags: ['Indirect Labor', 'SSS', 'BIR']
   },
   {
-    id: 'rep-pay-4',
-    title: 'Withholding Tax Report (BIR 2316)',
-    description: 'Annual withholding tax summary per employee in BIR Form 2316 format. Includes YTD taxable income, tax withheld, and tax due/refund status for year-end annualization.',
-    category: 'Payroll',
+    id: 'rep-em-07',
+    title: 'Masterlist of Resigned Employees',
+    description: 'List of former employees; used for clearance validation, alumni records, and re-hiring checks.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Users size={24} className="text-blue-600" />,
+    tags: ['Resigned', 'Alumni', 'Separation']
+  },
+  {
+    id: 'rep-em-08',
+    title: 'Masterlist to Excel',
+    description: 'Generates a downloadable Excel file of employee data for reporting, audit, or analysis.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Today, 10:00 AM',
+    icon: <FileSpreadsheet size={24} className="text-blue-600" />,
+    tags: ['Export', 'Excel', 'Audit']
+  },
+  {
+    id: 'rep-em-09',
+    title: 'Employee General List',
+    description: 'Summary list of all employees with general info; used for quick reference.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 3, 2026',
+    icon: <Users size={24} className="text-blue-600" />,
+    tags: ['Directory', 'Quick Reference']
+  },
+  {
+    id: 'rep-em-10',
+    title: 'Manpower Report',
+    description: 'Summarizes total headcount per department/division; used in strategic planning and reporting.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Users size={24} className="text-blue-600" />,
+    tags: ['Headcount', 'Planning', 'Workforce']
+  },
+  {
+    id: 'rep-em-11',
+    title: 'Positions Listing',
+    description: 'Displays all active positions in the organization with corresponding counts; aids in vacancy tracking.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <Table size={24} className="text-blue-600" />,
+    tags: ['Positions', 'Vacancy', 'Org Chart']
+  },
+  {
+    id: 'rep-em-12',
+    title: 'Demographics',
+    description: 'Presents employee demographics such as age, gender, civil status, education, etc.; used for HR planning and compliance.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Feb 15, 2026',
+    icon: <Database size={24} className="text-blue-600" />,
+    tags: ['Demographics', 'Compliance', 'Planning']
+  },
+  {
+    id: 'rep-em-13',
+    title: 'DOLE Report',
+    description: 'Prepared for Department of Labor and Employment; includes employment status and demographics.',
+    category: 'Employee Masterlist',
     type: 'Standard',
     lastGenerated: 'Jan 31, 2026',
-    icon: <FileSpreadsheet size={24} className="text-emerald-600" />,
-    tags: ['BIR', 'Tax', 'Year-End']
+    icon: <FileText size={24} className="text-blue-600" />,
+    tags: ['DOLE', 'Government', 'Compliance']
   },
   {
-    id: 'rep-ta-1',
-    title: 'Timekeeping Summary',
-    description: 'Consolidated daily time record (DTR) report per employee for a selected period. Includes total days worked, tardiness, undertime, and absences.',
+    id: 'rep-em-14',
+    title: 'Years of Service Report',
+    description: 'Lists employees by length of service; used for loyalty awards, retirement, or milestone recognition.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Calendar size={24} className="text-blue-600" />,
+    tags: ['Tenure', 'Loyalty', 'Retirement']
+  },
+  {
+    id: 'rep-em-15',
+    title: 'Birthdates',
+    description: 'List of employee birthdays for greetings, wellness programs, or age-related benefits.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 4, 2026',
+    icon: <Calendar size={24} className="text-blue-600" />,
+    tags: ['Birthdays', 'Wellness']
+  },
+  {
+    id: 'rep-em-16',
+    title: 'Masterlist All Per Division',
+    description: 'Masterlist broken down by division; useful for divisional HR heads or reports.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 3, 2026',
+    icon: <Users size={24} className="text-blue-600" />,
+    tags: ['Division', 'Masterfile']
+  },
+  {
+    id: 'rep-em-17',
+    title: 'Employee Data By Date Hired',
+    description: 'Sorts employees by hire date; useful for onboarding, probation tracking, or reporting.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Calendar size={24} className="text-blue-600" />,
+    tags: ['Onboarding', 'Probation', 'Date Hired']
+  },
+  {
+    id: 'rep-em-18',
+    title: '201 File',
+    description: 'Digital copy of employee 201 files; includes personal, employment, and legal documents.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <FileText size={24} className="text-blue-600" />,
+    tags: ['201', 'Records', 'Documents']
+  },
+  {
+    id: 'rep-em-19',
+    title: 'Alumni Report',
+    description: 'Tracks separated employees; useful for verification, rehires, or alumni outreach.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Users size={24} className="text-blue-600" />,
+    tags: ['Alumni', 'Separated', 'Rehire']
+  },
+  {
+    id: 'rep-em-20',
+    title: 'PAF',
+    description: 'Reflects all changes in employee status, role, salary, or assignment; used for documentation and approval.',
+    category: 'Employee Masterlist',
+    type: 'Standard',
+    lastGenerated: 'Mar 3, 2026',
+    icon: <FileText size={24} className="text-blue-600" />,
+    tags: ['PAF', 'Status Change', 'Approval']
+  },
+
+  // ── TIME AND ATTENDANCE (TAA) REPORTS (Standard / Immutable) ──────────────
+  {
+    id: 'rep-ta-late',
+    title: 'Late',
+    description: 'Lists instances of employee tardiness; used to track habitual latecomers and apply disciplinary action or payroll deductions.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Today, 7:00 AM',
+    icon: <Clock size={24} className="text-indigo-600" />,
+    tags: ['Tardiness', 'Deductions', 'Discipline']
+  },
+  {
+    id: 'rep-ta-ut',
+    title: 'Undertime',
+    description: 'Records employees who log out earlier than scheduled; used for deduction computation and performance review.',
     category: 'Time & Attendance',
     type: 'Standard',
     lastGenerated: 'Yesterday',
     icon: <Clock size={24} className="text-indigo-600" />,
-    tags: ['DTR', 'Tardiness', 'Compliance']
+    tags: ['Undertime', 'Deductions']
   },
   {
-    id: 'rep-ta-2',
-    title: 'Overtime Hours Summary',
-    description: 'Company-wide breakdown of approved overtime hours by employee, department, and OT type (regular, rest day, holiday) for the selected pay period.',
+    id: 'rep-ta-ot',
+    title: 'OT Report',
+    description: 'Displays overtime hours rendered; used for payroll approval validation and labor cost analysis.',
     category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Clock size={24} className="text-indigo-600" />,
+    tags: ['Overtime', 'Labor Cost', 'DOLE']
+  },
+  {
+    id: 'rep-ta-slvl',
+    title: 'SLVL Balance',
+    description: 'Shows current Sick Leave (SL) and Vacation Leave (VL) balances per employee; used for leave planning and HR audits.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Mar 3, 2026',
+    icon: <Calendar size={24} className="text-indigo-600" />,
+    tags: ['SL', 'VL', 'Leave Balance']
+  },
+  {
+    id: 'rep-ta-att',
+    title: 'Attendance',
+    description: 'Shows raw clock-ins/outs or summarized daily attendance per employee; used to verify presence/absence.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Today, 8:00 AM',
+    icon: <Clock size={24} className="text-indigo-600" />,
+    tags: ['Attendance', 'Clock-in', 'Verification']
+  },
+  {
+    id: 'rep-ta-sumh',
+    title: 'Time and Attendance Summary Report History',
+    description: 'Consolidated timekeeping summary for past periods (e.g., cutoff, monthly); used for audit trails and reference.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <FileBarChart size={24} className="text-indigo-600" />,
+    tags: ['History', 'Audit', 'Summary']
+  },
+  {
+    id: 'rep-ta-1',
+    title: 'Time and Attendance Summary Report',
+    description: 'Real-time or current payroll period summary of time-ins/outs, total hours, absences, etc.; used for payroll computation.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Today, 7:30 AM',
+    icon: <Clock size={24} className="text-indigo-600" />,
+    tags: ['DTR', 'Summary', 'Payroll']
+  },
+  {
+    id: 'rep-ta-dtr',
+    title: 'DTR',
+    description: 'Individual Daily Time Record showing daily time-ins/outs; used for attendance validation and payroll basis.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Today, 8:00 AM',
+    icon: <FileText size={24} className="text-indigo-600" />,
+    tags: ['DTR', 'Daily', 'Individual']
+  },
+  {
+    id: 'rep-ta-dtrh',
+    title: 'DTR History',
+    description: 'Historical records of DTRs per employee; useful for backtracking, disputes, or auditing.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <FileText size={24} className="text-indigo-600" />,
+    tags: ['DTR', 'History', 'Audit']
+  },
+  {
+    id: 'rep-ta-vlsl',
+    title: 'VLSL Application',
+    description: 'Records filed Sick/Vacation Leave requests with details like date, type, and status; used for leave approval processing.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Mar 3, 2026',
+    icon: <Calendar size={24} className="text-indigo-600" />,
+    tags: ['Leave', 'Application', 'Approval']
+  },
+  {
+    id: 'rep-ta-vlslh',
+    title: 'VLSL Application History',
+    description: 'Archived record of past leave applications; used to check usage patterns and ensure policy compliance.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <Calendar size={24} className="text-indigo-600" />,
+    tags: ['Leave', 'History', 'Compliance']
+  },
+  {
+    id: 'rep-ta-mh',
+    title: 'Manhour Report',
+    description: 'Reports total actual hours worked per employee or group; used for productivity analysis, costing, or DOLE/PEZA reports.',
+    category: 'Time & Attendance',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Clock size={24} className="text-indigo-600" />,
+    tags: ['Manhours', 'Productivity', 'DOLE']
+  },
+
+  // ── PAYROLL SYSTEM (PAYSYS) REPORTS (Standard / Immutable) ────────────────
+  {
+    id: 'rep-pay-1',
+    title: 'Payslip',
+    description: 'Individual breakdown of earnings and deductions for a payroll period; given to employees.',
+    category: 'Payroll',
     type: 'Standard',
     lastGenerated: 'Feb 15, 2026',
-    icon: <Clock size={24} className="text-indigo-600" />,
-    tags: ['OT', 'Labor Cost', 'DOLE']
+    icon: <FileSpreadsheet size={24} className="text-emerald-600" />,
+    tags: ['Payslip', 'Earnings', 'Net Pay']
   },
   {
-    id: 'rep-ta-3',
-    title: 'Leave Balance & Utilization',
-    description: 'Employee leave balance report showing accrued, used, and remaining credits per leave type (VL, SL, EL, etc.) as of the selected reference date.',
-    category: 'Time & Attendance',
+    id: 'rep-ps-hist',
+    title: 'Payslip History',
+    description: 'Archive of previously generated payslips; used for reference and dispute resolution.',
+    category: 'Payroll',
     type: 'Standard',
-    lastGenerated: 'Feb 29, 2026',
-    icon: <Calendar size={24} className="text-indigo-600" />,
-    tags: ['VL', 'SL', 'Leave Ledger']
+    lastGenerated: 'Feb 28, 2026',
+    icon: <FileSpreadsheet size={24} className="text-emerald-600" />,
+    tags: ['Payslip', 'History', 'Archive']
   },
+  {
+    id: 'rep-ps-loans',
+    title: 'Employee Loans',
+    description: 'Lists loan balances and deductions per employee; includes company and government loans.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Loans', 'Deductions', 'Balances']
+  },
+  {
+    id: 'rep-ps-journal',
+    title: 'Payroll Journal',
+    description: 'Summary of total payroll entries (gross pay, deductions, net pay); used in accounting and posting.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Feb 15, 2026',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['Journal', 'Accounting', 'Posting']
+  },
+  {
+    id: 'rep-ps-jd',
+    title: 'Payroll Journal Dailies',
+    description: 'Payroll journal for daily-paid employees; includes daily rates and applicable deductions.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['Journal', 'Daily', 'Accounting']
+  },
+  {
+    id: 'rep-ps-period',
+    title: 'Payroll Period',
+    description: 'List of defined payroll periods, cutoffs, and applicable dates for reference or filtering.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Calendar size={24} className="text-emerald-600" />,
+    tags: ['Period', 'Cutoff', 'Reference']
+  },
+  {
+    id: 'rep-ps-13th-dept',
+    title: '13th MO Entries Dept',
+    description: 'Shows 13th month pay data per department; used for annual bonus computations.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Dec 1, 2025',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['13th Month', 'Department', 'Annual']
+  },
+  {
+    id: 'rep-ps-fdtr',
+    title: 'Payslip Final DTR',
+    description: 'Reflects the DTR (attendance) data tied to payroll for transparency.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Feb 15, 2026',
+    icon: <FileText size={24} className="text-emerald-600" />,
+    tags: ['Payslip', 'DTR', 'Transparency']
+  },
+  {
+    id: 'rep-ps-fdtrh',
+    title: 'Payslip Final DTR History',
+    description: 'Historical version of DTRs used in previous payroll runs.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Jan 31, 2026',
+    icon: <FileText size={24} className="text-emerald-600" />,
+    tags: ['Payslip', 'DTR', 'History']
+  },
+  {
+    id: 'rep-ps-13th-slip',
+    title: '13th Payslip',
+    description: 'Payslip format focused on annual 13th month pay; required for legal compliance.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Dec 5, 2025',
+    icon: <FileSpreadsheet size={24} className="text-emerald-600" />,
+    tags: ['13th Month', 'Payslip', 'Compliance']
+  },
+  {
+    id: 'rep-ps-13th-all',
+    title: '13th Summary ALL',
+    description: 'Summary report of 13th month pay across all employees; used for reporting and reconciliation.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Dec 1, 2025',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['13th Month', 'Summary', 'Reconciliation']
+  },
+  {
+    id: 'rep-ps-entries',
+    title: 'Payroll Entries',
+    description: 'Shows specific payroll items entered per employee (earnings, deductions, adjustments).',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Table size={24} className="text-emerald-600" />,
+    tags: ['Entries', 'Earnings', 'Adjustments']
+  },
+  {
+    id: 'rep-ps-slvl',
+    title: 'SLVL Summary',
+    description: 'Overview of SL/VL credits, usage, and balance per employee.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 3, 2026',
+    icon: <Calendar size={24} className="text-emerald-600" />,
+    tags: ['SL', 'VL', 'Summary']
+  },
+  {
+    id: 'rep-ps-coop',
+    title: 'Coop Contribution',
+    description: 'Monthly contributions of employees to cooperative savings/funds.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Cooperative', 'Contributions']
+  },
+  {
+    id: 'rep-ps-hdmf',
+    title: 'HDMF Contribution',
+    description: 'Current contributions for HDMF (Pag-IBIG) Regular Fund.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <ShieldCheck size={24} className="text-emerald-600" />,
+    tags: ['HDMF', 'Pag-IBIG', 'Contribution']
+  },
+  {
+    id: 'rep-ps-hdmfh',
+    title: 'HDMF Contribution History',
+    description: 'Historical HDMF contributions for reconciliation and audit.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <ShieldCheck size={24} className="text-emerald-600" />,
+    tags: ['HDMF', 'Pag-IBIG', 'History']
+  },
+  {
+    id: 'rep-ps-mp2',
+    title: 'HDMF Contribution MP2',
+    description: 'Contributions for Modified Pag-IBIG 2 savings program.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <ShieldCheck size={24} className="text-emerald-600" />,
+    tags: ['HDMF', 'MP2', 'Savings']
+  },
+  {
+    id: 'rep-ps-mp2m',
+    title: 'HDMF Contribution History MP2 Month',
+    description: 'Monthly view of MP2 contributions for easier submission/reporting.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <ShieldCheck size={24} className="text-emerald-600" />,
+    tags: ['HDMF', 'MP2', 'Monthly']
+  },
+  {
+    id: 'rep-ps-hdmf-loan',
+    title: 'HDMF Loan Report',
+    description: 'Shows monthly loan deductions related to Pag-IBIG loans.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['HDMF', 'Loans', 'Deductions']
+  },
+  {
+    id: 'rep-ps-loan-hist',
+    title: 'Loan Report History',
+    description: 'Consolidated loan reports across all types (company, government, cooperative).',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Loans', 'History', 'All Types']
+  },
+  {
+    id: 'rep-ps-monthly-loans',
+    title: 'Monthly Loans Report',
+    description: 'Active loan deductions for the current month; used for remittance and validation.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Loans', 'Monthly', 'Remittance']
+  },
+
+  // ── ADDITIONAL PAYROLL REPORTS (Standard / Immutable) ─────────────────────
+  {
+    id: 'rep-ap-monthly',
+    title: 'Monthly Report',
+    description: 'Monthly summary of payroll activity (headcount, totals, etc.).',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['Monthly', 'Summary', 'Payroll']
+  },
+  {
+    id: 'rep-ap-sss',
+    title: 'Monthly SSS Loans Report',
+    description: 'Monthly report of Social Security System loan payments.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <ShieldCheck size={24} className="text-emerald-600" />,
+    tags: ['SSS', 'Loans', 'Monthly']
+  },
+  {
+    id: 'rep-ap-last-pay',
+    title: 'Last Pay',
+    description: 'Computes and records terminal pay of resigned or terminated employees.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Last Pay', 'Terminal', 'Separation']
+  },
+  {
+    id: 'rep-ap-ledger',
+    title: 'Payroll Ledger',
+    description: 'Ledger per employee showing full payroll history (earnings and deductions).',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Feb 28, 2026',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['Ledger', 'History', 'Finance']
+  },
+  {
+    id: 'rep-ap-fbat',
+    title: 'FBAT',
+    description: 'Summary of finalized payroll including bank account details; used for uploading to the bank for salary disbursement.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Feb 15, 2026',
+    icon: <FileSpreadsheet size={24} className="text-emerald-600" />,
+    tags: ['FBAT', 'Bank', 'Disbursement']
+  },
+  {
+    id: 'rep-ap-income-d',
+    title: 'Income Dailies',
+    description: 'Shows gross income earned by daily-paid employees.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Income', 'Daily', 'Earnings']
+  },
+  {
+    id: 'rep-ap-ded-d',
+    title: 'Deduction Dailies',
+    description: 'Breaks down all applicable deductions for daily-paid workers.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Deductions', 'Daily', 'Workers']
+  },
+  {
+    id: 'rep-ap-acct-d',
+    title: 'Accounting Details Dailies',
+    description: 'Shows detailed journal entries per daily-paid employee.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['Accounting', 'Journal', 'Daily']
+  },
+  {
+    id: 'rep-ap-acct-sd',
+    title: 'Accounting Summary Dailies',
+    description: 'Summarized version for accounting use and posting.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['Accounting', 'Summary', 'Daily']
+  },
+  {
+    id: 'rep-ap-income-m',
+    title: 'Income Monthly',
+    description: 'Total monthly earnings of employees; used for finance reporting.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Income', 'Monthly', 'Finance']
+  },
+  {
+    id: 'rep-ap-ded-m',
+    title: 'Deduction Monthly',
+    description: 'Total monthly deductions including loans, taxes, and contributions.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <Wallet size={24} className="text-emerald-600" />,
+    tags: ['Deductions', 'Monthly', 'Tax']
+  },
+  {
+    id: 'rep-ap-acct-m',
+    title: 'Accounting Details Monthly',
+    description: 'General ledger-level detail of monthly payroll per account.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['Accounting', 'GL', 'Monthly']
+  },
+  {
+    id: 'rep-ap-acct-sm',
+    title: 'Accounting Summary Monthly',
+    description: 'Summary by cost center or GL account for posting in the accounting system.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 1, 2026',
+    icon: <FileBarChart size={24} className="text-emerald-600" />,
+    tags: ['Accounting', 'Summary', 'GL']
+  },
+
   // ── CUSTOM REPORTS (Mutable) ───────────────────────────────────────────────
   {
     id: 'rep-cust-1',
     title: 'Q1 2026 New Hire Tracker',
     description: 'Custom onboarding tracker for employees hired in Q1 2026. Includes completion status of pre-employment requirements and 201 file checklist.',
-    category: 'Core HR',
+    category: 'Employee Masterlist',
     type: 'Custom',
     lastGenerated: 'Mar 1, 2026',
     icon: <UserPlusIcon size={24} className="text-slate-500" />,
@@ -177,7 +744,7 @@ const INITIAL_REPORTS: ReportDef[] = [
     id: 'rep-cust-3',
     title: 'Salary Grade Distribution',
     description: 'Custom workforce compensation analysis mapping each active employee to their assigned salary grade and step. Includes min/max range utilization per grade.',
-    category: 'Core HR',
+    category: 'Employee Masterlist',
     type: 'Custom',
     lastGenerated: 'Jan 15, 2026',
     icon: <Table size={24} className="text-slate-500" />,
@@ -187,7 +754,7 @@ const INITIAL_REPORTS: ReportDef[] = [
     id: 'rep-cust-4',
     title: 'Voluntary Attrition Analysis — FY 2025',
     description: 'Custom turnover analysis for voluntary separations in FY 2025, broken down by department, tenure band, and exit reason. Includes annualized attrition rate.',
-    category: 'Core HR',
+    category: 'Employee Masterlist',
     type: 'Custom',
     lastGenerated: 'Feb 1, 2026',
     icon: <FileBarChart size={24} className="text-slate-500" />,
@@ -209,15 +776,15 @@ const INITIAL_REPORTS: ReportDef[] = [
 const MASTER_SOURCE_OPTIONS = [
   {
     id: 'rep-hr-1',
-    label: 'Employee Master List',
-    category: 'Core HR' as ReportCategory,
+    label: 'Masterlist ALL',
+    category: 'Employee Masterlist' as ReportCategory,
     description: 'Employee demographics, position, compensation, and statutory numbers.',
     icon: <Users size={22} className="text-blue-600" />,
     color: 'blue',
   },
   {
     id: 'rep-ta-1',
-    label: 'Timekeeping Summary',
+    label: 'Time and Attendance Summary Report',
     category: 'Time & Attendance' as ReportCategory,
     description: 'Daily time records, tardiness, overtime, and leave data.',
     icon: <Clock size={22} className="text-indigo-600" />,
@@ -225,7 +792,7 @@ const MASTER_SOURCE_OPTIONS = [
   },
   {
     id: 'rep-pay-1',
-    label: 'Payroll Register',
+    label: 'Payslip',
     category: 'Payroll' as ReportCategory,
     description: 'Gross-to-net pay breakdown including allowances and statutory deductions.',
     icon: <Wallet size={22} className="text-emerald-600" />,
@@ -240,6 +807,7 @@ const ReportsPage: React.FC = () => {
   const [reports, setReports] = useState<ReportDef[]>(INITIAL_REPORTS);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'All' | 'Standard' | 'Custom'>('All');
+  const [activeCategory, setActiveCategory] = useState<'All' | ReportCategory>('All');
 
   // 2-step creation wizard state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -275,7 +843,8 @@ const ReportsPage: React.FC = () => {
   const filteredReports = reports.filter(r => {
     const matchesSearch = r.title.toLowerCase().includes(searchTerm.toLowerCase()) || r.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === 'All' ? true : r.type === activeTab;
-    return matchesSearch && matchesTab;
+    const matchesCategory = activeCategory === 'All' ? true : r.category === activeCategory;
+    return matchesSearch && matchesTab && matchesCategory;
   });
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
@@ -329,32 +898,52 @@ const ReportsPage: React.FC = () => {
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm min-h-[600px] flex flex-col">
         
         {/* Controls */}
-        <div className="p-6 border-b border-slate-50 flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                {['All', 'Standard', 'Custom'].map(tab => (
-                    <button 
-                        key={tab}
-                        onClick={() => setActiveTab(tab as any)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                            activeTab === tab 
-                            ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' 
-                            : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+        <div className="p-6 border-b border-slate-50 flex flex-col gap-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div className="flex flex-wrap items-center gap-2">
+                    {(['All', 'Standard', 'Custom'] as const).map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                                activeTab === tab
+                                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                                : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+                            }`}
+                        >
+                            {tab} Reports
+                        </button>
+                    ))}
+                </div>
+                <div className="relative w-full lg:max-w-xs">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                      type="text"
+                      placeholder="Search reports..."
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+                {(['All', 'Employee Masterlist', 'Time & Attendance', 'Payroll'] as const).map(cat => (
+                    <button
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                            activeCategory === cat
+                            ? cat === 'Employee Masterlist' ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                              : cat === 'Time & Attendance' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                              : cat === 'Payroll' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                              : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            : 'bg-white border border-slate-200 text-slate-400 hover:bg-slate-50'
                         }`}
                     >
-                        {tab} Reports
+                        {cat === 'All' ? 'All Categories' : cat}
                     </button>
                 ))}
-            </div>
-
-            <div className="relative w-full lg:max-w-xs">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search reports..." 
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <span className="text-[11px] text-slate-400 ml-1">{filteredReports.length} report{filteredReports.length !== 1 ? 's' : ''}</span>
             </div>
         </div>
 
@@ -376,7 +965,7 @@ const ReportsPage: React.FC = () => {
                         <div>
                             <div className="flex justify-between items-start mb-4">
                                 <div className={`p-3 rounded-xl ${
-                                    report.category === 'Core HR' ? 'bg-blue-50' :
+                                    report.category === 'Employee Masterlist' ? 'bg-blue-50' :
                                     report.category === 'Payroll' ? 'bg-emerald-50' :
                                     report.category === 'Time & Attendance' ? 'bg-indigo-50' :
                                     'bg-slate-100'

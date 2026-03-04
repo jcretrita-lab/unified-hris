@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   OrgUnit,
@@ -8,6 +7,7 @@ import {
   Employee,
   OrgUnitType,
 } from "../types";
+
 import {
   Plus,
   FolderPlus,
@@ -36,6 +36,9 @@ import {
 } from "lucide-react";
 import Modal from "../components/Modal";
 import * as d3 from "d3";
+import { useOrganization } from "../context/OrganizationContext";
+import { OrganizationStructureConfig } from "../types";
+import { Settings as Cog } from "lucide-react";
 
 // --- MOCK DATA ---
 const MOCK_UNIT_TYPES: OrgUnitType[] = [
@@ -112,13 +115,28 @@ const OrgStructurePage: React.FC = () => {
   const [ranks] = useState<Rank[]>(MOCK_RANKS);
   // Using empty employees list for structure setup page to simulate vacancies
   const [employees] = useState<Employee[]>([]);
+  const { orgLabels, updateOrgLabels } = useOrganization();
+  const [isLabelsModalOpen, setIsLabelsModalOpen] = useState(false);
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Organization Structure</h1>
-        <p className="text-slate-500 font-medium mt-1">Design the company hierarchy, departments, and position map.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Organization Structure</h1>
+          <p className="text-slate-500 font-medium mt-1">
+            Design the company hierarchy, departments, and position map.
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsLabelsModalOpen(true)}
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300"
+        >
+          <Cog size={16} />
+          Edit Labels
+        </button>
       </div>
+
       <OrgStructure
         orgUnits={orgUnits}
         setOrgUnits={setOrgUnits}
@@ -130,6 +148,13 @@ const OrgStructurePage: React.FC = () => {
         unitTypes={unitTypes}
         setUnitTypes={setUnitTypes}
       />
+      {isLabelsModalOpen && (
+        <OrgLabelsModal
+          initialLabels={orgLabels}
+          onClose={() => setIsLabelsModalOpen(false)}
+          onSave={updateOrgLabels}
+        />
+      )}
     </div>
   );
 };
@@ -1616,6 +1641,71 @@ const OrgStructure: React.FC<Props> = ({
           )}
         </div>
       </Modal>
+    </div>
+  );
+};
+
+const OrgLabelsModal = ({
+  initialLabels,
+  onSave,
+  onClose,
+}: {
+  initialLabels: OrganizationStructureConfig;
+  onSave: (labels: OrganizationStructureConfig) => void;
+  onClose: () => void;
+}) => {
+  const [form, setForm] = useState(initialLabels);
+
+  const handleChange = (field: keyof OrganizationStructureConfig, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    if (!form.level1Label.trim() || !form.level2Label.trim()) {
+      alert("Level 1 and Level 2 labels are required.");
+      return;
+    }
+    onSave(form);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-4">Edit Organization Structure Labels</h2>
+
+        <div className="space-y-3">
+          {["level1Label", "level2Label", "level3Label", "level4Label", "level5Label"].map((field) => (
+            <div key={field}>
+              <label className="block text-sm font-medium mb-1">
+                {field.replace("Label", "").replace("level", "Level ")}
+              </label>
+              <input
+                className="w-full border rounded px-2 py-1 text-sm"
+                value={(form as any)[field] ?? ""}
+                onChange={(e) => handleChange(field as keyof OrganizationStructureConfig, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 p-3 border rounded bg-gray-50 text-xs">
+          <p className="font-medium mb-1">Preview:</p>
+          <p>
+            {form.level1Label} → {form.level2Label} → {form.level3Label} → {form.level4Label}
+            {form.level5Label ? ` → ${form.level5Label}` : ""}
+          </p>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button className="px-3 py-1 text-sm border rounded" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded" onClick={handleSave}>
+            Save
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

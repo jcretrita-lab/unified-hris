@@ -54,6 +54,7 @@ import AdjustmentSetup from './pages/settings/AdjustmentSetup';
 import EmployeeScheduleSettings from './pages/settings/EmployeeScheduleSettings';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { RequestProvider } from './context/RequestContext';
+import { OrganizationProvider } from './context/OrganizationContext';
 
 
 // Guard Component
@@ -194,15 +195,18 @@ const AnimatedRoutes = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <RequestProvider>
-        <HashRouter>
-          <Layout>
-            <AnimatedRoutes />
-          </Layout>
-        </HashRouter>
-      </RequestProvider>
-    </AuthProvider>
+  <OrganizationProvider>
+    <RequestProvider>
+      <HashRouter>
+        <Layout>
+          <AnimatedRoutes />
+        </Layout>
+      </HashRouter>
+    </RequestProvider>
+  </OrganizationProvider>
+</AuthProvider>
   );
 };
+
 
 export default App;

@@ -29,6 +29,34 @@ interface NotificationItem {
 
 // --- Mock Data ---
 const MOCK_NOTIFICATIONS: NotificationItem[] = [
+  // New notifications based on Notification Settings (placed at top for visibility)
+  {
+    id: 'n13',
+    title: 'Bank Details Required',
+    message: 'Your bank details are missing. Please update to receive your salary.',
+    timestamp: 'Just now',
+    type: 'Error',
+    isRead: false,
+    link: '/manage/employee'
+  },
+  {
+    id: 'n12',
+    title: 'Salary Updated',
+    message: 'Your salary has been updated effective Sep 01, 2025.',
+    timestamp: '5 minutes ago',
+    type: 'Info',
+    isRead: false,
+    link: '/manage/payroll'
+  },
+  {
+    id: 'n11',
+    title: 'Late Attendance',
+    message: 'John Doe clocked in late on Aug 28, 2025.',
+    timestamp: '30 minutes ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/monitor/attendance'
+  },
   {
     id: 'n0',
     title: 'Probationary Period Alert',
@@ -91,6 +119,51 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     type: 'Error',
     isRead: true,
     link: '/monitor/attendance'
+  },
+  {
+    id: 'n6',
+    title: 'Profile Update Approved',
+    message: 'Your profile update request has been approved by Alex Thompson.',
+    timestamp: 'Today, 10:15 AM',
+    type: 'Success',
+    isRead: false,
+    link: '/my-profile'
+  },
+  {
+    id: 'n7',
+    title: 'Probation Ending Soon',
+    message: 'Your probation period will end on Sep 30, 2025. Please prepare for your evaluation.',
+    timestamp: '2 days ago',
+    type: 'Warning',
+    isRead: true,
+    link: '/my-profile/evaluations'
+  },
+  {
+    id: 'n8',
+    title: 'Suspicious Login Attempt',
+    message: 'We detected a suspicious login attempt from Quezon City, Philippines.',
+    timestamp: '1 hour ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/monitor/audit-logs'
+  },
+  {
+    id: 'n9',
+    title: 'New Device Login',
+    message: 'Your account was accessed from a new device: Windows 11 - Chrome.',
+    timestamp: 'Yesterday, 8:45 PM',
+    type: 'Info',
+    isRead: true,
+    link: '/monitor/security/devices'
+  },
+  {
+    id: 'n10',
+    title: 'Multiple Failed Login Attempts',
+    message: 'Multiple failed login attempts were detected on your account.',
+    timestamp: 'Yesterday, 6:10 PM',
+    type: 'Error',
+    isRead: true,
+    link: '/monitor/security'
   }
 ];
 

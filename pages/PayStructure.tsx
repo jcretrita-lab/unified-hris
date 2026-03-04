@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { Formula, LookupTable, PayComponent, PayTemplate, DailyPayTemplate } from '../types';
+import { MOCK_DAILY_PAY_TEMPLATES } from './pay-structure/DailyPayTemplates';
 import FormulaBuilder from './pay-structure/FormulaBuilder';
 import PayComponents from './pay-structure/PayComponents';
 import PayTemplates from './pay-structure/PayTemplates';
-import DailyPayTemplates, { MOCK_DAILY_PAY_TEMPLATES } from './pay-structure/DailyPayTemplates';
+import DailyPayTemplates from './pay-structure/DailyPayTemplates';
 
 // --- MOCK INITIAL DATA ---
 const INITIAL_FORMULAS: Formula[] = [
@@ -348,7 +349,7 @@ export const PayStructure: React.FC = () => {
   const [payTemplates, setPayTemplates] = useState<PayTemplate[]>(INITIAL_TEMPLATES);
   const [dailyPayTemplates, setDailyPayTemplates] = useState<DailyPayTemplate[]>(MOCK_DAILY_PAY_TEMPLATES);
 
-  const tabs = ['Pay Templates', 'Pay Components', 'Formula Builder', 'Daily Pay Templates'];
+  const tabs = ['Pay Templates', 'Daily Pay Templates', 'Pay Components', 'Formula Builder'];
 
   return (
     <div className="space-y-8">

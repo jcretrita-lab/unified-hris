@@ -86,8 +86,9 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
     const [isCreating, setIsCreating] = useState(false);
 
     // Separate visibility toggles for earnings and deductions
-    const [showEarnings, setShowEarnings] = useState(false);
+    const [showEarnings, setShowEarnings] = useState(true);
     const [showDeductions, setShowDeductions] = useState(false);
+    const [showDeductionsPanel, setShowDeductionsPanel] = useState(false);
     // Visibility toggle for simulator (hidden by default)
     const [showSimValues, setShowSimValues] = useState(false);
 
@@ -744,45 +745,57 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                         </div>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div className={`grid grid-cols-1 gap-6 ${showDeductionsPanel ? 'lg:grid-cols-2' : ''}`}>
                                     <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-5">
                                         <div className="flex items-center justify-between mb-4 pb-3 border-b border-emerald-100/50">
                                             <div className="flex items-center gap-2">
                                                 <ArrowUpCircle className="text-emerald-500" size={20} />
                                                 <h4 className="font-bold text-emerald-900 text-sm">Earnings & Allowances</h4>
                                             </div>
-                                            <button
-                                                onClick={() => setShowEarnings(!showEarnings)}
-                                                className={`p-1.5 rounded-lg transition-colors ${showEarnings ? 'bg-emerald-100 text-emerald-600' : 'bg-white text-slate-400 hover:text-slate-600'}`}
-                                                title={showEarnings ? "Hide earnings values" : "Show earnings values"}
-                                            >
-                                                {showEarnings ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setShowDeductionsPanel(!showDeductionsPanel)}
+                                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-colors border ${showDeductionsPanel ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'}`}
+                                                    title={showDeductionsPanel ? "Hide deductions column" : "Show deductions column"}
+                                                >
+                                                    <ArrowDownCircle size={12} />
+                                                    {showDeductionsPanel ? 'Hide Deductions' : 'Show Deductions'}
+                                                </button>
+                                                <button
+                                                    onClick={() => setShowEarnings(!showEarnings)}
+                                                    className={`p-1.5 rounded-lg transition-colors ${showEarnings ? 'bg-emerald-100 text-emerald-600' : 'bg-white text-slate-400 hover:text-slate-600'}`}
+                                                    title={showEarnings ? "Hide earnings values" : "Show earnings values"}
+                                                >
+                                                    {showEarnings ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="space-y-1">
                                             {earningComponents.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4">No earning components defined.</p>}
                                             {earningComponents.map(comp => renderComponentItem(comp, !!activeTemplate?.components.includes(comp.id), showEarnings))}
                                         </div>
                                     </div>
-                                    <div className="bg-rose-50/50 border border-rose-100 rounded-2xl p-5">
-                                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-rose-100/50">
-                                            <div className="flex items-center gap-2">
-                                                <ArrowDownCircle className="text-rose-500" size={20} />
-                                                <h4 className="font-bold text-rose-900 text-sm">Deductions & Contributions</h4>
+                                    {showDeductionsPanel && (
+                                        <div className="bg-rose-50/50 border border-rose-100 rounded-2xl p-5">
+                                            <div className="flex items-center justify-between mb-4 pb-3 border-b border-rose-100/50">
+                                                <div className="flex items-center gap-2">
+                                                    <ArrowDownCircle className="text-rose-500" size={20} />
+                                                    <h4 className="font-bold text-rose-900 text-sm">Deductions & Contributions</h4>
+                                                </div>
+                                                <button
+                                                    onClick={() => setShowDeductions(!showDeductions)}
+                                                    className={`p-1.5 rounded-lg transition-colors ${showDeductions ? 'bg-rose-100 text-rose-600' : 'bg-white text-slate-400 hover:text-slate-600'}`}
+                                                    title={showDeductions ? "Hide deductions values" : "Show deductions values"}
+                                                >
+                                                    {showDeductions ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => setShowDeductions(!showDeductions)}
-                                                className={`p-1.5 rounded-lg transition-colors ${showDeductions ? 'bg-rose-100 text-rose-600' : 'bg-white text-slate-400 hover:text-slate-600'}`}
-                                                title={showDeductions ? "Hide deductions values" : "Show deductions values"}
-                                            >
-                                                {showDeductions ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
+                                            <div className="space-y-1">
+                                                {deductionComponents.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4">No deduction components defined.</p>}
+                                                {deductionComponents.map(comp => renderComponentItem(comp, activeTemplate.components.includes(comp.id), showDeductions))}
+                                            </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            {deductionComponents.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4">No deduction components defined.</p>}
-                                            {deductionComponents.map(comp => renderComponentItem(comp, !!activeTemplate?.components.includes(comp.id), showDeductions))}
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}
