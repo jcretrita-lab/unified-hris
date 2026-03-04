@@ -16,7 +16,7 @@ import { MOCK_YEAR_END_DATA, generate13thMonthHistory } from './mockData';
 
 const YearEndTab: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [modalConfig, setModalConfig] = useState<{ type: '13th' | 'tax' | 'gov' | null, empId: string | null }>({ type: null, empId: null });
+  const [modalConfig, setModalConfig] = useState<{ type: '13th' | 'tax' | 'gov' | 'itr' | null, empId: string | null }>({ type: null, empId: null });
 
   const filteredYearEnd = MOCK_YEAR_END_DATA.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -68,6 +68,7 @@ const YearEndTab: React.FC = () => {
                         <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Tax Due vs Withheld</th>
                         <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">13th Month Pay</th>
                         <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
+                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">ITR</th>
                         <th className="px-6 py-4 w-10"></th>
                     </tr>
                 </thead>
@@ -120,6 +121,14 @@ const YearEndTab: React.FC = () => {
                                     }`}>
                                         {item.status}
                                     </span>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    <button
+                                        onClick={() => setModalConfig({ type: 'itr', empId: item.id })}
+                                        className="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-all"
+                                    >
+                                        View ITR
+                                    </button>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <button className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-lg transition-all opacity-0 group-hover:opacity-100">
@@ -267,7 +276,36 @@ const YearEndTab: React.FC = () => {
                             </div>
                             </div>
                     )}
+                    {/* --- ITR Autofill View --- */}
+                    {modalConfig.type === 'itr' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 h-full flex flex-col">
+                            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-1">
+                                <h4 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                    <CalendarRange className="text-indigo-600" size={20} />
+                                    ITR Autofill Preview
+                                </h4>
 
+                                <img
+                                    src="https://d2v55crl1k4v3v.cloudfront.net/uploads/files/39d4b5f71d6eb6f96b206419a705c5fa.jpg"
+                                    alt="ITR Preview"
+                                    className="w-full rounded-xl border border-slate-200 shadow-sm"
+                                    />
+
+                                <button
+                                    onClick={() => {
+                                        const link = document.createElement('a');
+                                        link.href = 'https://the-bithub.com/ITR_SAMPLE_DOWNLOAD';
+                                        link.download = 'ITR-Autofill.jpg';
+                                        link.click();
+                                    }}
+                                    className="mt-6 w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Download size={18} />
+                                    Download ITR
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">

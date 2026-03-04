@@ -40,6 +40,7 @@ const INITIAL_LEAVE_REQUESTS = [
         reasonStatus: 'Waiting for HR Approval',
         appliedDate: 'August 24, 2025',
         notes: "This is employee's first leave",
+        payStatus: 'with-pay',
         credits: 3.0,
         balanceAfter: 2.0
     },
@@ -53,6 +54,7 @@ const INITIAL_LEAVE_REQUESTS = [
         reasonStatus: 'Approved by Manager',
         appliedDate: 'July 10, 2025',
         notes: "-",
+        payStatus: 'with-pay',
         credits: 1.0,
         balanceAfter: 14.0
     },
@@ -67,6 +69,7 @@ const INITIAL_LEAVE_REQUESTS = [
         reasonStatus: 'Approved by Manager',
         appliedDate: 'February 20, 2026',
         notes: "-",
+        payStatus: 'without-pay',
         credits: 1.0,
         balanceAfter: 13.0
     }
@@ -332,6 +335,8 @@ const LeaveRequests: React.FC = () => {
     const [leaveType, setLeaveType] = useState('Vacation Leave');
     const [leaveReason, setLeaveReason] = useState('');
     const [leaveEntries, setLeaveEntries] = useState<LeaveEntry[]>([]);
+    // NEW: Pay status for the leave request (with pay / without pay)
+    const [payStatus, setPayStatus] = useState<'with-pay' | 'without-pay'>('with-pay');
 
     // Current Entry Input State
     const [currentEntry, setCurrentEntry] = useState({
@@ -505,6 +510,8 @@ const LeaveRequests: React.FC = () => {
             appliedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
             credits: totalRequestCredits,
             balanceAfter: projectedBalance,
+            // NEW: pay status for this request
+            payStatus: payStatus,
             // Global store fields
             employeeId: user?.employeeId || 'emp-jane',
             employeeName: user?.name || 'Jane Doe',
@@ -519,7 +526,8 @@ const LeaveRequests: React.FC = () => {
             leaveCredits: totalRequestCredits,
             leaveBalanceAfter: projectedBalance,
             leaveReason: leaveReason
-        };
+    };
+
 
         const globalRequest = submitLeaveRequest(newRequest);
 
@@ -563,7 +571,18 @@ const LeaveRequests: React.FC = () => {
                         const dateStr = `2025-08-${d.toString().padStart(2, '0')}`;
                         const attendanceLog = MOCK_ATTENDANCE_DB[dateStr];
 
-                        const statusColor = req ? (req.status === 'Approved' ? 'bg-purple-500' : req.status === 'Rejected' ? 'bg-rose-500' : 'bg-indigo-300') : '';
+                        let statusColor = '';
+                        let payBorder = '';
+
+                        if (req) {
+                            if (req.status === 'Approved') statusColor = 'bg-purple-500';
+                            else if (req.status === 'Rejected') statusColor = 'bg-rose-500';
+                            else statusColor = 'bg-indigo-300';
+
+                            // NEW: Pay status border
+                            if (req.payStatus === 'with-pay') payBorder = 'ring-2 ring-emerald-400';
+                            else payBorder = 'ring-2 ring-slate-400';
+                        }
 
                         return (
                             <div key={d} className="relative group/day">
@@ -585,6 +604,7 @@ const LeaveRequests: React.FC = () => {
                                     className={`h-full w-full flex items-center justify-center text-xs font-bold rounded-lg relative transition-all 
                                     ${req ? 'text-white shadow-sm hover:scale-105' : 'text-slate-700 hover:bg-slate-50'} 
                                     ${req ? statusColor : ''} 
+                                    ${req ? payBorder : ''}
                                     ${isSelected && req ? 'ring-2 ring-offset-2 ring-indigo-500 z-10' : ''}
                                     ${attendanceLog ? 'bg-slate-50 text-slate-300 line-through decoration-rose-400 decoration-2 cursor-not-allowed opacity-80' : ''}
                                 `}
@@ -706,6 +726,17 @@ const LeaveRequests: React.FC = () => {
                         <tbody className="divide-y divide-slate-100">
                             {requests.map(req => (
                                 <tr key={req.id} className="hover:bg-slate-50 transition-colors">
+                                    <td className="px-8 py-5 whitespace-nowrap">
+                                    {req.payStatus === 'with-pay' ? (
+                                        <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                        With Pay
+                                        </span>
+                                    ) : (
+                                        <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                        Without Pay
+                                        </span>
+                                    )}
+                                    </td>
                                     <td className="px-6 py-4 font-bold text-slate-700">{req.type}</td>
                                     <td className="px-6 py-4 text-slate-600">
                                         <div className="flex flex-col gap-0.5">
@@ -841,10 +872,23 @@ const LeaveRequests: React.FC = () => {
             {/* Detail View Modal (Read Only) */}
             <Modal isOpen={isLeaveModalOpen} onClose={() => setIsLeaveModalOpen(false)} className="max-w-xl">
                 {selectedLeaveRequest && (
+                    
                     <div className="p-8">
                         <div className="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
                             <h3 className="text-xl font-bold text-slate-900">{selectedLeaveRequest.type}</h3>
                             <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100">{selectedLeaveRequest.status}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-3">
+                            <span className="text-xs font-bold text-slate-500 uppercase">Pay Status:</span>
+                            {selectedLeaveRequest?.payStatus === 'with-pay' ? (
+                                <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-100">
+                                With Pay
+                                </span>
+                            ) : (
+                                <span className="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-200">
+                                Without Pay
+                                </span>
+                            )}
                         </div>
                         <div className="space-y-4">
                             <div><label className="text-[10px] font-bold text-slate-400 uppercase">Dates</label><p className="text-sm font-bold">{selectedLeaveRequest.dates.join(', ')}</p></div>
@@ -853,6 +897,7 @@ const LeaveRequests: React.FC = () => {
                         </div>
                         <div className="mt-8 flex justify-end"><button onClick={() => setIsLeaveModalOpen(false)} className="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold">Close</button></div>
                     </div>
+                    
                 )}
             </Modal>
 
@@ -868,6 +913,7 @@ const LeaveRequests: React.FC = () => {
                             </h3>
                             <p className="text-xs text-slate-500 mt-1">Select dates to build your leave application.</p>
                         </div>
+                        
 
                         <div className="space-y-6 flex-1">
                             {/* Leave Type */}
@@ -882,6 +928,23 @@ const LeaveRequests: React.FC = () => {
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Emergency Leave">Emergency Leave</option>
                                 </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                    Pay Status
+                                </label>
+                                <select
+                                    className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all cursor-pointer"
+                                    value={payStatus}
+                                    onChange={(e) => setPayStatus(e.target.value as 'with-pay' | 'without-pay')}
+                                >
+                                    <option value="with-pay">With Pay</option>
+                                    <option value="without-pay">Without Pay</option>
+                                </select>
+                                <p className="text-[10px] text-slate-400 mt-1">
+                                    Choose if this leave will be paid or unpaid. This affects payroll and leave credits.
+                                </p>
                             </div>
 
                             {/* Date Builder Card */}

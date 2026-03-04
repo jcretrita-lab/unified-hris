@@ -1,4 +1,3 @@
-
 export enum EmployeeStatus {
   ACTIVE = 'Active',
   INACTIVE = 'Inactive'
@@ -18,6 +17,7 @@ export interface Employee {
   positionId?: string;
   firstName?: string;
   lastName?: string;
+  payScheduleId?: string; // links employee to a PaySchedule
 }
 
 export interface User {
@@ -45,19 +45,6 @@ export interface RoleSetup {
   lastModified: string;
 }
 
-export interface CutoffRange {
-  startDay: number;
-  endDay: number;
-  payDay: number;
-}
-
-export interface MonthOverride {
-  month: number; // 0-11
-  year: number;
-  cutoffs: CutoffRange[];
-  note?: string;
-}
-
 export interface PaySchedule {
   id: string;
   name: string;
@@ -69,11 +56,6 @@ export interface PaySchedule {
   secondCutoff?: number;
   secondPayDate?: number;
   divisorId?: string; // Links to a Divisor
-  // Airbnb-style range fields
-  firstCutoffRange?: CutoffRange;
-  secondCutoffRange?: CutoffRange;
-  monthOverrides?: MonthOverride[];
-  applyToAllMonths?: boolean;
 }
 
 export interface Divisor {
@@ -126,6 +108,15 @@ export interface PayComponent {
   isTaxable: boolean;
   valueType: 'fixed' | 'formula' | 'table';
   fixedValue?: number;
+
+  // added to know loans exist
+  category?: 'loan' | 'government' | 'other';
+  loanPrincipalAmount?: number;
+  loanInstallmentAmount?: number;
+  loanRemainingBalance?: number;
+  loanStartDate?: string;
+  loanEndDate?: string;
+
   formulaId?: string;
   tableId?: string;
   archiveAfterDays?: number;
@@ -158,6 +149,22 @@ export interface OrgUnitType {
   name: string;
   level: number;
 }
+
+export interface OrganizationStructureConfig {
+  level1Label: string;
+  level2Label: string;
+  level3Label: string;
+  level4Label: string;
+  level5Label?: string;
+}
+
+export const defaultOrgStructureConfig: OrganizationStructureConfig = {
+  level1Label: "Division",
+  level2Label: "Department",
+  level3Label: "Unit",
+  level4Label: "Team",
+  level5Label: "Sub-Team",
+};
 
 export interface SalaryStep {
   id: string;
@@ -213,14 +220,4 @@ export interface PayTemplate {
   components: string[]; // IDs of PayComponents
   isTaxExempt?: boolean;
   taxRate?: number;
-}
-
-export interface DailyPayTemplate {
-  id: string;
-  name: string;
-  dailyRate: number;
-  targetType: 'Global' | 'Department' | 'Position';
-  targetId: string | null;
-  additionalComponents: { name: string; amount: number; type: 'earning' | 'deduction' }[];
-  isActive: boolean;
 }
