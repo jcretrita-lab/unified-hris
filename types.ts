@@ -150,6 +150,22 @@ export interface OrgUnitType {
   level: number;
 }
 
+export interface OrganizationStructureConfig {
+  level1Label: string;
+  level2Label: string;
+  level3Label: string;
+  level4Label: string;
+  level5Label?: string;
+}
+
+export const defaultOrgStructureConfig: OrganizationStructureConfig = {
+  level1Label: "Division",
+  level2Label: "Department",
+  level3Label: "Unit",
+  level4Label: "Team",
+  level5Label: "Sub-Team",
+};
+
 export interface SalaryStep {
   id: string;
   name: string;
@@ -205,4 +221,3 @@ export interface PayTemplate {
   isTaxExempt?: boolean;
   taxRate?: number;
 }
-
