@@ -135,6 +135,8 @@ export interface PayComponent {
   isArchived?: boolean;
   includeIn13thMonth?: boolean; // Added field
   isSystem?: boolean; // Added to prevent deletion of critical components like Basic Pay
+  frequency?: 'Monthly' | 'Semi-Monthly' | 'Weekly' | 'Daily'; // Added field
+  distribution?: { period: string; amount: number }[]; // Added for period-specific splits
   currentVersion?: string;
   versions?: VersionHistory[];
 }

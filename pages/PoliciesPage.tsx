@@ -159,6 +159,15 @@ interface PolicyState {
     flexibleMinimumHours: number;
     holidayDecompressionEnabled: boolean;
     hmoEligibility: 'Immediate' | 'Upon Regularization';
+
+    // Additional Compensation
+    fourteenthMonthEnabled: boolean;
+    fourteenthMonthRequiresAppraisal: boolean;
+    fifteenthMonthEnabled: boolean;
+    fifteenthMonthRequiresAppraisal: boolean;
+    performanceBonusEnabled: boolean;
+    performanceBonusBasis: '13th Month' | 'Basic Salary';
+    performanceBonusRequiresAppraisal: boolean;
 }
 
 const INITIAL_STATE: PolicyState = {
@@ -221,6 +230,15 @@ const INITIAL_STATE: PolicyState = {
     flexibleMinimumHours: 8.5,
     holidayDecompressionEnabled: false,
     hmoEligibility: 'Upon Regularization',
+
+    // Additional Compensation Defaults
+    fourteenthMonthEnabled: false,
+    fourteenthMonthRequiresAppraisal: false,
+    fifteenthMonthEnabled: false,
+    fifteenthMonthRequiresAppraisal: false,
+    performanceBonusEnabled: false,
+    performanceBonusBasis: '13th Month',
+    performanceBonusRequiresAppraisal: false,
 };
 
 // Leave Monetization Types
@@ -1048,6 +1066,154 @@ const PoliciesPage: React.FC = () => {
                                                         : 'Employees will only be eligible for HMO coverage once they successfully pass their probationary period and are regularized.'
                                                     }
                                                 </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 13th Month & Additional Bonuses */}
+                                    <div className="p-8 border border-slate-200 rounded-3xl bg-slate-50">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <Coins size={24} className="text-amber-500" />
+                                            <div>
+                                                <h4 className="font-bold text-slate-900">13th Month & Additional Compensation</h4>
+                                                <p className="text-xs text-slate-500">Configure mandatory and additional annual bonuses.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* 13th Month Basis */}
+                                            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">13th Month Computation Basis</label>
+                                                <div className="flex gap-2">
+                                                    {(['Basic Pay', 'Total Earnings'] as const).map(basis => (
+                                                        <button
+                                                            key={basis}
+                                                            onClick={() => updatePolicy('thirteenthMonthBasis', basis)}
+                                                            className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all border ${policies.thirteenthMonthBasis === basis
+                                                                    ? 'bg-amber-50 border-amber-500 text-amber-700'
+                                                                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                                                                }`}
+                                                        >
+                                                            {basis}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <p className="mt-3 text-[10px] text-slate-400 italic">Statutory requirement is 1/12 of total basic salary earned during the calendar year.</p>
+                                            </div>
+
+                                            {/* Performance Bonus */}
+                                            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Performance Bonus</label>
+                                                    <button
+                                                        onClick={() => updatePolicy('performanceBonusEnabled', !policies.performanceBonusEnabled)}
+                                                        className="shrink-0"
+                                                    >
+                                                        {policies.performanceBonusEnabled ? (
+                                                            <ToggleRight size={28} className="text-indigo-600" />
+                                                        ) : (
+                                                            <ToggleLeft size={28} className="text-slate-300" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                {policies.performanceBonusEnabled ? (
+                                                    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Computation Basis</label>
+                                                            <div className="flex gap-2">
+                                                                {(['13th Month', 'Basic Salary'] as const).map(basis => (
+                                                                    <button
+                                                                        key={basis}
+                                                                        onClick={() => updatePolicy('performanceBonusBasis', basis)}
+                                                                        className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold border transition-all ${policies.performanceBonusBasis === basis
+                                                                                ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                                                                                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                                                                            }`}
+                                                                    >
+                                                                        {basis}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <label className="flex items-center gap-2 cursor-pointer pt-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="w-4 h-4 accent-indigo-600 rounded"
+                                                                checked={policies.performanceBonusRequiresAppraisal}
+                                                                onChange={(e) => updatePolicy('performanceBonusRequiresAppraisal', e.target.checked)}
+                                                            />
+                                                            <span className="text-xs font-bold text-slate-600">Requires satisfactory appraisal</span>
+                                                        </label>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[10px] text-slate-400 italic">Enable to configure performance-based bonuses.</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                            {/* 14th Month */}
+                                            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">14th Month Pay</label>
+                                                    <button
+                                                        onClick={() => updatePolicy('fourteenthMonthEnabled', !policies.fourteenthMonthEnabled)}
+                                                        className="shrink-0"
+                                                    >
+                                                        {policies.fourteenthMonthEnabled ? (
+                                                            <ToggleRight size={28} className="text-blue-600" />
+                                                        ) : (
+                                                            <ToggleLeft size={28} className="text-slate-300" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                {policies.fourteenthMonthEnabled ? (
+                                                    <div className="animate-in fade-in zoom-in-95 duration-200">
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="w-4 h-4 accent-blue-600 rounded"
+                                                                checked={policies.fourteenthMonthRequiresAppraisal}
+                                                                onChange={(e) => updatePolicy('fourteenthMonthRequiresAppraisal', e.target.checked)}
+                                                            />
+                                                            <span className="text-xs font-bold text-slate-600">Apply via appraisal performance</span>
+                                                        </label>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[10px] text-slate-400 italic">Enable for additional 14th month benefit.</p>
+                                                )}
+                                            </div>
+
+                                            {/* 15th Month */}
+                                            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">15th Month Pay</label>
+                                                    <button
+                                                        onClick={() => updatePolicy('fifteenthMonthEnabled', !policies.fifteenthMonthEnabled)}
+                                                        className="shrink-0"
+                                                    >
+                                                        {policies.fifteenthMonthEnabled ? (
+                                                            <ToggleRight size={28} className="text-emerald-600" />
+                                                        ) : (
+                                                            <ToggleLeft size={28} className="text-slate-300" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                {policies.fifteenthMonthEnabled ? (
+                                                    <div className="animate-in fade-in zoom-in-95 duration-200">
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="w-4 h-4 accent-emerald-600 rounded"
+                                                                checked={policies.fifteenthMonthRequiresAppraisal}
+                                                                onChange={(e) => updatePolicy('fifteenthMonthRequiresAppraisal', e.target.checked)}
+                                                            />
+                                                            <span className="text-xs font-bold text-slate-600">Apply via appraisal performance</span>
+                                                        </label>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[10px] text-slate-400 italic">Enable for additional 15th month benefit.</p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
