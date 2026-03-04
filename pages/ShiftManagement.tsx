@@ -831,61 +831,65 @@ const ShiftManagement: React.FC = () => {
             </button>
 
             {/* Non-Compressed Schedule */}
-            {!formData.isCompressible && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      Start Time
-                    </label>
-                    <input
-                      type="time"
-                      className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-900"
-                      value={formData.startTime}
-                      onChange={(e) =>
-                        setFormData({ ...formData, startTime: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      End Time
-                    </label>
-                    <input
-                      type="time"
-                      className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-900"
-                      value={formData.endTime}
-                      onChange={(e) =>
-                        setFormData({ ...formData, endTime: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-
-                {/* Work Days (array-based) */}
+            <div className={`space-y-4 ${formData.isCompressible ? 'bg-slate-50 p-5 rounded-2xl border border-slate-200' : ''}`}>
+              {formData.isCompressible && (
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" />
+                  Non-Compressed Schedule
+                </h4>
+              )}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-                    Work Days
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                    Start Time
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    {DAYS_OF_WEEK.map((day) => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => toggleDay(day)}
-                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
-                          formData.workDays?.includes(day)
-                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
-                            : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    ))}
-                  </div>
+                  <input
+                    type="time"
+                    className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-900"
+                    value={formData.startTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startTime: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                    End Time
+                  </label>
+                  <input
+                    type="time"
+                    className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-900"
+                    value={formData.endTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endTime: e.target.value })
+                    }
+                  />
                 </div>
               </div>
-            )}
+
+              {/* Work Days (array-based) */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                  Work Days
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK.map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDay(day)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
+                        formData.workDays?.includes(day)
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
+                          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Compressed Schedule */}
             {formData.isCompressible && (
