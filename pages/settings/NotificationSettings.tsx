@@ -146,6 +146,69 @@ const INITIAL_RULES: NotificationRule[] = [
         actionUrl: '/manage/employee'
     }
   },
+    { 
+    id: 'hr-3', 
+    module: 'Core HR', 
+    event: 'Profile Update Approved', 
+    triggerType: 'Event-Based',
+    description: 'Notify the employee when their profile update request is approved.', 
+    recipientRoles: ['Employee'], 
+    inAppEnabled: true, 
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Your profile update has been approved',
+        emailBody: 'Hi {{employee_name}},\n\nYour profile update request has been approved by {{approver_name}}.\n\nBest,\nHR Team',
+        inAppTitle: 'Profile Update Approved',
+        inAppBody: 'Your profile update request has been approved.',
+        type: 'Success',
+        senderName: '{{approver_name}}',
+        actionLabel: 'View Profile',
+        actionUrl: '/my-profile'
+    }
+  },
+  { 
+    id: 'hr-4', 
+    module: 'Core HR', 
+    event: 'Document Uploaded', 
+    triggerType: 'Event-Based',
+    description: 'When an employee uploads a new document to their profile.', 
+    recipientRoles: ['HR Admin'], 
+    inAppEnabled: true, 
+    emailEnabled: false,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'New Document Uploaded: {{document_type}}',
+        emailBody: '{{employee_name}} uploaded a new {{document_type}} to their profile.',
+        inAppTitle: 'New Document Uploaded',
+        inAppBody: '{{employee_name}} uploaded a new {{document_type}}.',
+        type: 'Info',
+        senderName: 'HR System',
+        actionLabel: 'Review Documents',
+        actionUrl: '/manage/employee'
+    }
+  },
+  { 
+    id: 'hr-5', 
+    module: 'Core HR', 
+    event: 'Probation Period Ending Reminder', 
+    triggerType: 'Schedule-Based',
+    description: 'Remind HR and managers when an employee’s probation period is about to end.', 
+    recipientRoles: ['HR Admin', 'Approver'], 
+    inAppEnabled: true, 
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Probation Ending: {{employee_name}}',
+        emailBody: 'Probation for {{employee_name}} will end on {{date}}. Please prepare for evaluation.',
+        inAppTitle: 'Probation Ending Soon',
+        inAppBody: 'Probation for {{employee_name}} ends on {{date}}.',
+        type: 'Reminder',
+        senderName: 'HR System',
+        actionLabel: 'View Employee',
+        actionUrl: '/manage/employee'
+    }
+  },
   
   // Time & Attendance
   { 
@@ -215,25 +278,88 @@ const INITIAL_RULES: NotificationRule[] = [
   },
   
   // System
-  { 
-    id: 'sys-1', 
+    { 
+    id: 'sys-2', 
     module: 'System', 
-    event: 'Security Alert', 
+    event: 'Suspicious Login Attempt', 
     triggerType: 'Event-Based',
-    description: 'Critical security events (e.g. failed logins).', 
-    recipientRoles: ['Superadmin'], 
+    description: 'When a login attempt is detected from an unusual location or device.', 
+    recipientRoles: ['Employee'], 
     inAppEnabled: true, 
     emailEnabled: true,
     template: {
         ...DEFAULT_TEMPLATE,
-        emailSubject: 'Security Alert: {{event_type}}',
-        emailBody: 'A security event was detected: {{event_type}} on {{date}}.',
-        inAppTitle: 'Security Alert',
-        inAppBody: 'Critical: {{event_type}} detected.',
+        emailSubject: 'Suspicious Login Attempt Detected',
+        emailBody: 'We detected a suspicious login attempt on your account from {{location}} at {{date}}.',
+        inAppTitle: 'Suspicious Login Attempt',
+        inAppBody: 'Suspicious login attempt detected from {{location}}.',
+        type: 'Warning',
+        senderName: 'Security Watchdog',
+        actionLabel: 'Review Activity',
+        actionUrl: '/monitor/audit-logs'
+    }
+  },
+  { 
+    id: 'sys-3', 
+    module: 'System', 
+    event: 'Login from New Device', 
+    triggerType: 'Event-Based',
+    description: 'Notify user when their account is accessed from a new device.', 
+    recipientRoles: ['Employee'], 
+    inAppEnabled: true, 
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'New Device Login Detected',
+        emailBody: 'Your account was accessed from a new device: {{device_name}} on {{date}}.',
+        inAppTitle: 'New Device Login',
+        inAppBody: 'Your account was accessed from {{device_name}}.',
+        type: 'Info',
+        senderName: 'Security Watchdog',
+        actionLabel: 'Manage Devices',
+        actionUrl: '/monitor/security/devices'
+    }
+  },
+  { 
+    id: 'sys-4', 
+    module: 'System', 
+    event: 'Multiple Failed Login Attempts', 
+    triggerType: 'Event-Based',
+    description: 'When several failed login attempts occur in a short period.', 
+    recipientRoles: ['Employee', 'Superadmin'], 
+    inAppEnabled: true, 
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Multiple Failed Login Attempts',
+        emailBody: 'We detected multiple failed login attempts on your account on {{date}}.',
+        inAppTitle: 'Multiple Failed Login Attempts',
+        inAppBody: 'Multiple failed login attempts were detected on your account.',
         type: 'Error',
         senderName: 'Security Watchdog',
-        actionLabel: 'View Audit Logs',
-        actionUrl: '/monitor/audit-logs'
+        actionLabel: 'Secure Account',
+        actionUrl: '/monitor/security'
+    }
+  },
+  { 
+    id: 'sys-5', 
+    module: 'System', 
+    event: 'Password Changed', 
+    triggerType: 'Event-Based',
+    description: 'Notify user when their password is updated.', 
+    recipientRoles: ['Employee'], 
+    inAppEnabled: true, 
+    emailEnabled: true,
+    template: {
+        ...DEFAULT_TEMPLATE,
+        emailSubject: 'Your Password Was Changed',
+        emailBody: 'Your account password was successfully changed on {{date}}. If this was not you, contact support immediately.',
+        inAppTitle: 'Password Changed',
+        inAppBody: 'Your password has been successfully updated.',
+        type: 'Success',
+        senderName: 'Security Watchdog',
+        actionLabel: 'Review Security Settings',
+        actionUrl: '/my-profile'
     }
   },
 ];

@@ -469,7 +469,7 @@ const PayComponents: React.FC<PayComponentsProps> = ({
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setIsSavingVersion(false); }}>
-        <div className="p-8">
+        <div className="p-8 max-h-[80vh] overflow-y-auto">
             {!isSavingVersion ? (
                 <>
                 <div className="flex justify-between items-center mb-2">
