@@ -149,7 +149,7 @@ const EmployeeDetail: React.FC = () => {
           className="space-y-8"
         >
           {activeTab === 'Profile' && <ProfileTab employee={employee} />}
-          {activeTab === 'Schedule' && <ScheduleTab />}
+          {activeTab === 'Schedule' && <ScheduleTab employee={employee} isEmployeeView={isEmployeeView} />}
           {activeTab === 'Pay Structure' && <PayStructureTab />}
           {activeTab === 'Payroll' && <PayrollTab />}
           {activeTab === 'Attendance' && <AttendanceTab />}
