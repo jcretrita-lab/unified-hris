@@ -380,17 +380,6 @@ export const PayStructure: React.FC = () => {
           components={payComponents}
         />
       )}
-<<<<<<< HEAD
-=======
-
-      {activeTab === 'Daily Pay Templates' && (
-        <DailyPayTemplates
-          templates={dailyPayTemplates}
-          setTemplates={setDailyPayTemplates}
-          components={payComponents}
-        />
-      )}
->>>>>>> 5f8bdef007c19c38054ab7b1ceb67ea44532de2a
     </div>
   );
 };
