@@ -159,6 +159,267 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
       </div>
     ),
     actionLink: { label: 'File Correction', url: '/monitor/attendance' }
+  },
+  'n11': {
+    id: 'n11',
+    type: 'Warning',
+    category: 'Timekeeping',
+    title: 'Late Attendance: John Doe',
+    timestamp: 'August 28, 2025 • 9:45 AM',
+    sender: { name: 'Timekeeping Bot', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          <strong>John Doe</strong> was detected as late on <strong>August 28, 2025</strong>.
+        </p>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Scheduled Time</p>
+              <p className="text-sm font-bold text-slate-800">9:00 AM</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Actual Time</p>
+              <p className="text-sm font-bold text-slate-800">9:45 AM</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Late By</p>
+              <p className="text-sm font-bold text-rose-600">45 minutes</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Department: <strong>IT Department</strong>
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Attendance Record', url: '/monitor/attendance' },
+    metadata: [
+        { label: 'Date', value: 'Aug 28, 2025' },
+        { label: 'Department', value: 'IT Department' }
+    ]
+  },
+  'n12': {
+    id: 'n12',
+    type: 'Info',
+    category: 'Payroll',
+    title: 'Salary Updated',
+    timestamp: 'August 28, 2025 • 10:00 AM',
+    sender: { name: 'Payroll System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your base salary has been updated effective <strong>September 01, 2025</strong>.
+        </p>
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Previous Salary</p>
+              <p className="text-sm font-bold text-slate-800">₱ 35,000.00</p>
+            </div>
+            <div className="text-2xl text-slate-300">→</div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">New Salary</p>
+              <p className="text-sm font-bold text-emerald-600">₱ 45,000.00</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Please contact HR if you have any questions regarding this update.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Pay Structure', url: '/manage/payroll' },
+    metadata: [
+        { label: 'Effective Date', value: 'Sep 01, 2025' },
+        { label: 'Adjustment Type', value: 'Salary Increase' }
+    ]
+  },
+  'n13': {
+    id: 'n13',
+    type: 'Error',
+    category: 'Payroll',
+    title: 'Bank Details Required',
+    timestamp: 'August 28, 2025 • 10:30 AM',
+    sender: { name: 'Payroll System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your bank details are missing from the system. Please update your bank information to ensure timely salary disbursement.
+        </p>
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl">
+          <p className="text-sm font-bold text-rose-800">
+            ⚠️ Action Required
+          </p>
+          <p className="text-xs text-rose-700 mt-1">
+            Without valid bank details, your salary cannot be credited to your account.
+          </p>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Please update your bank information in your employee profile as soon as possible to avoid delays in your salary payment.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Update Bank Details', url: '/manage/employee' },
+    metadata: [
+        { label: 'Required By', value: 'Sep 01, 2025 (Payroll Date)' },
+        { label: 'Status', value: 'Missing' }
+    ]
+  },
+  'n6': {
+    id: 'n6',
+    type: 'Success',
+    category: 'HR Core',
+    title: 'Profile Update Approved',
+    timestamp: 'August 28, 2025 • 10:15 AM',
+    sender: { name: 'Alex Thompson', role: 'HR Manager', avatar: 'AT', isSystem: false },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Good news! Your profile update request has been approved by <strong>Alex Thompson</strong>.
+        </p>
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+          <p className="text-sm font-bold text-emerald-800">Changes Approved:</p>
+          <ul className="text-xs text-slate-600 mt-2 space-y-1">
+            <li>• Phone Number: Updated</li>
+            <li>• Address: Updated</li>
+            <li>• Emergency Contact: Updated</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Your profile has been updated with the new information. Thank you!
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Profile', url: '/my-profile' }
+  },
+  'n7': {
+    id: 'n7',
+    type: 'Warning',
+    category: 'HR Core',
+    title: 'Probation Ending Soon',
+    timestamp: 'August 26, 2025 • 9:00 AM',
+    sender: { name: 'HR System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your probation period will end on <strong>September 30, 2025</strong>. Please prepare for your evaluation.
+        </p>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Start Date</p>
+              <p className="text-sm font-bold text-slate-800">July 01, 2025</p>
+            </div>
+            <div className="text-2xl text-slate-300">→</div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">End Date</p>
+              <p className="text-sm font-bold text-amber-600">Sep 30, 2025</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Please coordinate with your manager regarding your performance evaluation and any required documents.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Evaluation Details', url: '/my-profile/evaluations' },
+    metadata: [
+        { label: 'Days Remaining', value: '33 days' },
+        { label: 'Department', value: 'IT Department' }
+    ]
+  },
+  'n8': {
+    id: 'n8',
+    type: 'Warning',
+    category: 'System',
+    title: 'Suspicious Login Attempt',
+    timestamp: 'August 27, 2025 • 2:30 PM',
+    sender: { name: 'Security Watchdog', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          We detected a suspicious login attempt on your account from <strong>Quezon City, Philippines</strong>.
+        </p>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <p className="text-sm font-bold text-amber-800">Suspicious Activity Details:</p>
+          <ul className="text-xs text-slate-600 mt-2 space-y-1">
+            <li>• Location: Quezon City, Philippines</li>
+            <li>• IP Address: 203.XXX.XXX.XXX</li>
+            <li>• Device: Unknown Device</li>
+            <li>• Time: August 27, 2025 2:30 PM</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          If this was you, you can ignore this notification. If you did not attempt to log in, please secure your account immediately by changing your password.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Review Activity Logs', url: '/monitor/audit-logs' },
+    metadata: [
+        { label: 'Risk Level', value: 'Medium' },
+        { label: 'Status', value: 'Flagged' }
+    ]
+  },
+  'n9': {
+    id: 'n9',
+    type: 'Info',
+    category: 'System',
+    title: 'New Device Login',
+    timestamp: 'August 26, 2025 • 8:45 PM',
+    sender: { name: 'Security Watchdog', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your account was accessed from a new device: <strong>Windows 11 - Chrome</strong>.
+        </p>
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+          <p className="text-sm font-bold text-blue-800">Device Information:</p>
+          <ul className="text-xs text-slate-600 mt-2 space-y-1">
+            <li>• Device: Windows 11 - Chrome</li>
+            <li>• Browser: Chrome 115.0</li>
+            <li>• Location: Manila, Philippines</li>
+            <li>• Time: August 26, 2025 8:45 PM</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          If this was you, you can ignore this message. If you don't recognize this device, please change your password immediately.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Manage Devices', url: '/monitor/security/devices' }
+  },
+  'n10': {
+    id: 'n10',
+    type: 'Error',
+    category: 'System',
+    title: 'Multiple Failed Login Attempts',
+    timestamp: 'August 26, 2025 • 6:10 PM',
+    sender: { name: 'Security Watchdog', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Multiple failed login attempts were detected on your account. This could indicate a brute-force attack attempt.
+        </p>
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl">
+          <p className="text-sm font-bold text-rose-800">Security Alert:</p>
+          <ul className="text-xs text-slate-600 mt-2 space-y-1">
+            <li>• Failed Attempts: 5</li>
+            <li>• Time Window: August 26, 2025 6:00 PM - 6:10 PM</li>
+            <li>• IP Address: 203.XXX.XXX.XXX</li>
+            <li>• Location: Unknown</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Your account is currently secure. We recommend changing your password to prevent unauthorized access.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Secure Your Account', url: '/monitor/security' },
+    metadata: [
+        { label: 'Risk Level', value: 'High' },
+        { label: 'Account Status', value: 'Secure' }
+    ]
   }
 };
 

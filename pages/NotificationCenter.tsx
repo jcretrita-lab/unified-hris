@@ -29,14 +29,42 @@ interface NotificationItem {
 
 // --- Mock Data ---
 const MOCK_NOTIFICATIONS: NotificationItem[] = [
+  // New notifications based on Notification Settings (placed at top for visibility)
+  {
+    id: 'n13',
+    title: 'Bank Details Required',
+    message: 'Your bank details are missing. Please update to receive your salary.',
+    timestamp: 'Just now',
+    type: 'Error',
+    isRead: false,
+    link: '/manage/employee'
+  },
+  {
+    id: 'n12',
+    title: 'Salary Updated',
+    message: 'Your salary has been updated effective Sep 01, 2025.',
+    timestamp: '5 minutes ago',
+    type: 'Info',
+    isRead: false,
+    link: '/manage/payroll'
+  },
+  {
+    id: 'n11',
+    title: 'Late Attendance',
+    message: 'John Doe clocked in late on Aug 28, 2025.',
+    timestamp: '30 minutes ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/monitor/attendance'
+  },
   {
     id: 'n1',
     title: 'Payslip Generated',
     message: 'Your payslip for the period Aug 01 - Aug 15 is now available for viewing.',
-    timestamp: 'Just now',
+    timestamp: '1 hour ago',
     type: 'Success',
     isRead: false,
-    link: '/my-profile' // In real app would link to payslip tab
+    link: '/my-profile'
   },
   {
     id: 'n2',
@@ -62,9 +90,19 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     message: 'HRIS will be undergoing scheduled maintenance on Saturday, Aug 30 from 10 PM to 12 AM.',
     timestamp: 'Aug 24, 2025',
     type: 'Info',
-    isRead: true
+    isRead: true,
+    link: '/monitor/system-status'
   },
-    {
+  {
+    id: 'n5',
+    title: 'Attendance Discrepancy',
+    message: 'You have a missing time-out record for Aug 22. Please file an ODTR.',
+    timestamp: 'Aug 23, 2025',
+    type: 'Error',
+    isRead: true,
+    link: '/monitor/attendance'
+  },
+  {
     id: 'n6',
     title: 'Profile Update Approved',
     message: 'Your profile update request has been approved by Alex Thompson.',
@@ -108,17 +146,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     type: 'Error',
     isRead: true,
     link: '/monitor/security'
-  },
-  {
-    id: 'n5',
-    title: 'Attendance Discrepancy',
-    message: 'You have a missing time-out record for Aug 22. Please file an ODTR.',
-    timestamp: 'Aug 23, 2025',
-    type: 'Error',
-    isRead: true,
-    link: '/monitor/attendance'
   }
-  
 ];
 
 const NotificationCenter: React.FC = () => {
