@@ -45,6 +45,19 @@ export interface RoleSetup {
   lastModified: string;
 }
 
+export interface CutoffRange {
+  startDay: number;
+  endDay: number;
+  payDay: number;
+}
+
+export interface MonthOverride {
+  month: number; // 0-11
+  year: number;
+  cutoffs: CutoffRange[];
+  note?: string;
+}
+
 export interface PaySchedule {
   id: string;
   name: string;
@@ -55,7 +68,11 @@ export interface PaySchedule {
   firstPayDate?: number | string;
   secondCutoff?: number;
   secondPayDate?: number;
-  divisorId?: string; // Links to a Divisor
+  divisorId?: string;
+  firstCutoffRange?: CutoffRange;
+  secondCutoffRange?: CutoffRange;
+  monthOverrides?: MonthOverride[];
+  applyToAllMonths?: boolean;
 }
 
 export interface Divisor {

@@ -142,6 +142,12 @@ interface PolicyState {
     vawcLeave: number;
     magnaCartaLeave: number;
     nonCompressedWorkWeek: boolean;
+    workScheduleType: 'Standard' | 'Compressed' | 'Flexible';
+    sixthDay: string;
+    compressedDailyHours: number;
+    standardDailyHours: number;
+    flexibleMinimumHours: number;
+    holidayDecompressionEnabled: boolean;
 
     lastPayHoldMonths: number;
     requireAttendanceBeforeAfterHoliday: boolean;
@@ -198,6 +204,12 @@ const INITIAL_STATE: PolicyState = {
     vawcLeave: 10,
     magnaCartaLeave: 60,
     nonCompressedWorkWeek: false,
+    workScheduleType: 'Standard',
+    sixthDay: 'Saturday',
+    compressedDailyHours: 9.5,
+    standardDailyHours: 8,
+    flexibleMinimumHours: 8.5,
+    holidayDecompressionEnabled: false,
     requireAttendanceBeforeAfterHoliday: false
 
 };
@@ -653,6 +665,130 @@ const PoliciesPage: React.FC = () => {
                                                 </label>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    {/* Work Schedule Type */}
+                                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <Calendar size={24} className="text-indigo-600" />
+                                            <div>
+                                                <h4 className="font-bold text-slate-900">Work Schedule Type</h4>
+                                                <p className="text-xs text-slate-500">Select the work schedule type for your organization.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                            {([
+                                                { value: 'Standard', label: 'Standard', desc: 'Regular 5-day work week with fixed daily hours.' },
+                                                { value: 'Compressed', label: 'Compressed', desc: 'Fewer work days with longer daily hours to complete weekly requirement.' },
+                                                { value: 'Flexible', label: 'Flexible', desc: 'Employees choose start/end times within a minimum hours requirement.' },
+                                            ] as const).map(opt => (
+                                                <button
+                                                    key={opt.value}
+                                                    onClick={() => updatePolicy('workScheduleType', opt.value)}
+                                                    className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                                                        policies.workScheduleType === opt.value
+                                                            ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
+                                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-3 mb-2">
+                                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                                            policies.workScheduleType === opt.value
+                                                                ? 'border-indigo-600 bg-indigo-600'
+                                                                : 'border-slate-300'
+                                                        }`}>
+                                                            {policies.workScheduleType === opt.value && <Check size={12} className="text-white" />}
+                                                        </div>
+                                                        <span className={`text-sm font-bold ${policies.workScheduleType === opt.value ? 'text-indigo-700' : 'text-slate-700'}`}>{opt.label}</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-500 leading-relaxed">{opt.desc}</p>
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+                                            {policies.workScheduleType === 'Standard' && (
+                                                <div className="flex items-center gap-4">
+                                                    <label className="text-sm font-bold text-slate-700">Standard Daily Hours</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.5"
+                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        value={policies.standardDailyHours}
+                                                        onChange={(e) => updatePolicy('standardDailyHours', Number(e.target.value))}
+                                                    />
+                                                    <span className="text-sm text-slate-500">hours/day</span>
+                                                </div>
+                                            )}
+
+                                            {policies.workScheduleType === 'Compressed' && (
+                                                <div className="space-y-5">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div className="flex items-center gap-4">
+                                                            <label className="text-sm font-bold text-slate-700">6th Day</label>
+                                                            <select
+                                                                className="flex-1 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 bg-white appearance-none"
+                                                                value={policies.sixthDay}
+                                                                onChange={(e) => updatePolicy('sixthDay', e.target.value)}
+                                                            >
+                                                                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
+                                                                    <option key={d} value={d}>{d}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div className="flex items-center gap-4">
+                                                            <label className="text-sm font-bold text-slate-700">Compressed Daily Hours</label>
+                                                            <input
+                                                                type="number"
+                                                                step="0.5"
+                                                                className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                                value={policies.compressedDailyHours}
+                                                                onChange={(e) => updatePolicy('compressedDailyHours', Number(e.target.value))}
+                                                            />
+                                                            <span className="text-sm text-slate-500">hrs</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="border border-amber-200 bg-amber-50 rounded-xl p-5">
+                                                        <label className="flex items-center gap-3 cursor-pointer">
+                                                            <button onClick={() => updatePolicy('holidayDecompressionEnabled', !policies.holidayDecompressionEnabled)} className="shrink-0">
+                                                                {policies.holidayDecompressionEnabled ? (
+                                                                    <ToggleRight size={28} className="text-amber-600" />
+                                                                ) : (
+                                                                    <ToggleLeft size={28} className="text-slate-300" />
+                                                                )}
+                                                            </button>
+                                                            <div>
+                                                                <span className="text-sm font-bold text-slate-800 block">Holiday Auto-Decompression</span>
+                                                                <span className="text-[11px] text-slate-500 block mt-0.5">When the 6th day falls on a holiday, automatically switch compressed employees to standard schedules.</span>
+                                                            </div>
+                                                        </label>
+                                                        {policies.holidayDecompressionEnabled && (
+                                                            <div className="mt-4 p-4 bg-white rounded-lg border border-amber-200 text-xs text-amber-800 font-medium italic">
+                                                                Preview: "The 6th day ({policies.sixthDay}) is a holiday on [DATE]. Compressed employees will switch to standard {policies.standardDailyHours}-hour schedules."
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {policies.workScheduleType === 'Flexible' && (
+                                                <div className="flex items-center gap-4">
+                                                    <label className="text-sm font-bold text-slate-700">Minimum Daily Hours</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.5"
+                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        value={policies.flexibleMinimumHours}
+                                                        onChange={(e) => updatePolicy('flexibleMinimumHours', Number(e.target.value))}
+                                                    />
+                                                    <span className="text-sm text-slate-500">hours/day</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         {/* Require Attendance Before/After Holiday */}
                                         <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors flex flex-col justify-between">
                                         <label className="flex items-start gap-4 cursor-pointer">
