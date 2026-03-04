@@ -229,6 +229,35 @@ export const PaySchedulePage: React.FC = () => {
                                         </span>
                                     )}
                                 </div>
+
+                                {/* Cutoff Dates Display - Prominent */}
+                                <div className="mt-3 pt-3 border-t border-slate-200 space-y-1.5">
+                                    {s.frequency === 'Semi-Monthly' && (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                                                <span className="text-[10px] font-black text-amber-700">Cutoffs: {s.firstCutoff}° & {s.secondCutoff}°</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                                <span className="text-[10px] font-black text-emerald-700">Pay: {s.firstPayDate}° & {s.secondPayDate}°</span>
+                                            </div>
+                                        </>
+                                    )}
+                                    {s.frequency === 'Monthly' && (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                                                <span className="text-[10px] font-black text-amber-700">Cutoff: {s.firstCutoff}°</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                                <span className="text-[10px] font-black text-emerald-700">Pay: {s.firstPayDate}°</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
                                 <div className="flex items-center gap-1.5 mt-3 text-xs text-slate-400 font-medium">
                                     {getTargetIcon(s.targetType)}
                                     <span className="truncate">{getTargetDescription(s)}</span>
@@ -266,6 +295,48 @@ export const PaySchedulePage: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Cutoff Summary Box - Prominent Display */}
+                        <div className="px-6 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 grid grid-cols-4 gap-4">
+                            {selectedSchedule.frequency === 'Semi-Monthly' && (
+                                <>
+                                    <div className="bg-white rounded-xl p-4 border-2 border-amber-300 shadow-md">
+                                        <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wide mb-1.5">1st Cutoff</p>
+                                        <p className="text-2xl font-black text-amber-700">{selectedSchedule.firstCutoff}°</p>
+                                        <p className="text-[10px] text-amber-600 font-bold mt-1">of month</p>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 border-2 border-emerald-300 shadow-md">
+                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1.5">1st Pay</p>
+                                        <p className="text-2xl font-black text-emerald-700">{selectedSchedule.firstPayDate}°</p>
+                                        <p className="text-[10px] text-emerald-600 font-bold mt-1">of month</p>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 border-2 border-amber-300 shadow-md">
+                                        <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wide mb-1.5">2nd Cutoff</p>
+                                        <p className="text-2xl font-black text-amber-700">{selectedSchedule.secondCutoff}°</p>
+                                        <p className="text-[10px] text-amber-600 font-bold mt-1">of month</p>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 border-2 border-emerald-300 shadow-md">
+                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1.5">2nd Pay</p>
+                                        <p className="text-2xl font-black text-emerald-700">{selectedSchedule.secondPayDate}°</p>
+                                        <p className="text-[10px] text-emerald-600 font-bold mt-1">of month</p>
+                                    </div>
+                                </>
+                            )}
+                            {selectedSchedule.frequency === 'Monthly' && (
+                                <>
+                                    <div className="bg-white rounded-xl p-4 border-2 border-amber-300 shadow-md">
+                                        <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wide mb-1.5">Cutoff</p>
+                                        <p className="text-2xl font-black text-amber-700">{selectedSchedule.firstCutoff}°</p>
+                                        <p className="text-[10px] text-amber-600 font-bold mt-1">of month</p>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 border-2 border-emerald-300 shadow-md col-span-3">
+                                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1.5">Pay Date</p>
+                                        <p className="text-2xl font-black text-emerald-700">{selectedSchedule.firstPayDate}°</p>
+                                        <p className="text-[10px] text-emerald-600 font-bold mt-1">of month</p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
                         {/* Legend */}
                         <div className="px-6 py-3 bg-slate-50/50 border-b border-slate-100 flex gap-6 text-xs font-bold text-slate-500 uppercase tracking-wide">
                             <div className="flex items-center gap-2">
@@ -293,24 +364,39 @@ export const PaySchedulePage: React.FC = () => {
                                     const day = i + 1;
                                     const events = getDayEvents(day);
                                     const isToday = new Date().toDateString() === new Date(viewDate.getFullYear(), viewDate.getMonth(), day).toDateString();
+                                    const hasCutoff = events.some(e => e.type === 'cutoff');
+                                    const hasPay = events.some(e => e.type === 'pay');
 
                                     return (
                                         <div
                                             key={day}
-                                            className={`min-h-[100px] border rounded-2xl p-3 relative transition-all group hover:shadow-md flex flex-col justify-between ${isToday ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white border-slate-100 hover:border-indigo-200'
-                                                }`}
+                                            className={`min-h-[100px] border rounded-2xl p-3 relative transition-all group hover:shadow-md flex flex-col justify-between font-bold ${
+                                                hasCutoff
+                                                    ? 'bg-amber-100 border-2 border-amber-500 shadow-lg shadow-amber-200/50 ring-2 ring-amber-200'
+                                                    : hasPay
+                                                    ? 'bg-emerald-50 border-2 border-emerald-300 shadow-md shadow-emerald-100/50'
+                                                    : isToday
+                                                    ? 'bg-indigo-50/40 border-indigo-200'
+                                                    : 'bg-white border-slate-100 hover:border-indigo-200'
+                                            }`}
                                         >
-                                            <div className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}>{day}</div>
+                                            <div className={`text-sm font-black ${
+                                                hasCutoff
+                                                    ? 'text-amber-700'
+                                                    : hasPay
+                                                    ? 'text-emerald-700'
+                                                    : isToday ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'
+                                            }`}>{day}</div>
                                             <div className="space-y-1.5 mt-2">
                                                 {events.map((evt, idx) => (
                                                     <div
                                                         key={idx}
-                                                        className={`text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm ${evt.type === 'pay'
-                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                                            : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                                        className={`text-[10px] font-black px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-md border-2 ${evt.type === 'pay'
+                                                            ? 'bg-emerald-300 text-emerald-900 border-emerald-500'
+                                                            : 'bg-amber-400 text-amber-900 border-amber-600'
                                                             }`}
                                                     >
-                                                        <div className={`w-1.5 h-1.5 rounded-full ${evt.type === 'pay' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                                                        <div className={`w-2 h-2 rounded-full ${evt.type === 'pay' ? 'bg-emerald-700' : 'bg-amber-700'}`}></div>
                                                         {evt.label}
                                                     </div>
                                                 ))}
@@ -372,43 +458,44 @@ export const PaySchedulePage: React.FC = () => {
                         </div>
 
                         {/* Cutoff Configuration */}
-                        <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50">
-                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-indigo-900 uppercase tracking-wide">
-                                <Clock size={14} className="text-indigo-500" />
-                                Cutoff & Pay Dates
+                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-2xl border-2 border-amber-300 shadow-lg shadow-amber-100">
+                            <div className="flex items-center gap-2 mb-5 text-xs font-black text-amber-900 uppercase tracking-wider">
+                                <div className="w-2.5 h-2.5 rounded-full bg-amber-600"></div>
+                                <Clock size={14} className="text-amber-600" />
+                                Cutoff & Pay Dates — CRITICAL CONFIGURATION
                             </div>
 
                             {editor.frequency === 'Semi-Monthly' && (
                                 <div className="space-y-4">
                                     <div className="flex gap-4">
-                                        <div className="flex-1">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">1st Cutoff Day</label>
+                                        <div className="flex-1 bg-white rounded-xl p-3.5 border-2 border-amber-400 shadow-md">
+                                            <label className="text-[10px] font-black text-amber-700 uppercase block mb-2 tracking-widest">⚠️ 1st Cutoff Day</label>
                                             <div className="relative">
-                                                <input type="number" className="w-full border border-indigo-100 rounded-xl p-2.5 pl-4 text-slate-900 font-bold bg-white focus:border-indigo-500 outline-none" value={editor.firstCutoff} onChange={e => setEditor({ ...editor, firstCutoff: Number(e.target.value) })} />
-                                                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400 uppercase">th of month</span>
+                                                <input type="number" className="w-full border-2 border-amber-300 rounded-lg p-3 pl-4 text-2xl font-black text-amber-800 bg-amber-50 focus:border-amber-500 outline-none" value={editor.firstCutoff} onChange={e => setEditor({ ...editor, firstCutoff: Number(e.target.value) })} />
+                                                <span className="absolute right-3 top-3.5 text-[10px] font-black text-amber-600 uppercase">th</span>
                                             </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">1st Pay Day</label>
+                                        <div className="flex-1 bg-white rounded-xl p-3.5 border-2 border-emerald-400 shadow-md">
+                                            <label className="text-[10px] font-black text-emerald-700 uppercase block mb-2 tracking-widest">✓ 1st Pay Day</label>
                                             <div className="relative">
-                                                <input type="number" className="w-full border border-indigo-100 rounded-xl p-2.5 pl-4 text-slate-900 font-bold bg-white focus:border-indigo-500 outline-none" value={editor.firstPayDate} onChange={e => setEditor({ ...editor, firstPayDate: Number(e.target.value) })} />
-                                                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400 uppercase">th of month</span>
+                                                <input type="number" className="w-full border-2 border-emerald-300 rounded-lg p-3 pl-4 text-2xl font-black text-emerald-800 bg-emerald-50 focus:border-emerald-500 outline-none" value={editor.firstPayDate} onChange={e => setEditor({ ...editor, firstPayDate: Number(e.target.value) })} />
+                                                <span className="absolute right-3 top-3.5 text-[10px] font-black text-emerald-600 uppercase">th</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex gap-4">
-                                        <div className="flex-1">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">2nd Cutoff Day</label>
+                                        <div className="flex-1 bg-white rounded-xl p-3.5 border-2 border-amber-400 shadow-md">
+                                            <label className="text-[10px] font-black text-amber-700 uppercase block mb-2 tracking-widest">⚠️ 2nd Cutoff Day</label>
                                             <div className="relative">
-                                                <input type="number" className="w-full border border-indigo-100 rounded-xl p-2.5 pl-4 text-slate-900 font-bold bg-white focus:border-indigo-500 outline-none" value={editor.secondCutoff || 25} onChange={e => setEditor({ ...editor, secondCutoff: Number(e.target.value) })} />
-                                                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400 uppercase">th of month</span>
+                                                <input type="number" className="w-full border-2 border-amber-300 rounded-lg p-3 pl-4 text-2xl font-black text-amber-800 bg-amber-50 focus:border-amber-500 outline-none" value={editor.secondCutoff || 25} onChange={e => setEditor({ ...editor, secondCutoff: Number(e.target.value) })} />
+                                                <span className="absolute right-3 top-3.5 text-[10px] font-black text-amber-600 uppercase">th</span>
                                             </div>
                                         </div>
-                                        <div className="flex-1">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">2nd Pay Day</label>
+                                        <div className="flex-1 bg-white rounded-xl p-3.5 border-2 border-emerald-400 shadow-md">
+                                            <label className="text-[10px] font-black text-emerald-700 uppercase block mb-2 tracking-widest">✓ 2nd Pay Day</label>
                                             <div className="relative">
-                                                <input type="number" className="w-full border border-indigo-100 rounded-xl p-2.5 pl-4 text-slate-900 font-bold bg-white focus:border-indigo-500 outline-none" value={editor.secondPayDate || 30} onChange={e => setEditor({ ...editor, secondPayDate: Number(e.target.value) })} />
-                                                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400 uppercase">th of month</span>
+                                                <input type="number" className="w-full border-2 border-emerald-300 rounded-lg p-3 pl-4 text-2xl font-black text-emerald-800 bg-emerald-50 focus:border-emerald-500 outline-none" value={editor.secondPayDate || 30} onChange={e => setEditor({ ...editor, secondPayDate: Number(e.target.value) })} />
+                                                <span className="absolute right-3 top-3.5 text-[10px] font-black text-emerald-600 uppercase">th</span>
                                             </div>
                                         </div>
                                     </div>
@@ -417,18 +504,18 @@ export const PaySchedulePage: React.FC = () => {
 
                             {editor.frequency === 'Monthly' && (
                                 <div className="flex gap-4">
-                                    <div className="flex-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">Cutoff Day</label>
+                                    <div className="flex-1 bg-white rounded-xl p-3.5 border-2 border-amber-400 shadow-md">
+                                        <label className="text-[10px] font-black text-amber-700 uppercase block mb-2 tracking-widest">⚠️ Cutoff Day</label>
                                         <div className="relative">
-                                            <input type="number" className="w-full border border-indigo-100 rounded-xl p-2.5 pl-4 text-slate-900 font-bold bg-white focus:border-indigo-500 outline-none" value={editor.firstCutoff} onChange={e => setEditor({ ...editor, firstCutoff: Number(e.target.value) })} />
-                                            <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400 uppercase">th of month</span>
+                                            <input type="number" className="w-full border-2 border-amber-300 rounded-lg p-3 pl-4 text-2xl font-black text-amber-800 bg-amber-50 focus:border-amber-500 outline-none" value={editor.firstCutoff} onChange={e => setEditor({ ...editor, firstCutoff: Number(e.target.value) })} />
+                                            <span className="absolute right-3 top-3.5 text-[10px] font-black text-amber-600 uppercase">th</span>
                                         </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">Pay Day</label>
+                                    <div className="flex-1 bg-white rounded-xl p-3.5 border-2 border-emerald-400 shadow-md">
+                                        <label className="text-[10px] font-black text-emerald-700 uppercase block mb-2 tracking-widest">✓ Pay Day</label>
                                         <div className="relative">
-                                            <input type="number" className="w-full border border-indigo-100 rounded-xl p-2.5 pl-4 text-slate-900 font-bold bg-white focus:border-indigo-500 outline-none" value={editor.firstPayDate} onChange={e => setEditor({ ...editor, firstPayDate: Number(e.target.value) })} />
-                                            <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400 uppercase">th of month</span>
+                                            <input type="number" className="w-full border-2 border-emerald-300 rounded-lg p-3 pl-4 text-2xl font-black text-emerald-800 bg-emerald-50 focus:border-emerald-500 outline-none" value={editor.firstPayDate} onChange={e => setEditor({ ...editor, firstPayDate: Number(e.target.value) })} />
+                                            <span className="absolute right-3 top-3.5 text-[10px] font-black text-emerald-600 uppercase">th</span>
                                         </div>
                                     </div>
                                 </div>
@@ -436,13 +523,13 @@ export const PaySchedulePage: React.FC = () => {
 
                             {editor.frequency === 'Weekly' && (
                                 <div className="flex gap-4">
-                                    <div className="flex-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">Pay Day (Weekly)</label>
+                                    <div className="flex-1 bg-white rounded-xl p-3.5 border-2 border-emerald-400 shadow-md">
+                                        <label className="text-[10px] font-black text-emerald-700 uppercase block mb-2 tracking-widest">✓ Pay Day (Weekly)</label>
                                         <div className="relative">
-                                            <select className="w-full border border-indigo-100 rounded-xl p-2.5 pl-4 text-slate-900 font-bold bg-white focus:border-indigo-500 outline-none appearance-none" value={editor.firstPayDate} onChange={e => setEditor({ ...editor, firstPayDate: e.target.value })}>
+                                            <select className="w-full border-2 border-emerald-300 rounded-lg p-3 pl-4 text-lg font-black text-emerald-800 bg-emerald-50 focus:border-emerald-500 outline-none appearance-none" value={editor.firstPayDate} onChange={e => setEditor({ ...editor, firstPayDate: e.target.value })}>
                                                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => <option key={d} value={d}>{d}</option>)}
                                             </select>
-                                            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
+                                            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 rotate-90 pointer-events-none font-bold" size={16} />
                                         </div>
                                     </div>
                                 </div>

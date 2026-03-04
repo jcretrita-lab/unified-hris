@@ -241,6 +241,7 @@ const MOCK_SHIFTS: Shift[] = [
     workHours: 9,
     startTime: '08:00',
     endTime: '17:00',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     workdays: 'Mon – Fri',
     // Compressed (10-hour workday, Mon–Fri)
     compressedWorkHours: 10,
