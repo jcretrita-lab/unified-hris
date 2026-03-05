@@ -79,12 +79,27 @@ const INITIAL_SCHEDULES: PaySchedule[] = [
 ];
 
 // --- Helper: get active ranges for a specific month ---
-const getActiveRanges = (schedule: PaySchedule, month: number, year: number) => {
+const getActiveRanges = (schedule: PaySchedule, month: number, year: number): CutoffRange[] => {
     const override = schedule.monthOverrides?.find(o => o.month === month && o.year === year);
     if (override && override.cutoffs.length > 0) {
-        return { r1: override.cutoffs[0], r2: override.cutoffs[1] as CutoffRange | undefined };
+        return override.cutoffs;
     }
-    return { r1: schedule.firstCutoffRange, r2: schedule.secondCutoffRange };
+
+    // Default generating logic matching editor
+    let cutoffs: CutoffRange[] = [];
+    if (schedule.frequency === 'Semi-Monthly') {
+        cutoffs = [
+            ...(schedule.extraCutoffs || []),
+            schedule.firstCutoffRange || { startDay: 1, endDay: 10, payDay: 15 },
+            schedule.secondCutoffRange || { startDay: 11, endDay: 25, payDay: 30 }
+        ];
+    } else if (schedule.frequency === 'Monthly') {
+        cutoffs = [
+            ...(schedule.extraCutoffs || []),
+            schedule.firstCutoffRange || { startDay: 1, endDay: 25, payDay: 30 }
+        ];
+    }
+    return cutoffs;
 };
 
 // --- Date Range Picker Component ---
@@ -92,27 +107,40 @@ interface DateRangePickerProps {
     label: string;
     range: CutoffRange;
     onChange: (range: CutoffRange) => void;
-    color: 'amber' | 'emerald';
+    color?: 'amber' | 'emerald';
+    month?: number;
+    year?: number;
+    disabled?: boolean;
 }
 
-const DateRangePicker: React.FC<DateRangePickerProps> = ({ label, range, onChange, color }) => {
+const DateRangePicker: React.FC<DateRangePickerProps> = ({ label, range, onChange, color = 'amber', month, year, disabled = false }) => {
     const [selectingField, setSelectingField] = useState<'start' | 'end' | 'pay' | null>(null);
-    const days = Array.from({ length: 31 }, (_, i) => i + 1);
+
+    const currentMonthDays = typeof month === 'number' && typeof year === 'number' ? new Date(year, month + 1, 0).getDate() : 31;
+    const nextMonthDays = typeof month === 'number' && typeof year === 'number' ? new Date(year, month + 2, 0).getDate() : 31;
+
+    const m1Days = Array.from({ length: currentMonthDays }, (_, i) => i + 1);
+    const m2Days = Array.from({ length: nextMonthDays }, (_, i) => i + 1);
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonthName = typeof month === 'number' ? monthNames[month] : 'Current Month';
+    const nextMonthName = typeof month === 'number' ? monthNames[(month + 1) % 12] : 'Next Month';
 
     const bgColor = color === 'amber' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-emerald-100 text-emerald-800 border-emerald-200';
     const fillColor = color === 'amber' ? 'bg-amber-50' : 'bg-emerald-50';
     const activeColor = color === 'amber' ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white';
     const payDotColor = color === 'amber' ? 'ring-amber-400' : 'ring-emerald-400';
 
-    const handleDayClick = (day: number) => {
+    const handleDayClick = (day: number, offset: number) => {
+        if (disabled) return;
         if (selectingField === 'start') {
             onChange({ ...range, startDay: day });
             setSelectingField('end');
         } else if (selectingField === 'end') {
-            onChange({ ...range, endDay: day });
+            onChange({ ...range, endDay: day, endDayNextMonth: offset === 1 });
             setSelectingField('pay');
         } else if (selectingField === 'pay') {
-            onChange({ ...range, payDay: day });
+            onChange({ ...range, payDay: day, payDayNextMonth: offset === 1 });
             setSelectingField(null);
         } else {
             onChange({ ...range, startDay: day });
@@ -120,63 +148,111 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({ label, range, onChang
         }
     };
 
-    const isInRange = (day: number) => {
-        const { startDay, endDay } = range;
-        if (startDay <= endDay) {
-            return day >= startDay && day <= endDay;
+    const isInterMonth = range.endDayNextMonth !== undefined ? range.endDayNextMonth : range.startDay > range.endDay;
+
+    const isInRange = (day: number, offset: number) => {
+        if (!isInterMonth) {
+            return offset === 0 && day >= range.startDay && day <= range.endDay;
+        } else {
+            return offset === 0 ? day >= range.startDay : day <= range.endDay;
         }
-        return day >= startDay || day <= endDay;
     };
 
-    return (
-        <div className="space-y-3">
-            <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</h4>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => setSelectingField('start')}
-                        className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${selectingField === 'start' ? activeColor + ' border-transparent' : bgColor}`}
-                    >
-                        Start: {range.startDay}
-                    </button>
-                    <button
-                        onClick={() => setSelectingField('end')}
-                        className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${selectingField === 'end' ? activeColor + ' border-transparent' : bgColor}`}
-                    >
-                        End: {range.endDay}
-                    </button>
-                    <button
-                        onClick={() => setSelectingField('pay')}
-                        className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${selectingField === 'pay' ? 'bg-indigo-500 text-white border-transparent' : 'bg-indigo-50 text-indigo-700 border-indigo-200'}`}
-                    >
-                        Pay: {range.payDay}
-                    </button>
-                </div>
+    const isStart = (day: number, offset: number) => offset === 0 && day === range.startDay;
+
+    // In an inter-month cutoff, the end day wraps to the second month (offset 1)
+    const isEnd = (day: number, offset: number) => isInterMonth ? (offset === 1 && day === range.endDay) : (offset === 0 && day === range.endDay);
+
+    const isPay = (day: number, offset: number) => {
+        if (range.payDayNextMonth !== undefined) {
+            return (offset === 1) === range.payDayNextMonth && day === range.payDay;
+        }
+        // if payDay < startDay, physically it was recorded as next month
+        if (range.payDay < range.startDay) {
+            return offset === 1 && day === range.payDay;
+        }
+        return offset === 0 && day === range.payDay;
+    };
+
+    const renderMonthGrid = (daysArray: number[], offset: number, monthLabel: string) => (
+        <div className="flex-1 w-full min-w-[220px]">
+            <div className={`text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest text-center py-1.5 rounded-lg border ${offset === 0 ? 'bg-indigo-50/50 border-indigo-100/50' : 'bg-slate-50 border-slate-100'}`}>
+                {monthLabel} {typeof year === 'number' ? (offset === 0 ? year : (typeof month === 'number' && month === 11 ? year + 1 : year)) : ''}
             </div>
-            <div className="grid grid-cols-7 gap-1.5">
-                {days.map(day => {
-                    const inRange = isInRange(day);
-                    const isStart = day === range.startDay;
-                    const isEnd = day === range.endDay;
-                    const isPay = day === range.payDay;
+            <div className="grid grid-cols-7 gap-1.5 px-0.5">
+                {daysArray.map(day => {
+                    const inR = isInRange(day, offset);
+                    const isS = isStart(day, offset);
+                    const isE = isEnd(day, offset);
+                    const isP = isPay(day, offset);
 
                     return (
                         <button
                             key={day}
-                            onClick={() => handleDayClick(day)}
-                            className={`h-9 w-full flex items-center justify-center text-xs font-bold rounded-lg transition-all relative
-                                ${isPay ? 'bg-indigo-600 text-white ring-2 ' + payDotColor + ' shadow-md'
-                                    : isStart || isEnd ? activeColor + ' shadow-sm'
-                                        : inRange ? fillColor + ' text-slate-700'
-                                            : 'text-slate-500 hover:bg-slate-100'
+                            onClick={() => handleDayClick(day, offset)}
+                            className={`h-8 w-full flex items-center justify-center text-[10px] font-bold rounded-lg transition-all relative
+                                ${isP ? 'bg-indigo-600 text-white ring-2 z-10 ' + payDotColor + ' shadow-md'
+                                    : isS || isE ? activeColor + ' shadow-sm z-10'
+                                        : inR ? fillColor + ' text-slate-800 font-black'
+                                            : 'text-slate-400 hover:bg-slate-100 bg-white border border-slate-100/50'
                                 }
-                                ${selectingField ? 'cursor-pointer' : 'cursor-default'}
+                                ${disabled ? 'cursor-default opacity-80' : selectingField ? 'cursor-pointer hover:shadow-lg hover:border-indigo-300 hover:scale-[1.15] z-20' : 'cursor-default'}
                             `}
                         >
                             {day}
                         </button>
                     );
                 })}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h4 className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</h4>
+                </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => !disabled && setSelectingField('start')}
+                        className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${selectingField === 'start' ? activeColor + ' border-transparent shadow-md' : bgColor} ${disabled ? 'cursor-default opacity-80' : 'cursor-pointer hover:opacity-80'}`}
+                    >
+                        Start: {range.startDay}
+                    </button>
+                    <button
+                        onClick={() => !disabled && setSelectingField('end')}
+                        className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all ${selectingField === 'end' ? activeColor + ' border-transparent shadow-md' : bgColor} ${disabled ? 'cursor-default opacity-80' : 'cursor-pointer hover:opacity-80'}`}
+                    >
+                        End: {range.endDay}
+                    </button>
+                    <button
+                        onClick={() => !disabled && setSelectingField('pay')}
+                        className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all shadow-sm ${selectingField === 'pay' ? 'bg-indigo-500 text-white border-transparent' : 'bg-indigo-50 text-indigo-700 border-indigo-200'} ${disabled ? 'cursor-default opacity-80' : 'cursor-pointer hover:bg-indigo-100'}`}
+                    >
+                        Pay: {range.payDay}
+                    </button>
+                </div>
+            </div>
+
+            <div className={`p-4 rounded-xl border ${disabled ? 'bg-slate-50 border-slate-100' : 'bg-white border-slate-200 shadow-sm'}`}>
+                {selectingField && !disabled && (
+                    <div className="mb-4 text-[10px] text-indigo-600 font-bold bg-indigo-50/80 px-4 py-2.5 rounded-lg border border-indigo-100 flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-2">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                            </span>
+                            <span>Awaiting selection for new <span className="uppercase text-indigo-900 border-b border-indigo-200 ml-1">{selectingField}</span> date.</span>
+                        </div>
+                        <span className="text-slate-400 italic">Click a date below</span>
+                    </div>
+                )}
+
+                <div className="flex gap-4 overflow-x-auto pb-1">
+                    {renderMonthGrid(m1Days, 0, currentMonthName)}
+                    {renderMonthGrid(m2Days, 1, nextMonthName)}
+                </div>
             </div>
         </div>
     );
@@ -200,10 +276,7 @@ const MiniMonthCalendar: React.FC<MiniMonthCalendarProps> = ({ month, year, sche
 
     const hasOverride = !!override;
 
-    // Use override ranges if present, else default
-    const { r1, r2 } = hasOverride && override!.cutoffs.length > 0
-        ? { r1: override!.cutoffs[0], r2: override!.cutoffs[1] as CutoffRange | undefined }
-        : { r1: schedule.firstCutoffRange, r2: schedule.secondCutoffRange };
+    const cutoffs = getActiveRanges(schedule, month, year);
 
     const getDayClass = (day: number) => {
         if (schedule.frequency === 'Daily') {
@@ -219,15 +292,12 @@ const MiniMonthCalendar: React.FC<MiniMonthCalendarProps> = ({ month, year, sche
             return '';
         }
 
-        if (r1 && day === Math.min(r1.payDay, daysInMonth)) return 'bg-emerald-500 text-white';
-        if (r2 && day === Math.min(r2.payDay, daysInMonth)) return 'bg-emerald-500 text-white';
-
-        if (r1) {
-            const s = r1.startDay, e = Math.min(r1.endDay, daysInMonth);
-            if (s <= e ? (day >= s && day <= e) : (day >= s || day <= e)) return 'bg-amber-100 text-amber-800';
+        for (const c of cutoffs) {
+            if (day === Math.min(c.payDay, daysInMonth)) return 'bg-emerald-500 text-white';
         }
-        if (r2) {
-            const s = r2.startDay, e = Math.min(r2.endDay, daysInMonth);
+
+        for (const c of cutoffs) {
+            const s = c.startDay, e = Math.min(c.endDay, daysInMonth);
             if (s <= e ? (day >= s && day <= e) : (day >= s || day <= e)) return 'bg-amber-100 text-amber-800';
         }
 
@@ -283,8 +353,11 @@ export const PaySchedulePage: React.FC = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>('1');
+    const [selectedCutoffId, setSelectedCutoffId] = useState<string>('0-1');
+    const [selectedViewCutoffId, setSelectedViewCutoffId] = useState<string>('0-1');
     const [viewDate, setViewDate] = useState(new Date());
     const [showYearView, setShowYearView] = useState(false);
+    const [editorYear, setEditorYear] = useState<number>(new Date().getFullYear());
 
     // Override editing state
     const [editingOverride, setEditingOverride] = useState<{ month: number; year: number } | null>(null);
@@ -312,9 +385,134 @@ export const PaySchedulePage: React.FC = () => {
         dailyStartTime: '08:00',
         dailyEndTime: '17:00',
         dailyPayTime: '18:00',
+        monthOverrides: [],
     });
 
+    const getYearlyCutoffs = () => {
+        const list: any[] = [];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        if (editor.frequency === 'Semi-Monthly' || editor.frequency === 'Monthly') {
+            for (let i = 0; i < 12; i++) {
+                const override = editor.monthOverrides?.find(o => o.month === i && o.year === editorYear);
+                let cutoffs: CutoffRange[] = [];
+
+                if (override && override.cutoffs && override.cutoffs.length > 0) {
+                    cutoffs = override.cutoffs;
+                } else {
+                    if (editor.frequency === 'Semi-Monthly') {
+                        cutoffs = [
+                            ...(editor.extraCutoffs || []),
+                            editor.firstCutoffRange || { startDay: 1, endDay: 10, payDay: 15 },
+                            editor.secondCutoffRange || { startDay: 11, endDay: 25, payDay: 30 }
+                        ];
+                    } else if (editor.frequency === 'Monthly') {
+                        cutoffs = [
+                            ...(editor.extraCutoffs || []),
+                            editor.firstCutoffRange || { startDay: 1, endDay: 25, payDay: 30 }
+                        ];
+                    }
+                }
+
+                const baseCount = editor.frequency === 'Semi-Monthly' ? 2 : 1;
+                const extraCount = cutoffs.length - baseCount;
+
+                cutoffs.forEach((c, idx) => {
+                    const isExtra = idx < extraCount;
+                    const defaultIdx = idx - extraCount + 1;
+
+                    let name = 'New Cutoff';
+                    if (!isExtra) {
+                        const localBaseIdx = idx - extraCount;
+                        if (editor.frequency === 'Semi-Monthly') {
+                            name = `Cutoff ${i * 2 + localBaseIdx + 1}`;
+                        } else {
+                            name = `Cutoff ${i + 1}`;
+                        }
+                    }
+
+                    const stableIdSuffix = isExtra ? `extra-${idx}` : `default-${defaultIdx}`;
+
+                    list.push({
+                        id: `${i}-${stableIdSuffix}`,
+                        name: name,
+                        month: i,
+                        cutoffIndex: idx,
+                        isFirst: idx === 0,
+                        range: c,
+                        monthName: months[i]
+                    });
+                });
+            }
+        }
+        return list;
+    };
+
+    const yearlyCutoffs = useMemo(getYearlyCutoffs, [editor, editorYear]);
+    const activeCutoff = yearlyCutoffs.find(c => c.id === selectedCutoffId) || yearlyCutoffs[0];
+
     const selectedSchedule = useMemo(() => schedules.find(s => s.id === selectedId), [schedules, selectedId]);
+
+    const viewYearlyCutoffs = useMemo(() => {
+        if (!selectedSchedule) return [];
+        const list: any[] = [];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        if (selectedSchedule.frequency === 'Semi-Monthly' || selectedSchedule.frequency === 'Monthly') {
+            for (let i = 0; i < 12; i++) {
+                const override = selectedSchedule.monthOverrides?.find(o => o.month === i && o.year === viewDate.getFullYear());
+                let cutoffs: CutoffRange[] = [];
+
+                if (override && override.cutoffs && override.cutoffs.length > 0) {
+                    cutoffs = override.cutoffs;
+                } else {
+                    if (selectedSchedule.frequency === 'Semi-Monthly') {
+                        cutoffs = [
+                            ...(selectedSchedule.extraCutoffs || []),
+                            selectedSchedule.firstCutoffRange || { startDay: 1, endDay: 10, payDay: 15 },
+                            selectedSchedule.secondCutoffRange || { startDay: 11, endDay: 25, payDay: 30 }
+                        ];
+                    } else if (selectedSchedule.frequency === 'Monthly') {
+                        cutoffs = [
+                            ...(selectedSchedule.extraCutoffs || []),
+                            selectedSchedule.firstCutoffRange || { startDay: 1, endDay: 25, payDay: 30 }
+                        ];
+                    }
+                }
+
+                const baseCount = selectedSchedule.frequency === 'Semi-Monthly' ? 2 : 1;
+                const extraCount = cutoffs.length - baseCount;
+
+                cutoffs.forEach((c, idx) => {
+                    const isExtra = idx < extraCount;
+                    const defaultIdx = idx - extraCount + 1;
+                    let name = 'New Cutoff';
+                    if (!isExtra) {
+                        const localBaseIdx = idx - extraCount;
+                        if (selectedSchedule.frequency === 'Semi-Monthly') {
+                            name = `Cutoff ${i * 2 + localBaseIdx + 1}`;
+                        } else {
+                            name = `Cutoff ${i + 1}`;
+                        }
+                    }
+                    const stableIdSuffix = isExtra ? `extra-${idx}` : `default-${defaultIdx}`;
+
+                    list.push({
+                        id: `${i}-${stableIdSuffix}`,
+                        name: name,
+                        month: i,
+                        cutoffIndex: idx,
+                        isFirst: idx === 0,
+                        range: c,
+                        monthName: months[i]
+                    });
+                });
+            }
+        }
+        return list;
+    }, [selectedSchedule, viewDate]);
+
+    const activeViewCutoff = viewYearlyCutoffs.find(c => c.id === selectedViewCutoffId) || viewYearlyCutoffs[0];
 
     const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
     const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
@@ -385,9 +583,7 @@ export const PaySchedulePage: React.FC = () => {
         };
 
         const { frequency } = selectedSchedule;
-        const { r1: firstCutoffRange, r2: secondCutoffRange } = getActiveRanges(
-            selectedSchedule, viewDate.getMonth(), viewDate.getFullYear()
-        );
+        const cutoffs = getActiveRanges(selectedSchedule, viewDate.getMonth(), viewDate.getFullYear());
 
         if (frequency === 'Daily') {
             events.push({ type: 'pay', label: 'Daily Pay' });
@@ -397,36 +593,29 @@ export const PaySchedulePage: React.FC = () => {
             if (String(selectedSchedule.firstPayDate) === currentDayName) {
                 events.push({ type: 'pay', label: 'Pay Day' });
             }
-        } else if (frequency === 'Semi-Monthly') {
-            if (firstCutoffRange) {
-                const s = firstCutoffRange.startDay;
-                const e = Math.min(firstCutoffRange.endDay, maxDays);
-                if (day === s) events.push({ type: 'cutoff', label: '1st Cutoff Start' });
-                if (day === e) events.push({ type: 'cutoff', label: '1st Cutoff End' });
-                if (isMatch(firstCutoffRange.payDay)) events.push({ type: 'pay', label: '1st Pay' });
-            } else {
-                if (isMatch(selectedSchedule.firstCutoff as number)) events.push({ type: 'cutoff', label: '1st Cutoff' });
-                if (isMatch(selectedSchedule.firstPayDate as number)) events.push({ type: 'pay', label: '1st Pay' });
-            }
-            if (secondCutoffRange) {
-                const s = secondCutoffRange.startDay;
-                const e = Math.min(secondCutoffRange.endDay, maxDays);
-                if (day === s) events.push({ type: 'cutoff', label: '2nd Cutoff Start' });
-                if (day === e) events.push({ type: 'cutoff', label: '2nd Cutoff End' });
-                if (isMatch(secondCutoffRange.payDay)) events.push({ type: 'pay', label: '2nd Pay' });
-            } else {
-                if (isMatch(selectedSchedule.secondCutoff as number)) events.push({ type: 'cutoff', label: '2nd Cutoff' });
-                if (isMatch(selectedSchedule.secondPayDate as number)) events.push({ type: 'pay', label: '2nd Pay' });
-            }
-        } else if (frequency === 'Monthly') {
-            if (firstCutoffRange) {
-                if (day === firstCutoffRange.startDay) events.push({ type: 'cutoff', label: 'Cutoff Start' });
-                if (day === Math.min(firstCutoffRange.endDay, maxDays)) events.push({ type: 'cutoff', label: 'Cutoff End' });
-                if (isMatch(firstCutoffRange.payDay)) events.push({ type: 'pay', label: 'Pay Day' });
-            } else {
-                if (isMatch(selectedSchedule.firstCutoff as number)) events.push({ type: 'cutoff', label: 'Cutoff' });
-                if (isMatch(selectedSchedule.firstPayDate as number)) events.push({ type: 'pay', label: 'Pay Day' });
-            }
+        } else if (frequency === 'Semi-Monthly' || frequency === 'Monthly') {
+            const baseCount = frequency === 'Semi-Monthly' ? 2 : 1;
+            const extraCount = cutoffs.length - baseCount;
+
+            cutoffs.forEach((c, idx) => {
+                const s = c.startDay;
+                const e = Math.min(c.endDay, maxDays);
+                const isExtra = idx < extraCount;
+                const defaultIdx = idx - extraCount + 1;
+
+                let prefix = 'New';
+                if (!isExtra) {
+                    if (frequency === 'Semi-Monthly') {
+                        prefix = defaultIdx === 1 ? '1st' : '2nd';
+                    } else {
+                        prefix = 'Monthly';
+                    }
+                }
+
+                if (day === s) events.push({ type: 'cutoff', label: `${prefix} Start` });
+                if (day === e) events.push({ type: 'cutoff', label: `${prefix} End` });
+                if (isMatch(c.payDay)) events.push({ type: 'pay', label: `${prefix} Pay` });
+            });
         }
 
         return events;
@@ -435,13 +624,13 @@ export const PaySchedulePage: React.FC = () => {
     const isInCutoffRange = (day: number) => {
         if (!selectedSchedule) return false;
         const maxDays = getDaysInMonth(viewDate);
-        const { r1, r2 } = getActiveRanges(selectedSchedule, viewDate.getMonth(), viewDate.getFullYear());
-        const checkRange = (r?: CutoffRange) => {
-            if (!r) return false;
-            const s = r.startDay, e = Math.min(r.endDay, maxDays);
-            return s <= e ? (day >= s && day <= e) : (day >= s || day <= e);
-        };
-        return checkRange(r1) || checkRange(r2);
+        const cutoffs = getActiveRanges(selectedSchedule, viewDate.getMonth(), viewDate.getFullYear());
+
+        for (const c of cutoffs) {
+            const s = c.startDay, e = Math.min(c.endDay, maxDays);
+            if (s <= e ? (day >= s && day <= e) : (day >= s || day <= e)) return true;
+        }
+        return false;
     };
 
     const handleOpenCreate = () => {
@@ -453,15 +642,18 @@ export const PaySchedulePage: React.FC = () => {
             secondCutoffRange: { startDay: 11, endDay: 25, payDay: 30 },
             divisorId: 'div-1',
             applyToAllMonths: true,
+            monthOverrides: [],
         });
         setIsCreating(true);
         setActiveId(null);
+        setSelectedCutoffId('0-1');
     };
 
     const handleOpenEdit = (sch: PaySchedule) => {
         setEditor({ ...sch });
         setIsCreating(true);
         setActiveId(sch.id);
+        setSelectedCutoffId('0-1');
     };
 
     const handleSave = () => {
@@ -539,7 +731,7 @@ export const PaySchedulePage: React.FC = () => {
                         {schedules.map(s => (
                             <div
                                 key={s.id}
-                                onClick={() => setSelectedId(s.id)}
+                                onClick={() => { setSelectedId(s.id); setSelectedViewCutoffId('0-1'); }}
                                 className={`p-4 rounded-2xl cursor-pointer transition-all group relative border ${selectedId === s.id ? 'bg-white border-indigo-200 shadow-md shadow-indigo-50' : 'bg-white/50 border-transparent hover:bg-white hover:border-slate-200 hover:shadow-sm'}`}
                             >
                                 <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -639,92 +831,157 @@ export const PaySchedulePage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Legend */}
-                        <div className="px-6 py-3 bg-slate-50/50 border-b border-slate-100 flex gap-6 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100"></div>
-                                Pay Date
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-amber-100"></div>
-                                Cutoff Range
-                            </div>
-                            {(selectedSchedule.monthOverrides?.length ?? 0) > 0 && (
+                        {selectedSchedule.frequency !== 'Weekly' && selectedSchedule.frequency !== 'Daily' ? null : (
+                            /* Legend only for daily/weekly grids */
+                            <div className="px-6 py-3 bg-slate-50/50 border-b border-slate-100 flex gap-6 text-xs font-bold text-slate-500 uppercase tracking-wide">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded bg-indigo-400 ring-2 ring-indigo-100"></div>
-                                    Custom Override
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100"></div>
+                                    Pay Date
                                 </div>
-                            )}
-                        </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-amber-500 ring-2 ring-amber-100"></div>
+                                    Cutoff Range
+                                </div>
+                                {(selectedSchedule.monthOverrides?.length ?? 0) > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded bg-indigo-400 ring-2 ring-indigo-100"></div>
+                                        Custom Override
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Content */}
-                        <div className="flex-1 p-8 overflow-y-auto">
-                            {showYearView ? (
-                                /* Year-at-a-glance: 12 mini-calendars */
-                                <div className="grid grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {Array.from({ length: 12 }, (_, i) => {
-                                        const yr = viewDate.getFullYear();
-                                        const override = selectedSchedule.monthOverrides?.find(o => o.month === i && o.year === yr);
-                                        return (
-                                            <MiniMonthCalendar
-                                                key={i}
-                                                month={i}
-                                                year={yr}
-                                                schedule={selectedSchedule}
-                                                override={override}
-                                                onEdit={() => handleOpenOverrideEdit(i, yr)}
-                                                isEditable={selectedSchedule.frequency !== 'Weekly' && selectedSchedule.frequency !== 'Daily'}
-                                            />
-                                        );
-                                    })}
+                        <div className="flex-1 overflow-y-auto bg-slate-50 border-t border-slate-100">
+                            {selectedSchedule.frequency === 'Semi-Monthly' || selectedSchedule.frequency === 'Monthly' ? (
+                                <div className="flex h-full p-6 gap-6">
+                                    {/* Left Panel: List of Cutoffs */}
+                                    <div className="w-1/3 border border-slate-200 rounded-2xl overflow-y-auto bg-white custom-scrollbar-horizontal flex flex-col shadow-sm">
+                                        <div className="sticky top-0 bg-slate-50 p-4 border-b border-slate-200 z-10 flex items-center justify-between">
+                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Yearly Cutoffs</span>
+                                        </div>
+                                        <div className="divide-y divide-slate-100">
+                                            {viewYearlyCutoffs.map(c => {
+                                                const isSelected = selectedViewCutoffId === c.id;
+                                                return (
+                                                    <div
+                                                        key={c.id}
+                                                        onClick={() => setSelectedViewCutoffId(c.id)}
+                                                        className={`p-5 cursor-pointer transition-all hover:bg-slate-50 group ${isSelected ? 'bg-indigo-50 hover:bg-indigo-50 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
+                                                    >
+                                                        <div className={`text-sm font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
+                                                            {c.name}
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 mt-1.5 font-medium group-hover:text-slate-700 transition-colors">
+                                                            {c.monthName} {c.range.startDay} - {c.monthName} {c.range.endDay}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 bg-white px-2 py-1 rounded inline-block border border-slate-100">
+                                                            Pay Date: {c.monthName} {c.range.payDay}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Right Panel: Calendar picker */}
+                                    <div className="w-2/3 border border-slate-200 rounded-2xl bg-white p-8 shadow-sm flex flex-col justify-center items-center">
+                                        <div className="w-full max-w-2xl">
+                                            {activeViewCutoff && (
+                                                <div className="flex flex-col gap-6">
+                                                    <div className="flex items-center gap-2 text-lg font-bold text-indigo-900 uppercase tracking-wide border-b border-slate-100 pb-4">
+                                                        <CalendarRange size={22} className="text-indigo-500" />
+                                                        Viewing {activeViewCutoff.name} ({activeViewCutoff.monthName})
+                                                    </div>
+                                                    <DateRangePicker
+                                                        label={`${activeViewCutoff.name} Cutoff Period`}
+                                                        range={activeViewCutoff.range}
+                                                        month={activeViewCutoff.month}
+                                                        year={viewDate.getFullYear()}
+                                                        onChange={() => { }}
+                                                        color={activeViewCutoff.isFirst ? 'amber' : 'emerald'}
+                                                        disabled={true}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="mt-8">
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest border border-slate-100 bg-slate-50 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                                                <Edit2 size={12} /> Click "Edit Schedule" to modify cutoffs.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
-                                /* Single month calendar */
-                                <>
-                                    <div className="grid grid-cols-7 gap-4 mb-4">
-                                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                                            <div key={d} className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{d}</div>
-                                        ))}
-                                    </div>
-                                    <div className="grid grid-cols-7 gap-3">
-                                        {Array.from({ length: getFirstDayOfMonth(viewDate) }).map((_, i) => (
-                                            <div key={`empty-${i}`} className="min-h-[100px] bg-slate-50/30 rounded-2xl border border-transparent"></div>
-                                        ))}
-                                        {Array.from({ length: getDaysInMonth(viewDate) }).map((_, i) => {
-                                            const day = i + 1;
-                                            const events = getDayEvents(day);
-                                            const isToday = new Date().toDateString() === new Date(viewDate.getFullYear(), viewDate.getMonth(), day).toDateString();
-                                            const inRange = isInCutoffRange(day);
+                                <div className="p-8">
+                                    {showYearView ? (
+                                        /* Year-at-a-glance: 12 mini-calendars */
+                                        <div className="grid grid-cols-3 lg:grid-cols-4 gap-4">
+                                            {Array.from({ length: 12 }, (_, i) => {
+                                                const yr = viewDate.getFullYear();
+                                                const override = selectedSchedule.monthOverrides?.find(o => o.month === i && o.year === yr);
+                                                return (
+                                                    <MiniMonthCalendar
+                                                        key={i}
+                                                        month={i}
+                                                        year={yr}
+                                                        schedule={selectedSchedule}
+                                                        override={override}
+                                                        onEdit={() => handleOpenOverrideEdit(i, yr)}
+                                                        isEditable={selectedSchedule.frequency !== 'Weekly' && selectedSchedule.frequency !== 'Daily'}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        /* Single month calendar */
+                                        <>
+                                            <div className="grid grid-cols-7 gap-4 mb-4">
+                                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                                                    <div key={d} className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{d}</div>
+                                                ))}
+                                            </div>
+                                            <div className="grid grid-cols-7 gap-3">
+                                                {Array.from({ length: getFirstDayOfMonth(viewDate) }).map((_, i) => (
+                                                    <div key={`empty-${i}`} className="min-h-[100px] bg-slate-50/30 rounded-2xl border border-transparent"></div>
+                                                ))}
+                                                {Array.from({ length: getDaysInMonth(viewDate) }).map((_, i) => {
+                                                    const day = i + 1;
+                                                    const events = getDayEvents(day);
+                                                    const isToday = new Date().toDateString() === new Date(viewDate.getFullYear(), viewDate.getMonth(), day).toDateString();
+                                                    const inRange = isInCutoffRange(day);
 
-                                            return (
-                                                <div
-                                                    key={day}
-                                                    className={`min-h-[100px] border rounded-2xl p-3 relative transition-all group hover:shadow-md flex flex-col justify-between
-                                                        ${isToday ? 'bg-indigo-50/40 border-indigo-200'
-                                                            : inRange && events.length === 0 ? 'bg-amber-50/30 border-amber-100'
-                                                                : 'bg-white border-slate-100 hover:border-indigo-200'
-                                                        }`}
-                                                >
-                                                    <div className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}>{day}</div>
-                                                    <div className="space-y-1.5 mt-2">
-                                                        {events.map((evt, idx) => (
-                                                            <div
-                                                                key={idx}
-                                                                className={`text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm ${evt.type === 'pay'
-                                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                                                    : 'bg-amber-50 text-amber-700 border border-amber-100'
-                                                                    }`}
-                                                            >
-                                                                <div className={`w-1.5 h-1.5 rounded-full ${evt.type === 'pay' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
-                                                                {evt.label}
+                                                    return (
+                                                        <div
+                                                            key={day}
+                                                            className={`min-h-[100px] border rounded-2xl p-3 relative transition-all group hover:shadow-md flex flex-col justify-between
+                                                                ${isToday ? 'bg-indigo-50/40 border-indigo-200'
+                                                                    : inRange && events.length === 0 ? 'bg-amber-50/30 border-amber-100'
+                                                                        : 'bg-white border-slate-100 hover:border-indigo-200'
+                                                                }`}
+                                                        >
+                                                            <div className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`}>{day}</div>
+                                                            <div className="space-y-1.5 mt-2">
+                                                                {events.map((evt, idx) => (
+                                                                    <div
+                                                                        key={idx}
+                                                                        className={`text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm ${evt.type === 'pay'
+                                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                                                            : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                                                            }`}
+                                                                    >
+                                                                        <div className={`w-1.5 h-1.5 rounded-full ${evt.type === 'pay' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                                                                        {evt.label}
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
@@ -740,7 +997,7 @@ export const PaySchedulePage: React.FC = () => {
             </div>
 
             {/* Create/Edit Schedule Modal */}
-            <Modal isOpen={isCreating} onClose={() => setIsCreating(false)} className="max-w-3xl">
+            <Modal isOpen={isCreating} onClose={() => setIsCreating(false)} className="max-w-6xl">
                 <div className="p-8">
                     <h3 className="text-xl font-bold mb-6 text-slate-900 flex items-center gap-3">
                         <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
@@ -749,171 +1006,298 @@ export const PaySchedulePage: React.FC = () => {
                         {activeId ? 'Edit Pay Schedule' : 'Create Pay Schedule'}
                     </h3>
 
-                    <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
-                        {/* Name & Frequency */}
-                        <div className="grid grid-cols-2 gap-5">
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Schedule Name</label>
-                                <input
-                                    className="w-full border border-slate-200 p-3 rounded-xl text-slate-900 text-sm font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-                                    placeholder="e.g. Regular Employees"
-                                    value={editor.name}
-                                    onChange={e => setEditor({ ...editor, name: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Frequency</label>
-                                <div className="relative">
-                                    <select
-                                        className="w-full border border-slate-200 p-3 rounded-xl text-slate-900 text-sm font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none transition-all cursor-pointer"
-                                        value={editor.frequency}
-                                        onChange={e => setEditor({ ...editor, frequency: e.target.value as any })}
-                                    >
-                                        <option value="Semi-Monthly">Semi-Monthly (Twice)</option>
-                                        <option value="Monthly">Monthly (Once)</option>
-                                        <option value="Weekly">Weekly</option>
-                                        <option value="Daily">Daily</option>
-                                    </select>
-                                    <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
+                    <div className="space-y-6 max-h-[75vh] overflow-y-auto pr-2">
+                        {/* Unified Configuration */}
+                        <div className="bg-white space-y-10">
+
+                            {/* Section 1: General Configuration */}
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-3 gap-6">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Schedule Name</label>
+                                        <input
+                                            className="w-full border border-slate-200 p-3.5 rounded-2xl text-slate-900 text-sm font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                            placeholder="e.g. Regular Employees"
+                                            value={editor.name}
+                                            onChange={e => setEditor({ ...editor, name: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Frequency</label>
+                                        <div className="relative">
+                                            <select
+                                                className="w-full border border-slate-200 p-3.5 rounded-2xl text-slate-900 text-sm font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none transition-all cursor-pointer shadow-sm"
+                                                value={editor.frequency}
+                                                onChange={e => setEditor({ ...editor, frequency: e.target.value as any })}
+                                            >
+                                                <option value="Semi-Monthly">Semi-Monthly (Twice)</option>
+                                                <option value="Monthly">Monthly (Once)</option>
+                                                <option value="Weekly">Weekly</option>
+                                                <option value="Daily">Daily</option>
+                                            </select>
+                                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payroll Divisor</label>
+                                        <div className="relative">
+                                            <select
+                                                className="w-full border border-slate-200 p-3.5 rounded-2xl text-slate-900 text-sm font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none transition-all cursor-pointer shadow-sm"
+                                                value={editor.divisorId}
+                                                onChange={e => setEditor({ ...editor, divisorId: e.target.value })}
+                                            >
+                                                <option value="">Select a divisor...</option>
+                                                {MOCK_DIVISORS.map(d => (
+                                                    <option key={d.id} value={d.id}>{d.name} ({d.days} days)</option>
+                                                ))}
+                                            </select>
+                                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+
+                            {/* Section 2: Cutoff & Schedule Logic */}
+                            <div className="space-y-6">
+
+                                {(editor.frequency === 'Semi-Monthly' || editor.frequency === 'Monthly') && (
+                                    <div className="flex gap-6 h-[400px]">
+                                        {/* Left Panel: List of Cutoffs */}
+                                        <div className="w-1/3 border border-slate-200 rounded-2xl overflow-y-auto bg-slate-50 custom-scrollbar-horizontal flex flex-col">
+                                            <div className="sticky top-0 bg-slate-100 p-3 flex flex-row items-center justify-between border-b border-slate-200 shadow-sm z-10 group">
+                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Yearly Cutoffs</span>
+                                                <button
+                                                    onClick={() => {
+                                                        const targetMonth = activeCutoff ? activeCutoff.month : 0;
+                                                        const overrides = [...(editor.monthOverrides || [])];
+                                                        const oIdx = overrides.findIndex(o => o.month === targetMonth && o.year === editorYear);
+
+                                                        // Fallback to base schedule options if creating an override from scratch
+                                                        let existingOverride = oIdx >= 0 ? { ...overrides[oIdx] } : {
+                                                            month: targetMonth,
+                                                            year: editorYear,
+                                                            cutoffs: editor.frequency === 'Monthly'
+                                                                ? [...(editor.extraCutoffs || []), editor.firstCutoffRange || { startDay: 1, endDay: 25, payDay: 30 }]
+                                                                : [...(editor.extraCutoffs || []), editor.firstCutoffRange!, editor.secondCutoffRange!]
+                                                        };
+
+                                                        // Blank slate cutoff with lowest values
+                                                        existingOverride.cutoffs = [{ startDay: 1, endDay: 1, payDay: 1 }, ...existingOverride.cutoffs];
+
+                                                        if (oIdx >= 0) overrides[oIdx] = existingOverride;
+                                                        else overrides.push(existingOverride);
+
+                                                        // Force disable Apply to all months to allow custom ad-hoc overrides safely
+                                                        setEditor({ ...editor, applyToAllMonths: false, monthOverrides: overrides });
+                                                    }}
+                                                    className="text-[10px] bg-white border border-slate-200 font-bold text-slate-600 px-2 py-1 flex items-center gap-1 rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors shadow-sm"
+                                                >
+                                                    <Plus size={12} /> Add
+                                                </button>
+                                            </div>
+                                            <div className="divide-y divide-slate-100">
+                                                {yearlyCutoffs.map(c => {
+                                                    const isSelected = selectedCutoffId === c.id;
+                                                    return (
+                                                        <div
+                                                            key={c.id}
+                                                            onClick={() => setSelectedCutoffId(c.id)}
+                                                            className={`p-4 cursor-pointer transition-all hover:bg-white group ${isSelected ? 'bg-indigo-50 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
+                                                        >
+                                                            <div className={`text-sm font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
+                                                                {c.name}
+                                                            </div>
+                                                            <div className="text-xs text-slate-500 mt-1 font-medium group-hover:text-slate-700 transition-colors">
+                                                                {c.monthName} {c.range.startDay} - {c.monthName} {c.range.endDay}
+                                                            </div>
+                                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                                                Pay Date: {c.monthName} {c.range.payDay}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Right Panel: Calendar / Date Picker View */}
+                                        <div className="w-2/3 border border-slate-200 rounded-2xl overflow-y-auto bg-white p-8">
+                                            <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                                                <div className="flex items-center gap-2 text-sm font-bold text-indigo-900 uppercase tracking-wide">
+                                                    <CalendarRange size={18} className="text-indigo-500" />
+                                                    Configure {activeCutoff?.name} ({activeCutoff?.monthName})
+                                                </div>
+
+                                                {/* Apply to all months toggle - inside right panel header */}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                                                        <select
+                                                            value={activeCutoff?.month || 0}
+                                                            onChange={(e) => {
+                                                                const monthInfo = yearlyCutoffs.find(c => c.month === parseInt(e.target.value) && c.cutoffIndex === 0);
+                                                                if (monthInfo) setSelectedCutoffId(monthInfo.id);
+                                                            }}
+                                                            className="text-[10px] font-bold text-slate-600 uppercase tracking-widest bg-transparent border-none focus:ring-0 outline-none cursor-pointer"
+                                                        >
+                                                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
+                                                                <option key={m} value={i}>{m}</option>
+                                                            ))}
+                                                        </select>
+                                                        <span className="text-slate-300">|</span>
+                                                        <select
+                                                            value={editorYear}
+                                                            onChange={(e) => setEditorYear(parseInt(e.target.value))}
+                                                            className="text-[10px] font-bold text-slate-600 uppercase tracking-widest bg-transparent border-none focus:ring-0 outline-none cursor-pointer"
+                                                        >
+                                                            {[2024, 2025, 2026, 2027, 2028, 2029].map(y => (
+                                                                <option key={y} value={y}>{y}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+
+                                                    <label className="flex items-center gap-2 cursor-pointer group bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-white transition-colors">
+                                                        <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider group-hover:text-indigo-600 transition-colors">Apply to all months</span>
+                                                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${editor.applyToAllMonths ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 bg-white'}`}>
+                                                            {editor.applyToAllMonths && <Check size={10} className="text-white" />}
+                                                        </div>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="hidden"
+                                                            checked={editor.applyToAllMonths}
+                                                            onChange={() => setEditor({ ...editor, applyToAllMonths: !editor.applyToAllMonths })}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {activeCutoff && (
+                                                <div className="w-full max-w-2xl mx-auto">
+                                                    <DateRangePicker
+                                                        label={`${activeCutoff.name} Cutoff Period`}
+                                                        range={activeCutoff.range}
+                                                        month={activeCutoff.month}
+                                                        year={editorYear}
+                                                        onChange={(newRange) => {
+                                                            if (editor.applyToAllMonths) {
+                                                                const numExtras = (editor.extraCutoffs || []).length;
+                                                                if (activeCutoff.cutoffIndex < numExtras) {
+                                                                    const extras = [...(editor.extraCutoffs || [])];
+                                                                    extras[activeCutoff.cutoffIndex] = newRange;
+                                                                    setEditor({ ...editor, extraCutoffs: extras });
+                                                                } else if (activeCutoff.cutoffIndex === numExtras) {
+                                                                    setEditor({ ...editor, firstCutoffRange: newRange });
+                                                                } else if (activeCutoff.cutoffIndex === numExtras + 1 && editor.frequency === 'Semi-Monthly') {
+                                                                    setEditor({ ...editor, secondCutoffRange: newRange });
+                                                                }
+                                                            } else {
+                                                                const overrides = [...(editor.monthOverrides || [])];
+                                                                const oIdx = overrides.findIndex(o => o.month === activeCutoff.month && o.year === editorYear);
+                                                                let existingOverride = oIdx >= 0 ? { ...overrides[oIdx] } : {
+                                                                    month: activeCutoff.month,
+                                                                    year: editorYear,
+                                                                    cutoffs: editor.frequency === 'Monthly'
+                                                                        ? [...(editor.extraCutoffs || []), editor.firstCutoffRange || { startDay: 1, endDay: 25, payDay: 30 }]
+                                                                        : [...(editor.extraCutoffs || []), editor.firstCutoffRange!, editor.secondCutoffRange!]
+                                                                };
+
+                                                                // clone cutoffs array
+                                                                existingOverride.cutoffs = [...existingOverride.cutoffs];
+                                                                existingOverride.cutoffs[activeCutoff.cutoffIndex] = newRange;
+
+                                                                if (oIdx >= 0) overrides[oIdx] = existingOverride;
+                                                                else overrides.push(existingOverride);
+
+                                                                setEditor({ ...editor, monthOverrides: overrides });
+                                                            }
+                                                        }}
+                                                        color={activeCutoff.isFirst ? 'amber' : 'emerald'}
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="mt-8 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                                                <p className="text-xs text-slate-500 font-medium">
+                                                    {editor.applyToAllMonths ? (
+                                                        <span className="text-amber-600 font-bold">Note: You have "Apply to all months" enabled. Editing this month will affect ALL months. Uncheck it below if you only want to change this specific month.</span>
+                                                    ) : (
+                                                        <span className="text-emerald-600 font-bold">Custom override active: Changes here only applied to {activeCutoff?.monthName}.</span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {editor.frequency === 'Weekly' && (
+                                    <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100/50">
+                                        <div className="flex items-center gap-2 mb-6 text-xs font-bold text-indigo-900 uppercase tracking-wide">
+                                            <Clock size={14} className="text-indigo-500" />
+                                            Weekly Pay Day
+                                        </div>
+                                        <div className="flex gap-4">
+                                            <div className="flex-1 max-w-sm">
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">Pay Day</label>
+                                                <div className="relative">
+                                                    <select
+                                                        className="w-full border border-slate-200 rounded-xl p-3.5 pl-4 text-slate-900 font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none transition-all shadow-sm"
+                                                        value={editor.firstPayDate}
+                                                        onChange={e => setEditor({ ...editor, firstPayDate: e.target.value })}
+                                                    >
+                                                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => <option key={d} value={d}>{d}</option>)}
+                                                    </select>
+                                                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {editor.frequency === 'Daily' && (
+                                    <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100/50 space-y-6">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase tracking-wide">
+                                            <Clock size={14} className="text-indigo-500" />
+                                            Daily Cutoff & Pay Time
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Work Start</label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full border border-slate-200 p-3.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                                    value={editor.dailyStartTime}
+                                                    onChange={e => setEditor({ ...editor, dailyStartTime: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Work End</label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full border border-slate-200 p-3.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                                    value={editor.dailyEndTime}
+                                                    onChange={e => setEditor({ ...editor, dailyEndTime: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Pay Time</label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full border border-slate-200 p-3.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                                    value={editor.dailyPayTime}
+                                                    onChange={e => setEditor({ ...editor, dailyPayTime: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-indigo-600 font-medium bg-white/50 p-4 rounded-xl border border-indigo-100/50 italic">
+                                            Cutoff is defined per day. Pay is released daily at the specified pay time.
+                                        </p>
+                                    </div>
+                                )}
+
                             </div>
                         </div>
 
-                        {/* Cutoff Range Configuration */}
-                        {editor.frequency === 'Semi-Monthly' && (
-                            <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50 space-y-6">
-                                <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase tracking-wide">
-                                    <Clock size={14} className="text-indigo-500" />
-                                    Cutoff Ranges — Click days to set start, end, then pay day
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <DateRangePicker
-                                        label="1st Cutoff Period"
-                                        range={editor.firstCutoffRange || { startDay: 1, endDay: 10, payDay: 15 }}
-                                        onChange={r => setEditor({ ...editor, firstCutoffRange: r })}
-                                        color="amber"
-                                    />
-                                    <DateRangePicker
-                                        label="2nd Cutoff Period"
-                                        range={editor.secondCutoffRange || { startDay: 11, endDay: 25, payDay: 30 }}
-                                        onChange={r => setEditor({ ...editor, secondCutoffRange: r })}
-                                        color="emerald"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {editor.frequency === 'Monthly' && (
-                            <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50">
-                                <div className="flex items-center gap-2 mb-4 text-xs font-bold text-indigo-900 uppercase tracking-wide">
-                                    <Clock size={14} className="text-indigo-500" />
-                                    Cutoff Range
-                                </div>
-                                <DateRangePicker
-                                    label="Monthly Cutoff Period"
-                                    range={editor.firstCutoffRange || { startDay: 1, endDay: 25, payDay: 30 }}
-                                    onChange={r => setEditor({ ...editor, firstCutoffRange: r })}
-                                    color="amber"
-                                />
-                            </div>
-                        )}
-
-                        {editor.frequency === 'Weekly' && (
-                            <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50">
-                                <div className="flex items-center gap-2 mb-4 text-xs font-bold text-indigo-900 uppercase tracking-wide">
-                                    <Clock size={14} className="text-indigo-500" />
-                                    Weekly Pay Day
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="flex-1">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">Pay Day</label>
-                                        <select
-                                            className="w-full border border-indigo-100 rounded-xl p-2.5 pl-4 text-slate-900 font-bold bg-white focus:border-indigo-500 outline-none appearance-none"
-                                            value={editor.firstPayDate}
-                                            onChange={e => setEditor({ ...editor, firstPayDate: e.target.value })}
-                                        >
-                                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => <option key={d} value={d}>{d}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {editor.frequency === 'Daily' && (
-                            <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100/50 space-y-6">
-                                <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase tracking-wide">
-                                    <Clock size={14} className="text-indigo-500" />
-                                    Daily Cutoff & Pay Time
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Work Start</label>
-                                        <input
-                                            type="time"
-                                            className="w-full border border-slate-200 p-2.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-                                            value={editor.dailyStartTime}
-                                            onChange={e => setEditor({ ...editor, dailyStartTime: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Work End</label>
-                                        <input
-                                            type="time"
-                                            className="w-full border border-slate-200 p-2.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-                                            value={editor.dailyEndTime}
-                                            onChange={e => setEditor({ ...editor, dailyEndTime: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Pay Time</label>
-                                        <input
-                                            type="time"
-                                            className="w-full border border-slate-200 p-2.5 rounded-xl text-slate-900 text-sm font-bold bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all"
-                                            value={editor.dailyPayTime}
-                                            onChange={e => setEditor({ ...editor, dailyPayTime: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-indigo-600 font-medium bg-white/50 p-3 rounded-lg border border-indigo-100/50 italic">
-                                    Cutoff is defined per day. Pay is released daily at the specified pay time.
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Apply to all months toggle */}
-                        {editor.frequency !== 'Weekly' && editor.frequency !== 'Daily' && (
-                            <label className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-                                <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${editor.applyToAllMonths ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 bg-white'}`}>
-                                    {editor.applyToAllMonths && <Check size={12} className="text-white" />}
-                                </div>
-                                <div onClick={() => setEditor({ ...editor, applyToAllMonths: !editor.applyToAllMonths })}>
-                                    <span className="text-sm font-bold text-slate-800 block">Apply to all months</span>
-                                    <span className="text-[10px] text-slate-400 font-medium block">Use the same cutoff ranges for every month. Individual months can still be overridden from the year view.</span>
-                                </div>
-                            </label>
-                        )}
-
-                        {/* Divisor Selection */}
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payroll Divisor</label>
-                            <div className="relative">
-                                <select
-                                    className="w-full border border-slate-200 p-3 rounded-xl text-slate-900 text-sm font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none transition-all cursor-pointer"
-                                    value={editor.divisorId}
-                                    onChange={e => setEditor({ ...editor, divisorId: e.target.value })}
-                                >
-                                    <option value="">Select a divisor...</option>
-                                    {MOCK_DIVISORS.map(d => (
-                                        <option key={d.id} value={d.id}>{d.name} ({d.days} days)</option>
-                                    ))}
-                                </select>
-                                <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
-                            </div>
+                        <div className="pt-4 pb-2">
+                            <button onClick={handleSave} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 active:scale-95 text-xs uppercase tracking-[0.2em]">
+                                {activeId ? 'Save Changes' : 'Create Pay Schedule'}
+                            </button>
                         </div>
-
-                        <button onClick={handleSave} className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 text-sm">
-                            {activeId ? 'Save Changes' : 'Create Schedule'}
-                        </button>
                     </div>
                 </div>
             </Modal>

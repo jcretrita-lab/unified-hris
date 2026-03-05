@@ -31,7 +31,7 @@ const YearEndPrepLayout: React.FC<YearEndPrepLayoutProps> = ({
     const tabs = [
         { id: '13th', label: '13th Month Pay', icon: Wallet, path: '/manage/year-end/13th' },
         { id: 'tax', label: 'Tax Annualization', icon: Calculator, path: '/manage/year-end/tax' },
-        { id: 'gov', label: 'Govt Contributions', icon: ShieldCheck, path: '/manage/year-end/gov' },
+        { id: 'gov', label: 'Government Contributions', icon: ShieldCheck, path: '/manage/year-end/gov' },
     ] as const;
 
     return (
