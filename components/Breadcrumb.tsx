@@ -74,13 +74,13 @@ const Breadcrumb: React.FC = () => {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="flex items-center gap-1 mb-6 text-xs font-medium select-none"
+      className="flex items-center gap-1.5 mb-6 text-sm font-medium select-none"
     >
       {items.map((item, index) => (
         <React.Fragment key={`${item.path}-${index}`}>
           {index > 0 && (
             <ChevronRight
-              size={13}
+              size={16}
               className="text-slate-300 flex-shrink-0"
               aria-hidden="true"
             />
@@ -93,12 +93,12 @@ const Breadcrumb: React.FC = () => {
               className="text-slate-400 hover:text-slate-600 transition-colors duration-150 flex-shrink-0"
               aria-label="Home"
             >
-              <Home size={14} />
+              <Home size={18} />
             </Link>
           ) : item.isLast ? (
             /* Current page — not a link */
             <span
-              className="text-slate-700 font-semibold truncate max-w-[220px]"
+              className="text-slate-800 font-semibold truncate max-w-[280px]"
               title={item.label}
               aria-current="page"
             >
@@ -108,7 +108,7 @@ const Breadcrumb: React.FC = () => {
             /* Ancestor crumb — clickable */
             <Link
               to={item.path}
-              className="text-slate-400 hover:text-slate-700 transition-colors duration-150 truncate max-w-[160px] whitespace-nowrap"
+              className="text-slate-400 hover:text-slate-700 transition-colors duration-150 truncate max-w-[200px] whitespace-nowrap"
               title={item.label}
             >
               {item.label}
