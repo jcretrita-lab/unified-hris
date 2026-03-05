@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PayComponent, PayTemplate, OrgUnit, Rank, Position, Employee, EmployeeStatus } from '../../types';
 import Modal from '../../components/Modal';
 import {
@@ -25,7 +26,15 @@ import {
     AlertCircle,
     ToggleLeft,
     ToggleRight,
-    CheckCircle2
+    CheckCircle2,
+    Heart,
+    ChevronDown,
+    ChevronRight,
+    FolderTree,
+    CalendarDays,
+    Coins,
+    Sparkles,
+    ArrowLeft
 } from 'lucide-react';
 
 // --- MOCK DATA FOR SIMULATION & INSTANCES ---
@@ -101,6 +110,9 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
     const [filterRankId, setFilterRankId] = useState<string>('');
     const [filterSubRankId, setFilterSubRankId] = useState<string>('');
     const [finalTargetId, setFinalTargetId] = useState<string>('');
+
+    const [expandedComponents, setExpandedComponents] = useState<string[]>([]);
+    const [expandedComparisons, setExpandedComparisons] = useState<string[]>([]);
 
     const activeTemplate = templates.find(t => t.id === selectedTemplateId);
 
@@ -347,7 +359,8 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
             return {
                 employee: emp,
                 isCustomized,
-                netDiff: isCustomized ? 1500 : 0
+                netDiff: isCustomized ? 1500 : 0,
+                frequency: emp.jobType === 'Full-Time' ? 'Semi-Monthly' : 'Monthly'
             };
         });
     };
@@ -402,7 +415,9 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                 type: std?.type || act?.type || 'earning',
                 stdVal,
                 actVal,
-                status
+                status,
+                frequency: std?.frequency || act?.frequency,
+                distribution: std?.distribution || act?.distribution
             };
         });
 
@@ -427,66 +442,224 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
     const earningComponents = components.filter(c => c.type === 'earning');
     const deductionComponents = components.filter(c => c.type === 'deduction');
 
-    const renderComponentItem = (comp: PayComponent, isSelected: boolean, showValue: boolean) => (
-        <div
-            key={comp.id}
-            onClick={() => toggleComponent(comp.id)}
-            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all mb-2 ${isSelected ? (comp.type === 'earning' ? 'bg-emerald-50 border-emerald-200 shadow-sm' : 'bg-rose-50 border-rose-200 shadow-sm') : 'bg-white border-slate-200 hover:border-slate-300'}`}
-        >
-            <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${isSelected ? (comp.type === 'earning' ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-rose-600 border-rose-600 text-white') : 'border-slate-300 bg-white'}`}>
-                    {isSelected && <Check size={12} />}
-                </div>
-                <div>
-                    <div className="font-bold text-sm text-slate-700">{comp.name}</div>
-                    <div className="text-[10px] text-slate-400 uppercase flex items-center gap-2 font-bold tracking-wider">
-                        {comp.isTaxable && <span className="text-orange-500">Taxable</span>}
-                        {comp.isTaxable && <span className="w-1 h-1 bg-slate-300 rounded-full"></span>}
-                        <span>{comp.valueType === 'fixed' ? 'Fixed' : 'Formula'}</span>
+    const renderComponentItem = (comp: PayComponent, isSelected: boolean, showValue: boolean) => {
+        const isExpanded = expandedComponents.includes(comp.id);
+        const hasFrequency = !!comp.frequency;
+
+        return (
+            <div
+                key={comp.id}
+                className="group mb-3"
+            >
+                <motion.div
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.99 }}
+                    className={`relative overflow-hidden grid grid-cols-[40px_1fr_140px] items-center p-4 rounded-2xl border cursor-pointer transition-all ${isSelected ? (comp.type === 'earning' ? 'bg-emerald-50/50 border-emerald-200 ring-2 ring-emerald-500/20' : 'bg-rose-50/50 border-rose-200 ring-2 ring-rose-500/20') : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md hover:shadow-slate-100'}`}
+                >
+                    {isSelected && (
+                        <motion.div
+                            layoutId={`selection-glow-${comp.id}`}
+                            className={`absolute inset-0 opacity-20 pointer-events-none ${comp.type === 'earning' ? 'bg-gradient-to-r from-emerald-500/10 to-transparent' : 'bg-gradient-to-r from-rose-500/10 to-transparent'}`}
+                        />
+                    )}
+
+                    {/* Col 1: Chevron Toggle */}
+                    <div className="flex items-center justify-center relative z-10">
+                        {hasFrequency && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedComponents(prev => prev.includes(comp.id) ? prev.filter(i => i !== comp.id) : [...prev, comp.id]);
+                                }}
+                                className={`p-1.5 rounded-lg transition-all ${isExpanded ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-50 text-slate-400 hover:text-slate-600'}`}
+                            >
+                                <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Col 2: Selection & Info */}
+                    <div className="flex items-center gap-4 relative z-10 overflow-hidden" onClick={() => toggleComponent(comp.id)}>
+                        <div className={`shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${isSelected ? (comp.type === 'earning' ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-rose-600 border-rose-600 text-white shadow-lg shadow-rose-200') : 'border-slate-200 bg-white'}`}>
+                            {isSelected ? <Check size={14} strokeWidth={3} /> : <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />}
+                        </div>
+                        <div className="overflow-hidden">
+                            <div className="font-black text-sm text-slate-800 tracking-tight flex items-center gap-2 truncate">
+                                <span className="truncate">{comp.name}</span>
+                                {isSelected && <Sparkles size={12} className={`shrink-0 ${comp.type === 'earning' ? 'text-emerald-500' : 'text-rose-500'}`} />}
+                            </div>
+                            <div className="text-[10px] text-slate-400 flex items-center gap-2 font-bold tracking-widest mt-0.5 uppercase whitespace-nowrap">
+                                {comp.isTaxable && <span className="text-orange-500 px-1.5 py-0.5 bg-orange-50 rounded border border-orange-100/50">Taxable</span>}
+                                <span>{comp.valueType === 'fixed' ? 'Fixed' : 'Formula'}</span>
+                                {comp.frequency && <span className="w-1 h-1 bg-slate-300 rounded-full"></span>}
+                                {comp.frequency && <span className="text-indigo-600 font-black">{comp.frequency}</span>}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Col 3: Values */}
+                    <div className="flex items-center justify-end px-3 relative z-10">
+                        <div className={`text-base font-mono font-black whitespace-nowrap ${comp.type === 'earning' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            <div className="flex items-center gap-1 justify-end">
+                                {comp.type === 'earning' ? '+' : '-'}
+                                {comp.valueType === 'fixed' ? <SensitiveValue showAll={showValue} value={comp.fixedValue || 0} currency="₱" /> : 'CALC'}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Enhanced Tree UI for Frequency Distribution */}
+                <AnimatePresence>
+                    {isExpanded && comp.frequency && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                            exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                            className="ml-10 mt-2 border-l-2 border-slate-100 pl-6 space-y-3 py-3 relative"
+                        >
+                            <div className="absolute top-0 left-[-2px] w-[2px] h-4 bg-gradient-to-b from-slate-200 to-transparent"></div>
+                            <div className="flex items-center gap-2 mb-2 p-1 bg-slate-100/50 rounded-lg w-fit">
+                                <FolderTree size={12} className="text-slate-400" />
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Payout Distribution</span>
+                            </div>
+                            {(comp.distribution || (comp.frequency === 'Monthly' ? [
+                                { period: 'Full Month Payout', amount: (comp.fixedValue || 0) }
+                            ] : [
+                                { period: 'Pay Period 1', amount: (comp.fixedValue || 0) / 2 },
+                                { period: 'Pay Period 2', amount: (comp.fixedValue || 0) / 2 }
+                            ])).map((row, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ x: -10, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className="flex items-center justify-between text-[11px] font-bold group/row hover:bg-white p-2 rounded-xl transition-all border border-transparent hover:border-slate-100 hover:shadow-sm"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative">
+                                            <div className="w-4 h-[1px] bg-slate-200"></div>
+                                            <div className="absolute top-[-4px] right-[-4px] w-2 h-2 rounded-full border-2 border-white bg-slate-300 group-hover/row:bg-indigo-500 transition-colors"></div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-slate-600">
+                                            <CalendarDays size={12} className="text-slate-400" />
+                                            <span>{row.period}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 font-mono text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 group-hover/row:bg-indigo-50 group-hover/row:border-indigo-100 group-hover/row:text-indigo-600 transition-all">
+                                        <Coins size={10} className="text-slate-400 group-hover/row:text-indigo-400" />
+                                        {showValue ? `₱${row.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : 'XXXXXX'}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        );
+    };
+
+    const ComparisonRow: React.FC<{ row: any }> = ({ row }) => {
+        const isExpanded = expandedComparisons.includes(row.id);
+        const hasFrequency = !!row.frequency;
+
+        return (
+            <div className="flex flex-col border-b border-slate-50 last:border-0 group">
+                <div className={`grid grid-cols-[40px_1.5fr_1fr_1fr_1fr_0.8fr] px-5 py-3 text-sm hover:bg-slate-50 transition-colors items-center ${row.status === 'removed' ? 'opacity-60 bg-slate-50/50' : ''}`}>
+                    {/* Col 1: Chevron Toggle */}
+                    <div className="flex items-center justify-center">
+                        {hasFrequency && row.status !== 'removed' && (
+                            <button
+                                onClick={() => setExpandedComparisons(prev => prev.includes(row.id) ? prev.filter(i => i !== row.id) : [...prev, row.id])}
+                                className={`p-1 rounded transition-all ${isExpanded ? 'text-indigo-600 bg-indigo-50' : 'text-slate-300 hover:text-slate-600'}`}
+                            >
+                                <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="font-bold text-slate-700 flex items-center gap-2 overflow-hidden">
+                        <div className={`shrink-0 w-1.5 h-1.5 rounded-full ${row.status === 'match' ? 'bg-slate-300' : row.status === 'added' ? 'bg-emerald-500' : row.status === 'removed' ? 'bg-rose-500' : 'bg-indigo-500'}`}></div>
+                        <span className={`truncate ${row.status === 'removed' ? 'text-slate-400 line-through decoration-slate-300' : ''}`}>{row.name}</span>
+                    </div>
+
+                    <div className="text-right font-mono text-slate-400 text-xs px-2">
+                        {row.stdVal !== null ? (
+                            <span>{row.type === 'earning' ? '+' : '-'}₱{row.stdVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        ) : <span className="text-slate-200">--</span>}
+                    </div>
+
+                    <div className="flex justify-end font-mono font-bold text-xs px-2">
+                        {row.actVal !== null ? (
+                            <span className={`px-2 py-0.5 rounded transition-colors ${row.status === 'diff' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm' :
+                                row.status === 'added' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                                    'text-slate-700'
+                                }`}>
+                                {row.type === 'earning' ? '+' : '-'}₱{row.actVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                        ) : <span className="text-slate-300 italic text-[10px] px-2 bg-slate-100 rounded">Removed</span>}
+                    </div>
+
+                    <div className="flex justify-center items-center gap-2 px-2">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-tighter shadow-sm whitespace-nowrap">
+                                {row.frequency || (comparisonData?.employee.jobType === 'Full-Time' ? 'Semi-Monthly' : 'Monthly')}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end pl-2">
+                        {row.status === 'match' && <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Inherited</span>}
+                        {row.status === 'diff' && <span className="text-[10px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-wide shadow-sm">Overridden</span>}
+                        {row.status === 'added' && <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-wide">Added</span>}
+                        {row.status === 'removed' && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 uppercase tracking-wide text-center">Excluded</span>}
                     </div>
                 </div>
-            </div>
-            <div className={`text-sm font-mono font-bold ${comp.type === 'earning' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                <div className="flex items-center gap-1">
-                    {comp.type === 'earning' ? '+' : '-'}
-                    {comp.valueType === 'fixed' ? <SensitiveValue showAll={showValue} value={comp.fixedValue || 0} currency="₱" /> : 'Calc'}
-                </div>
-            </div>
-        </div>
-    );
 
-    const ComparisonRow: React.FC<{ row: any }> = ({ row }) => (
-        <div className="grid grid-cols-4 px-5 py-3 text-sm hover:bg-slate-50 transition-colors items-center group border-b border-slate-50 last:border-0">
-            <div className="col-span-1 font-bold text-slate-700 flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${row.status === 'match' ? 'bg-slate-300' : row.status === 'added' ? 'bg-emerald-500' : row.status === 'removed' ? 'bg-rose-500' : 'bg-indigo-500'}`}></div>
-                <span className={row.status === 'removed' ? 'text-slate-400 line-through decoration-slate-300' : ''}>{row.name}</span>
+                {/* Tree UI for Frequency Distribution in Comparison Row */}
+                <AnimatePresence>
+                    {isExpanded && row.frequency && row.status !== 'removed' && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="ml-12 mb-4 mt-2 border-l-2 border-indigo-50 pl-6 space-y-2 py-2 relative"
+                        >
+                            <div className="absolute top-0 left-[-2px] w-[2px] h-4 bg-indigo-100"></div>
+                            <div className="flex items-center gap-2 mb-2 p-1 bg-indigo-50 rounded-lg w-fit">
+                                <FolderTree size={10} className="text-indigo-400" />
+                                <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">Active Balance Distribution</span>
+                            </div>
+                            {(row.distribution || (row.frequency === 'Monthly' ? [
+                                { period: 'Full Month Payout', amount: (row.actVal || row.stdVal || 0) }
+                            ] : [
+                                { period: 'Pay Period 1', amount: (row.actVal || row.stdVal || 0) / 2 },
+                                { period: 'Pay Period 2', amount: (row.actVal || row.stdVal || 0) / 2 }
+                            ])).map((d: { period: string; amount: number }, idx: number) => (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ x: -10, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className="flex items-center justify-between text-[11px] text-slate-500 font-bold group/row max-w-[300px] hover:bg-white p-1.5 rounded-lg transition-all"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-[1px] bg-indigo-100"></div>
+                                        <div className="flex items-center gap-2 text-slate-400">
+                                            <CalendarDays size={10} className="text-slate-300" />
+                                            <span className="group-hover/row:text-indigo-600 transition-colors uppercase tracking-tighter text-[10px] font-black">{d.period}</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-indigo-700 font-mono bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100 shadow-sm text-[10px]">
+                                        ₱{d.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </span>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
-
-            <div className="col-span-1 text-right font-mono text-slate-400 text-xs">
-                {row.stdVal !== null ? (
-                    <span>{row.type === 'earning' ? '+' : '-'}₱{row.stdVal.toLocaleString()}</span>
-                ) : <span className="text-slate-200">--</span>}
-            </div>
-
-            <div className="col-span-1 text-right font-mono font-bold text-xs flex justify-end">
-                {row.actVal !== null ? (
-                    <span className={`px-2 py-0.5 rounded transition-colors ${row.status === 'diff' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
-                        row.status === 'added' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                            'text-slate-700'
-                        }`}>
-                        {row.type === 'earning' ? '+' : '-'}₱{row.actVal.toLocaleString()}
-                    </span>
-                ) : <span className="text-slate-300 italic text-[10px] px-2">Removed</span>}
-            </div>
-
-            <div className="col-span-1 flex justify-end">
-                {row.status === 'match' && <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Inherited</span>}
-                {row.status === 'diff' && <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-wide">Overridden</span>}
-                {row.status === 'added' && <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-wide">Added</span>}
-                {row.status === 'removed' && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 uppercase tracking-wide">Excluded</span>}
-            </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row h-auto md:h-[700px] overflow-hidden">
@@ -519,8 +692,8 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                         ))}
                     </div>
                 </div>
-            </div>
-            <div className="flex-1 flex flex-col bg-white overflow-hidden">
+            </div >
+            <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
                 {mode === 'edit' && activeTemplate && (
                     <>
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
@@ -553,18 +726,18 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                         <h4 className="text-xs font-bold text-slate-400 mb-1 flex items-center gap-2 uppercase tracking-widest"><User size={14} /> Base Pay (Context)</h4>
                                         <p className="text-xs text-slate-400 mb-6 max-w-md">This is the starting salary derived from the {basePayInfo?.source}. All components below are added/deducted from this amount.</p>
                                         <div className="flex items-end gap-3">
-                                            <div className="text-3xl font-mono font-bold text-white">{basePayInfo && basePayInfo.amount > 0 ? `₱${basePayInfo.amount.toLocaleString()}` : <span className="text-white/50 text-xl">Varies by Role</span>}</div>
-                                            {activeTemplate.targetType === 'Position' && (<div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-1 rounded-lg text-white">{basePayInfo?.label}</div>)}
+                                            <div className="text-3xl font-mono font-bold text-white">{basePayInfo && basePayInfo.amount > 0 ? `₱${basePayInfo.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : <span className="text-white/50 text-xl">Varies by Role</span>}</div>
+                                            {activeTemplate?.targetType === 'Position' && (<div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-1 rounded-lg text-white">{basePayInfo?.label}</div>)}
                                         </div>
 
                                         {/* Tax Flags Display */}
                                         <div className="flex gap-2 mt-4">
-                                            {activeTemplate.isTaxExempt && (
+                                            {activeTemplate?.isTaxExempt && (
                                                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold uppercase tracking-wide">
                                                     <CheckCircle2 size={12} /> Tax Exempt
                                                 </div>
                                             )}
-                                            {activeTemplate.taxRate !== undefined && activeTemplate.taxRate > 0 && (
+                                            {activeTemplate?.taxRate !== undefined && activeTemplate.taxRate > 0 && (
                                                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold uppercase tracking-wide">
                                                     <AlertCircle size={12} /> {activeTemplate.taxRate}% Tax Applied
                                                 </div>
@@ -599,7 +772,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                         </div>
                                         <div className="space-y-1">
                                             {earningComponents.length === 0 && <p className="text-sm text-slate-400 italic text-center py-4">No earning components defined.</p>}
-                                            {earningComponents.map(comp => renderComponentItem(comp, activeTemplate.components.includes(comp.id), showEarnings))}
+                                            {earningComponents.map(comp => renderComponentItem(comp, !!activeTemplate?.components.includes(comp.id), showEarnings))}
                                         </div>
                                     </div>
                                     {showDeductionsPanel && (
@@ -658,6 +831,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                         <thead className="bg-white text-slate-400 text-[10px] font-bold uppercase tracking-widest border-b border-slate-100">
                                             <tr>
                                                 <th className="px-6 py-4">Employee</th>
+                                                <th className="px-6 py-4">Frequency</th>
                                                 <th className="px-6 py-4">Configuration Status</th>
                                                 <th className="px-6 py-4 text-right">Net Adjustment</th>
                                                 <th className="px-6 py-4 text-right">Actions</th>
@@ -669,6 +843,11 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                                     <td className="px-6 py-4">
                                                         <div className="font-bold text-slate-800">{inst.employee.firstName} {inst.employee.lastName}</div>
                                                         <div className="text-xs text-slate-500">{inst.employee.role}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100">
+                                                            {(inst as any).frequency}
+                                                        </span>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         {inst.isCustomized ? (
@@ -683,7 +862,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                                     </td>
                                                     <td className="px-6 py-4 text-right font-mono text-slate-600 font-bold">
                                                         {inst.isCustomized ? (
-                                                            <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">+ ₱{inst.netDiff.toLocaleString()}</span>
+                                                            <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">+ ₱{inst.netDiff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                         ) : (
                                                             <span className="text-slate-300">-</span>
                                                         )}
@@ -691,7 +870,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                                     <td className="px-6 py-4 text-right">
                                                         <button
                                                             onClick={() => setComparingEmployeeId(inst.employee.id)}
-                                                            className="text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors opacity-0 group-hover:opacity-100"
+                                                            className="text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors opacity-100"
                                                         >
                                                             View Comparison
                                                         </button>
@@ -821,10 +1000,11 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                 </div>
             </Modal>
 
-            {/* INSTANCE COMPARISON MODAL - POLISHED NEUTRAL STYLE */}
+
+            {/* INSTANCE COMPARISON MODAL - MOVED TO TOP LEVEL TO AVOID CLIPPING */}
             <Modal isOpen={!!comparingEmployeeId} onClose={() => setComparingEmployeeId(null)} className="max-w-4xl">
                 <div className="w-full flex flex-col h-[80vh] md:h-auto md:max-h-[85vh] overflow-hidden bg-white">
-                    {comparisonData && (
+                    {comparisonData ? (
                         <>
                             {/* Header */}
                             <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-white z-10 shrink-0">
@@ -845,6 +1025,12 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                         </div>
                                     </div>
                                 </div>
+                                <button
+                                    onClick={() => setComparingEmployeeId(null)}
+                                    className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
                             </div>
 
                             {/* Scrollable Content */}
@@ -853,28 +1039,30 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                 <div className="grid grid-cols-3 gap-4 mb-6">
                                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Template Standard</div>
-                                        <div className="text-lg font-mono font-bold text-slate-700">₱{comparisonData.summary.defNet.toLocaleString()}</div>
+                                        <div className="text-lg font-mono font-bold text-slate-700">₱{comparisonData.summary.defNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                     </div>
                                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
                                         <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-bl-full -mr-4 -mt-4"></div>
                                         <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-1 relative z-10">Employee Actual</div>
-                                        <div className="text-lg font-mono font-bold text-indigo-900 relative z-10">₱{comparisonData.summary.actNet.toLocaleString()}</div>
+                                        <div className="text-lg font-mono font-bold text-indigo-900 relative z-10">₱{comparisonData.summary.actNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                     </div>
                                     <div className={`p-4 rounded-xl border shadow-sm ${comparisonData.summary.diff > 0 ? 'bg-emerald-50 border-emerald-100' : comparisonData.summary.diff < 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-200'}`}>
                                         <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${comparisonData.summary.diff > 0 ? 'text-emerald-600' : comparisonData.summary.diff < 0 ? 'text-rose-600' : 'text-slate-400'}`}>Net Difference</div>
                                         <div className={`text-lg font-mono font-bold flex items-center gap-1 ${comparisonData.summary.diff > 0 ? 'text-emerald-700' : comparisonData.summary.diff < 0 ? 'text-rose-700' : 'text-slate-500'}`}>
-                                            {comparisonData.summary.diff > 0 ? '+' : ''}{comparisonData.summary.diff !== 0 ? `₱${comparisonData.summary.diff.toLocaleString()}` : '--'}
+                                            {comparisonData.summary.diff > 0 ? '+' : ''}{comparisonData.summary.diff !== 0 ? `₱${comparisonData.summary.diff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '--'}
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Comparison Table */}
                                 <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                                    <div className="grid grid-cols-4 bg-slate-50 border-b border-slate-100 px-5 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest sticky top-0 z-10">
+                                    <div className="grid grid-cols-[40px_1.5fr_1fr_1fr_1fr_0.8fr] bg-slate-50 border-b border-slate-100 px-5 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest sticky top-0 z-10">
+                                        <div className="flex justify-center"><Layers size={12} className="text-slate-300" /></div>
                                         <div>Component Name</div>
-                                        <div className="text-right text-slate-400">Default Value</div>
-                                        <div className="text-right text-indigo-600">Actual Value</div>
-                                        <div className="text-right">Status</div>
+                                        <div className="text-right px-2">Default</div>
+                                        <div className="text-right px-2 text-indigo-600">Actual</div>
+                                        <div className="text-center px-2">Frequency</div>
+                                        <div className="text-right pl-2">Status</div>
                                     </div>
                                     <div className="divide-y divide-slate-100">
                                         {/* Earnings Group */}
@@ -925,6 +1113,8 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                 </div>
                             </div>
                         </>
+                    ) : (
+                        <div className="p-20 text-center text-slate-400 italic">Loading comparison data...</div>
                     )}
                 </div>
             </Modal>

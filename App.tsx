@@ -37,10 +37,16 @@ import TimekeepingDetail from './pages/TimekeepingDetail';
 import UserManagement from './pages/UserManagement';
 import NewOrganization from './pages/NewOrganization';
 import NewEmployee from './pages/NewEmployee';
+import OffboardingEmployee from './pages/OffboardingEmployee';
 import ReportsPage from './pages/ReportsPage';
 import ReportDetail from './pages/ReportDetail';
 import EmployeeFieldsSetup from './pages/settings/EmployeeFieldsSetup';
 import NotificationSettings from './pages/settings/NotificationSettings';
+import YearEndBatch13thPage from './pages/YearEndBatch13thPage';
+import YearEndBatchTaxPage from './pages/YearEndBatchTaxPage';
+import YearEnd13thPrepPage from './pages/year-end/YearEnd13thPrepPage';
+import YearEndTaxPrepPage from './pages/year-end/YearEndTaxPrepPage';
+import YearEndGovPrepPage from './pages/year-end/YearEndGovPrepPage';
 import NotificationCenter from './pages/NotificationCenter';
 import NotificationDetail from './pages/NotificationDetail';
 import SettingsOverview from './pages/settings/SettingsOverview';
@@ -123,7 +129,8 @@ const AnimatedRoutes = () => {
         {/* Admin Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><PageWrapper><Dashboard /></PageWrapper></ProtectedRoute>} />
         <Route path="/manage/employee" element={<ProtectedRoute><PageWrapper><EmployeeList /></PageWrapper></ProtectedRoute>} />
-        <Route path="/manage/employee/new" element={<ProtectedRoute><PageWrapper><NewEmployee /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/employee/onboarding" element={<ProtectedRoute><PageWrapper><NewEmployee /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/employee/offboarding" element={<ProtectedRoute><PageWrapper><OffboardingEmployee /></PageWrapper></ProtectedRoute>} />
 
         {/* Shared Route (Admin sees all, Employee sees self via protection logic) */}
         <Route path="/manage/employee/:id" element={<ProtectedRoute><PageWrapper><EmployeeDetail /></PageWrapper></ProtectedRoute>} />
@@ -141,6 +148,12 @@ const AnimatedRoutes = () => {
 
         <Route path="/manage/pay-schedule" element={<ProtectedRoute><PageWrapper><PaySchedulePage /></PageWrapper></ProtectedRoute>} />
         <Route path="/manage/pay-structure" element={<ProtectedRoute><PageWrapper><PayStructure /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/year-end-prep" element={<Navigate to="/manage/year-end/13th" replace />} />
+        <Route path="/manage/year-end/13th" element={<ProtectedRoute><PageWrapper><YearEnd13thPrepPage /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/year-end/tax" element={<ProtectedRoute><PageWrapper><YearEndTaxPrepPage /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/year-end/gov" element={<ProtectedRoute><PageWrapper><YearEndGovPrepPage /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/year-end-prep/batch-13th" element={<ProtectedRoute><PageWrapper><YearEndBatch13thPage /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/year-end-batch-tax" element={<ProtectedRoute><PageWrapper><YearEndBatchTaxPage /></PageWrapper></ProtectedRoute>} />
         <Route path="/monitor/audit-logs" element={<ProtectedRoute><PageWrapper><AuditLogsPage /></PageWrapper></ProtectedRoute>} />
         <Route path="/monitor/approvals" element={<ProtectedRoute><PageWrapper><ApprovalList /></PageWrapper></ProtectedRoute>} />
         <Route path="/monitor/approvals/:id" element={<ProtectedRoute><PageWrapper><ApprovalDetail /></PageWrapper></ProtectedRoute>} />

@@ -122,7 +122,11 @@ const INITIAL_PAY_COMPONENTS: PayComponent[] = [
     includeIn13thMonth: false,
     archiveAfterDays: 0,
     isArchived: false,
-    currentVersion: '1.0.0'
+    currentVersion: '1.0.0',
+    frequency: 'Monthly',
+    distribution: [
+      { period: 'Pay Period 1', amount: 2000 }
+    ]
   },
   {
     id: 'pc-transport',
@@ -134,7 +138,12 @@ const INITIAL_PAY_COMPONENTS: PayComponent[] = [
     includeIn13thMonth: false,
     archiveAfterDays: 0,
     isArchived: false,
-    currentVersion: '1.0.0'
+    currentVersion: '1.0.0',
+    frequency: 'Semi-Monthly',
+    distribution: [
+      { period: 'Pay Period 1', amount: 1500 },
+      { period: 'Pay Period 2', amount: 1500 }
+    ]
   },
   {
     id: 'pc-meal',
@@ -158,7 +167,14 @@ const INITIAL_PAY_COMPONENTS: PayComponent[] = [
     includeIn13thMonth: false,
     archiveAfterDays: 0,
     isArchived: false,
-    currentVersion: '1.0.0'
+    currentVersion: '1.0.0',
+    frequency: 'Weekly',
+    distribution: [
+      { period: 'Week 1', amount: 100 },
+      { period: 'Week 2', amount: 100 },
+      { period: 'Week 3', amount: 100 },
+      { period: 'Week 4', amount: 100 }
+    ]
   },
   {
     id: 'pc-medical',
@@ -349,8 +365,8 @@ export const PayStructure: React.FC = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`pb-4 text-sm font-bold transition-all relative
-                ${activeTab === tab 
-                  ? 'text-indigo-600 border-b-2 border-indigo-600' 
+                ${activeTab === tab
+                  ? 'text-indigo-600 border-b-2 border-indigo-600'
                   : 'text-slate-400 hover:text-slate-600'}`}
             >
               {tab}
@@ -360,11 +376,11 @@ export const PayStructure: React.FC = () => {
       </div>
 
       {activeTab === 'Formula Builder' && (
-        <FormulaBuilder 
-          formulas={formulas} 
-          setFormulas={setFormulas} 
-          lookupTables={lookupTables} 
-          setLookupTables={setLookupTables} 
+        <FormulaBuilder
+          formulas={formulas}
+          setFormulas={setFormulas}
+          lookupTables={lookupTables}
+          setLookupTables={setLookupTables}
         />
       )}
 

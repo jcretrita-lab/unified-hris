@@ -908,8 +908,8 @@ const OrgStructure: React.FC<Props> = ({
 
         <div
           className={`flex items-center gap-2 p-2 rounded-lg border transition-all duration-200 group ${depth === 0
-              ? "bg-slate-900 text-slate-300 border-slate-900 mb-2 shadow-md ml-0"
-              : "bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm mb-1 ml-6"
+            ? "bg-slate-900 text-slate-300 border-slate-900 mb-2 shadow-md ml-0"
+            : "bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm mb-1 ml-6"
             }`}
           style={{
             marginLeft: depth === 0 ? 0 : `${depth * 20}px`,
@@ -921,8 +921,8 @@ const OrgStructure: React.FC<Props> = ({
             <button
               onClick={() => toggleExpand(unit.id)}
               className={`p-1 rounded transition-colors relative z-10 ${depth === 0
-                  ? "hover:bg-slate-700 text-slate-300"
-                  : "hover:bg-slate-100 text-slate-400"
+                ? "hover:bg-slate-700 text-slate-300"
+                : "hover:bg-slate-100 text-slate-400"
                 }`}
               disabled={!hasChildren}
             >
@@ -1070,15 +1070,15 @@ const OrgStructure: React.FC<Props> = ({
 
                     <div
                       className={`flex-1 flex items-center justify-between p-2 border rounded-md transition-all ml-2 ${isVacant
-                          ? "bg-slate-50 border-slate-200 border-dashed"
-                          : "bg-green-50/50 border-green-100 hover:border-green-300"
+                        ? "bg-slate-50 border-slate-200 border-dashed"
+                        : "bg-green-50/50 border-green-100 hover:border-green-300"
                         }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isVacant
-                              ? "bg-slate-200 text-slate-400"
-                              : "bg-green-100 text-green-600"
+                            ? "bg-slate-200 text-slate-400"
+                            : "bg-green-100 text-green-600"
                             }`}
                         >
                           {rank ? rank.level : <UserPlus size={12} />}
@@ -1205,8 +1205,8 @@ const OrgStructure: React.FC<Props> = ({
             <button
               onClick={() => setShowAllValues(!showAllValues)}
               className={`p-2 rounded-lg transition-colors ${showAllValues
-                  ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                 }`}
               title={
                 showAllValues
@@ -1222,8 +1222,8 @@ const OrgStructure: React.FC<Props> = ({
             <button
               onClick={() => setViewMode("list")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${viewMode === "list"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
                 }`}
             >
               <List size={14} /> List
@@ -1359,15 +1359,15 @@ const OrgStructure: React.FC<Props> = ({
                       <div
                         key={type.id}
                         className={`flex justify-between items-center p-2 rounded border text-sm transition-colors ${editingTypeId === type.id
-                            ? "bg-blue-50 border-blue-200"
-                            : "bg-white border-slate-200"
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-white border-slate-200"
                           }`}
                       >
                         <div className="flex items-center gap-2">
                           <span
                             className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${editingTypeId === type.id
-                                ? "bg-blue-200 text-blue-700"
-                                : "bg-slate-100 text-slate-600"
+                              ? "bg-blue-200 text-blue-700"
+                              : "bg-slate-100 text-slate-600"
                               }`}
                           >
                             {type.level}
@@ -1433,8 +1433,8 @@ const OrgStructure: React.FC<Props> = ({
                   onClick={handleSaveUnitType}
                   disabled={!newTypeForm.name}
                   className={`text-white p-2 rounded disabled:opacity-50 transition-colors ${editingTypeId
-                      ? "bg-orange-500 hover:bg-orange-600"
-                      : "bg-blue-600 hover:bg-blue-700"
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-blue-600 hover:bg-blue-700"
                     }`}
                   title={editingTypeId ? "Update Type" : "Add Type"}
                 >
@@ -1582,8 +1582,8 @@ const OrgStructure: React.FC<Props> = ({
                 <select
                   disabled
                   className={`w-full border p-2.5 rounded-lg bg-slate-100 text-slate-500 outline-none cursor-not-allowed transition-colors ${isOverride
-                      ? "border-orange-200 bg-orange-50/50"
-                      : "border-slate-200"
+                    ? "border-orange-200 bg-orange-50/50"
+                    : "border-slate-200"
                     }`}
                   value={posForm.gradeId}
                   onChange={(e) => handleGradeChange(e.target.value)}
@@ -1622,8 +1622,8 @@ const OrgStructure: React.FC<Props> = ({
                     )}
                     <span className="font-mono">
                       {isFixedRate
-                        ? `₱${selectedGrade.minSalary?.toLocaleString()}`
-                        : `₱${selectedGrade.minSalary?.toLocaleString()} - ₱${selectedGrade.maxSalary?.toLocaleString()}`}
+                        ? `₱${selectedGrade.minSalary?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : `₱${selectedGrade.minSalary?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - ₱${selectedGrade.maxSalary?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     </span>
                   </div>
                 )}

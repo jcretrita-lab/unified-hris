@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  Plus, 
-  MoreHorizontal, 
-  ChevronLeft, 
+import {
+  Search,
+  Plus,
+  UserMinus,
+  MoreHorizontal,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
   Filter,
@@ -34,13 +35,22 @@ const EmployeeList: React.FC = () => {
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Employee Directory</h1>
           <p className="text-slate-500 font-medium mt-1">Manage, filter and track all team members in one place.</p>
         </div>
-        <button 
-          onClick={() => navigate('/manage/employee/new')}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95"
-        >
-          <Plus size={18} />
-          Add Employee
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/manage/employee/onboarding')}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95"
+          >
+            <Plus size={18} />
+            Onboard Employee
+          </button>
+          <button
+            onClick={() => navigate('/manage/employee/offboarding')}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all active:scale-95"
+          >
+            <UserMinus size={18} className="text-rose-500" />
+            Offboard Employee
+          </button>
+        </div>
       </div>
 
       {/* Advanced Filters */}
@@ -94,7 +104,7 @@ const EmployeeList: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {MOCK_EMPLOYEES.map((employee, idx) => (
-                <MotionTr 
+                <MotionTr
                   key={employee.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -116,8 +126,8 @@ const EmployeeList: React.FC = () => {
                   </td>
                   <td className="px-8 py-5 whitespace-nowrap">
                     <span className={`px-2.5 py-1 inline-flex text-[10px] font-bold rounded-lg uppercase tracking-wider
-                      ${employee.status === EmployeeStatus.ACTIVE 
-                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                      ${employee.status === EmployeeStatus.ACTIVE
+                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                         : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
                       {employee.status}
                     </span>
@@ -134,7 +144,7 @@ const EmployeeList: React.FC = () => {
                   </td>
                   <td className="px-8 py-5 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <button className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                      <button className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
                         <ExternalLink size={16} />
                       </button>
                       <button className="p-2 text-slate-300 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all">
@@ -157,7 +167,7 @@ const EmployeeList: React.FC = () => {
             </button>
             <div className="flex items-center gap-1">
               {[1, 2, 3, '...', 43].map((n, i) => (
-                <button 
+                <button
                   key={i}
                   className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-bold transition-all
                     ${n === 1 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-500 hover:bg-white hover:shadow-sm'}`}
