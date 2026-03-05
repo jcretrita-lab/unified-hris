@@ -25,6 +25,7 @@ import { MOCK_ADJUSTMENT_TYPES } from './settings/AdjustmentSetup';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_YEAR_END_DATA, generate13thMonthHistory } from './payroll/mockData';
 import Modal from '../components/Modal';
+import { INITIAL_SCHEDULES, getActiveRanges } from './PaySchedule';
 
 const YearEndBatch13thPage: React.FC = () => {
     const navigate = useNavigate();
@@ -147,6 +148,41 @@ const YearEndBatch13thPage: React.FC = () => {
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+    // --- Cutoff details for assumed/actual ---
+    const defaultSchedule = INITIAL_SCHEDULES[0];
+    const currentYear = 2026;
+    // Assumed: Nov (index 10), 2nd cutoff (index 1)
+    // Actual: Jan next year (index 0), 1st cutoff (index 0)
+    const cutoffMonth: number = stage === 'assumed' ? 10 : 0;
+    const cutoffIdx = stage === 'assumed' ? 1 : 0;
+    const cutoffYear = stage === 'assumed' ? currentYear : currentYear + 1;
+
+    const cutoffDetail = useMemo(() => {
+        const ranges = getActiveRanges(defaultSchedule, cutoffMonth, cutoffYear);
+        const range = ranges[cutoffIdx] || ranges[0];
+        if (!range) return null;
+
+        const payMonth = range.payDayNextMonth ? (cutoffMonth + 1) % 12 : cutoffMonth;
+        const payYear = (range.payDayNextMonth && cutoffMonth === 11) ? cutoffYear + 1 : cutoffYear;
+        const formattedPayDate = `${months[payMonth]} ${range.payDay}, ${payYear}`;
+
+        const endMonth = range.endDayNextMonth ? (cutoffMonth + 1) % 12 : cutoffMonth;
+        const formattedRange = `${months[cutoffMonth]} ${range.startDay} – ${months[endMonth]} ${range.endDay}`;
+
+        return {
+            month: months[cutoffMonth],
+            year: cutoffYear,
+            cutoff: cutoffIdx + 1,
+            range: formattedRange,
+            payDate: formattedPayDate
+        };
+    }, [defaultSchedule, cutoffMonth, cutoffYear, cutoffIdx, months]);
+
+    // Which months (0-indexed) are editable?
+    // For assumed (Nov cutoff): only Nov (10) and Dec (11) are editable
+    // For actual (Jan next year cutoff): all months editable since it's the reconciliation
+    const firstEditableMonth = stage === 'assumed' ? cutoffMonth : 0;
+
     const rowGroups = [
         {
             name: 'Earnings',
@@ -225,7 +261,7 @@ const YearEndBatch13thPage: React.FC = () => {
                         <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                             13th Month Adjustment Ledger
                             <span className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100">
-                                {stage === 'assumed' ? 'Assumed (Dec)' : 'Actual (Jan)'}
+                                {stage === 'assumed' ? 'Assumed' : 'Actual'}
                             </span>
                         </h2>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Workspace: Review and verify monthly earnings for the final 13th month payout</span>
@@ -327,6 +363,12 @@ const YearEndBatch13thPage: React.FC = () => {
                                         <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">[Manual Override]</span>
                                     )}
                                 </div>
+                                {cutoffDetail && (
+                                    <div className="text-[9px] font-bold text-slate-400 mt-1 flex items-center gap-1.5">
+                                        <Calendar size={10} className="text-slate-300" />
+                                        {cutoffDetail.month} {cutoffDetail.year} · Cutoff {cutoffDetail.cutoff} ({cutoffDetail.range}) · Pay: {cutoffDetail.payDate}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Action Buttons */}
@@ -406,8 +448,8 @@ const YearEndBatch13thPage: React.FC = () => {
                                                             </td>
                                                             {displayHistory.map((m: any, mIdx) => (
                                                                 <React.Fragment key={`${mIdx}-${rIdx}`}>
-                                                                    <td className={`px-2 py-3 text-right font-mono text-[11px] border-r border-slate-50 ${isEditingLedger ? 'bg-indigo-50/20' : ''}`}>
-                                                                        {isEditingLedger ? (
+                                                                    <td className={`px-2 py-3 text-right font-mono text-[11px] border-r border-slate-50 ${isEditingLedger && mIdx >= firstEditableMonth ? 'bg-indigo-50/20' : ''} ${isEditingLedger && mIdx < firstEditableMonth ? 'bg-slate-100/60' : ''}`}>
+                                                                        {isEditingLedger && mIdx >= firstEditableMonth ? (
                                                                             <input
                                                                                 type="number"
                                                                                 value={m.p1[row.key] || 0}
@@ -418,8 +460,8 @@ const YearEndBatch13thPage: React.FC = () => {
                                                                             <span className={m.p1[row.key] === 0 ? 'text-slate-300' : (row as any).color || 'text-slate-900'}>{formatVal(m.p1[row.key] || 0, row.isDeduction)}</span>
                                                                         )}
                                                                     </td>
-                                                                    <td className={`px-2 py-3 text-right font-mono text-[11px] border-r-2 border-slate-200 ${isEditingLedger ? 'bg-indigo-50/20' : ''}`}>
-                                                                        {isEditingLedger ? (
+                                                                    <td className={`px-2 py-3 text-right font-mono text-[11px] border-r-2 border-slate-200 ${isEditingLedger && mIdx >= firstEditableMonth ? 'bg-indigo-50/20' : ''} ${isEditingLedger && mIdx < firstEditableMonth ? 'bg-slate-100/60' : ''}`}>
+                                                                        {isEditingLedger && mIdx >= firstEditableMonth ? (
                                                                             <input
                                                                                 type="number"
                                                                                 value={m.p2[row.key] || 0}

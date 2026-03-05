@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_SETUPS, ApprovalSetup } from './ApprovalSetup';
+import { INITIAL_SCHEDULES, getActiveRanges } from './PaySchedule';
 
 // --- Types & Constants ---
 
@@ -117,6 +118,15 @@ interface PolicyState {
 
     serviceChargeDistribution: number;
     thirteenthMonthBasis: 'Basic Pay' | 'Total Earnings';
+    thirteenthMonthScheduleId: string | null;
+    thirteenthMonthAssumedMonth: number | null;
+    thirteenthMonthAssumedCutoff: number | null;
+    thirteenthMonthActualMonth: number | null;
+    thirteenthMonthActualCutoff: number | null;
+    // Disbursement config
+    thirteenthMonthDisbursementMode: 'Full' | 'Partial';
+    thirteenthMonthPartialCount: number;
+    thirteenthMonthPartialPayDates: (string | null)[];
     serviceIncentiveLeave: number;
 
     // De Minimis (Tax Exempt Ceilings)
@@ -194,6 +204,14 @@ const INITIAL_STATE: PolicyState = {
 
     serviceChargeDistribution: 100,
     thirteenthMonthBasis: 'Basic Pay',
+    thirteenthMonthScheduleId: 'ps-001',
+    thirteenthMonthAssumedMonth: null,
+    thirteenthMonthAssumedCutoff: null,
+    thirteenthMonthActualMonth: null,
+    thirteenthMonthActualCutoff: null,
+    thirteenthMonthDisbursementMode: 'Full',
+    thirteenthMonthPartialCount: 2,
+    thirteenthMonthPartialPayDates: [null, null],
     serviceIncentiveLeave: 5,
 
     riceSubsidyCap: 2000,
@@ -331,6 +349,58 @@ const PoliciesPage: React.FC = () => {
     const [primaryTab, setPrimaryTab] = useState<'Government' | 'Company'>('Government');
     const [activeTab, setActiveTab] = useState<string>('Book3');
     const [policies, setPolicies] = useState<PolicyState>(INITIAL_STATE);
+
+    const currentYear = new Date().getFullYear();
+    const selectedPaySchedule = React.useMemo(() => {
+        return INITIAL_SCHEDULES.find(s => s.id === policies.thirteenthMonthScheduleId) || INITIAL_SCHEDULES[0];
+    }, [policies.thirteenthMonthScheduleId]);
+
+    const allCutoffs = React.useMemo(() => {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const list: { month: number; index: number; label: string; range: any; year: number }[] = [];
+        // Current year: Jan–Dec
+        for (let m = 0; m < 12; m++) {
+            const ranges = getActiveRanges(selectedPaySchedule, m, currentYear);
+            ranges.forEach((range, idx) => {
+                let rangeText = `${range.startDay} - ${range.endDay}`;
+                if (range.endDayNextMonth) {
+                    rangeText = `${range.startDay} - ${range.endDay} (Next Mo)`;
+                }
+                let payText = `${range.payDay}`;
+                if (range.payDayNextMonth || (range.payDay < range.startDay && range.endDayNextMonth === undefined)) {
+                    payText = `${range.payDay} (Next Mo)`;
+                }
+                list.push({
+                    month: m,
+                    index: idx,
+                    year: currentYear,
+                    label: `${monthNames[m]} ${currentYear} Cutoff ${idx + 1} (${rangeText}) | Pay: ${payText}`,
+                    range
+                });
+            });
+        }
+        // Next year: January only (for actual 13th month)
+        const nextYear = currentYear + 1;
+        const janRanges = getActiveRanges(selectedPaySchedule, 0, nextYear);
+        janRanges.forEach((range, idx) => {
+            let rangeText = `${range.startDay} - ${range.endDay}`;
+            if (range.endDayNextMonth) {
+                rangeText = `${range.startDay} - ${range.endDay} (Next Mo)`;
+            }
+            let payText = `${range.payDay}`;
+            if (range.payDayNextMonth || (range.payDay < range.startDay && range.endDayNextMonth === undefined)) {
+                payText = `${range.payDay} (Next Mo)`;
+            }
+            list.push({
+                month: 0,
+                index: idx,
+                year: nextYear,
+                label: `Jan ${nextYear} Cutoff ${idx + 1} (${rangeText}) | Pay: ${payText}`,
+                range
+            });
+        });
+        return list;
+    }, [selectedPaySchedule, currentYear]);
 
     // Divisor Setup State
     const [divisors, setDivisors] = useState<Divisor[]>([
@@ -1172,6 +1242,207 @@ const PoliciesPage: React.FC = () => {
                                                     <p className="text-[10px] text-slate-400 italic">Enable to configure performance-based bonuses.</p>
                                                 )}
                                             </div>
+                                        </div>
+
+                                        {/* 13th Month Cutoff & Disbursement Configuration */}
+                                        <div className="mt-6 bg-white p-6 border border-slate-200 rounded-2xl shadow-sm">
+                                            <div className="mb-6">
+                                                <h4 className="font-bold text-slate-900 text-sm">13th Month Cutoff & Disbursement</h4>
+                                                <p className="text-[10px] text-slate-400 italic">Configure cutoff schedules, pay dates, and how the 13th month pay will be disbursed.</p>
+                                            </div>
+
+                                            {/* Base Pay Schedule */}
+                                            <div className="mb-6 border-b border-slate-100 pb-4">
+                                                <label className="block text-xs font-bold text-slate-700 mb-2">Base Pay Schedule</label>
+                                                <select
+                                                    value={policies.thirteenthMonthScheduleId || ''}
+                                                    onChange={(e) => {
+                                                        updatePolicy('thirteenthMonthScheduleId', e.target.value);
+                                                        updatePolicy('thirteenthMonthAssumedMonth', null);
+                                                        updatePolicy('thirteenthMonthAssumedCutoff', null);
+                                                        updatePolicy('thirteenthMonthActualMonth', null);
+                                                        updatePolicy('thirteenthMonthActualCutoff', null);
+                                                    }}
+                                                    className="w-full md:w-1/2 p-2 border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-indigo-500 bg-slate-50 relative z-20"
+                                                >
+                                                    {INITIAL_SCHEDULES.map(s => (
+                                                        <option key={s.id} value={s.id}>{s.name} ({s.frequency})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* Assumed & Actual Cutoff Selectors */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 mb-6 border-b border-slate-100 pb-6">
+                                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl relative">
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Assumed Cutoff</label>
+                                                    <select
+                                                        value={policies.thirteenthMonthAssumedMonth !== null && policies.thirteenthMonthAssumedCutoff !== null ? JSON.stringify({ month: policies.thirteenthMonthAssumedMonth, index: policies.thirteenthMonthAssumedCutoff }) : ''}
+                                                        onChange={(e) => {
+                                                            if (!e.target.value) return;
+                                                            const val = JSON.parse(e.target.value);
+                                                            updatePolicy('thirteenthMonthAssumedMonth', val.month);
+                                                            updatePolicy('thirteenthMonthAssumedCutoff', val.index);
+                                                        }}
+                                                        className="w-full p-2 border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-indigo-500 bg-white"
+                                                    >
+                                                        <option value="" disabled>Select Cutoff &amp; Pay Date...</option>
+                                                        {allCutoffs.map((c, i) => (
+                                                            <option key={i} value={JSON.stringify({ month: c.month, index: c.index })}>{c.label}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl relative">
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Actual Cutoff</label>
+                                                    <select
+                                                        value={policies.thirteenthMonthActualMonth !== null && policies.thirteenthMonthActualCutoff !== null ? JSON.stringify({ month: policies.thirteenthMonthActualMonth, index: policies.thirteenthMonthActualCutoff }) : ''}
+                                                        onChange={(e) => {
+                                                            if (!e.target.value) return;
+                                                            const val = JSON.parse(e.target.value);
+                                                            updatePolicy('thirteenthMonthActualMonth', val.month);
+                                                            updatePolicy('thirteenthMonthActualCutoff', val.index);
+                                                        }}
+                                                        className="w-full p-2 border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-indigo-500 bg-white"
+                                                    >
+                                                        <option value="" disabled>Select Cutoff &amp; Pay Date...</option>
+                                                        {allCutoffs.map((c, i) => (
+                                                            <option key={i} value={JSON.stringify({ month: c.month, index: c.index })}>{c.label}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* Disbursement Mode */}
+                                            <div className="mb-4">
+                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Assumed 13th Month Disbursement Mode</label>
+                                            </div>
+                                            <div className="flex gap-2 mb-6">
+                                                {(['Full', 'Partial'] as const).map(mode => (
+                                                    <button
+                                                        key={mode}
+                                                        onClick={() => {
+                                                            updatePolicy('thirteenthMonthDisbursementMode', mode);
+                                                            if (mode === 'Full') {
+                                                                updatePolicy('thirteenthMonthPartialCount', 2);
+                                                                updatePolicy('thirteenthMonthPartialPayDates', [null, null]);
+                                                            }
+                                                        }}
+                                                        className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold border-2 transition-all ${policies.thirteenthMonthDisbursementMode === mode
+                                                            ? 'bg-amber-50 border-amber-500 text-amber-700 shadow-sm'
+                                                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                                                            }`}
+                                                    >
+                                                        {mode === 'Full' ? '\ud83d\udcb0 Full Payout' : '\ud83d\udcca Partial Disbursement'}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {policies.thirteenthMonthDisbursementMode === 'Full' ? (
+                                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">13th Month Pay Date</label>
+                                                    {(() => {
+                                                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                        const assumed = allCutoffs.find(c => c.month === policies.thirteenthMonthAssumedMonth && c.index === policies.thirteenthMonthAssumedCutoff);
+                                                        if (assumed) {
+                                                            const payDay = assumed.range.payDay;
+                                                            const payMonth = assumed.range.payDayNextMonth ? (policies.thirteenthMonthAssumedMonth! + 1) % 12 : policies.thirteenthMonthAssumedMonth!;
+                                                            return (
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="p-3 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900 flex-1">
+                                                                        {monthNames[payMonth]} {payDay}, {assumed.year || currentYear}
+                                                                    </div>
+                                                                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Auto-filled from cutoff</span>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return <p className="text-[10px] text-slate-400 italic">Select an Assumed Cutoff above to auto-fill the pay date.</p>;
+                                                    })()}
+                                                    <div className="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-lg">
+                                                        <div className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Sample Computation</div>
+                                                        <div className="text-sm font-bold text-amber-900">{'\u20b1'}24,000.00 {'\u2192'} <span className="text-amber-600">{'\u20b1'}24,000.00</span> (1 disbursement)</div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Number of Partial Disbursements</label>
+                                                        <div className="flex items-center gap-3">
+                                                            <input
+                                                                type="number"
+                                                                min={2}
+                                                                max={6}
+                                                                value={policies.thirteenthMonthPartialCount}
+                                                                onChange={(e) => {
+                                                                    const count = Math.max(2, Math.min(6, Number(e.target.value) || 2));
+                                                                    updatePolicy('thirteenthMonthPartialCount', count);
+                                                                    updatePolicy('thirteenthMonthPartialPayDates', Array(count).fill(null));
+                                                                }}
+                                                                className="w-20 p-2 border border-slate-200 rounded-lg text-sm font-bold text-center outline-none focus:border-indigo-500 bg-white"
+                                                            />
+                                                            <span className="text-xs font-bold text-slate-500">disbursements</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+                                                        <div className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Sample Computation</div>
+                                                        <div className="text-sm font-bold text-amber-900">
+                                                            {'\u20b1'}24,000.00 {'\u2192'} <span className="text-amber-600">{'\u20b1'}{(24000 / policies.thirteenthMonthPartialCount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span> {'\u00d7'} {policies.thirteenthMonthPartialCount} disbursements
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        {Array.from({ length: policies.thirteenthMonthPartialCount }).map((_, idx) => {
+                                                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                            const isFirst = idx === 0;
+                                                            const assumed = allCutoffs.find(c => c.month === policies.thirteenthMonthAssumedMonth && c.index === policies.thirteenthMonthAssumedCutoff);
+                                                            let autoPayDate: string | null = null;
+                                                            if (isFirst && assumed) {
+                                                                const payDay = assumed.range.payDay;
+                                                                const payMonth = assumed.range.payDayNextMonth ? (policies.thirteenthMonthAssumedMonth! + 1) % 12 : policies.thirteenthMonthAssumedMonth!;
+                                                                autoPayDate = `${monthNames[payMonth]} ${payDay}, ${assumed.year || currentYear}`;
+                                                            }
+                                                            const currentPayDate = policies.thirteenthMonthPartialPayDates[idx] || autoPayDate || null;
+
+                                                            return (
+                                                                <div key={idx} className={`p-4 border rounded-xl ${isFirst ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-100'}`}>
+                                                                    <div className="flex items-center justify-between mb-2">
+                                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Disbursement {idx + 1} Pay Date</label>
+                                                                        <span className="text-[10px] font-bold text-amber-600">{'\u20b1'}{(24000 / policies.thirteenthMonthPartialCount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                                    </div>
+                                                                    {isFirst && autoPayDate ? (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="flex-1 p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900">
+                                                                                {autoPayDate}
+                                                                            </div>
+                                                                            <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Auto</span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="relative">
+                                                                            <input
+                                                                                type="date"
+                                                                                value={currentPayDate || ''}
+                                                                                onChange={(e) => {
+                                                                                    const newDates = [...policies.thirteenthMonthPartialPayDates];
+                                                                                    newDates[idx] = e.target.value || null;
+                                                                                    updatePolicy('thirteenthMonthPartialPayDates', newDates);
+                                                                                }}
+                                                                                className="w-full p-2 border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-indigo-500 bg-white text-transparent caret-transparent"
+                                                                                style={{ colorScheme: 'light' }}
+                                                                            />
+                                                                            <div className="absolute inset-0 flex items-center px-3 pointer-events-none text-sm font-bold text-slate-900">
+                                                                                {currentPayDate ? (() => {
+                                                                                    const d = new Date(currentPayDate + 'T00:00:00');
+                                                                                    const mn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                                                    return `${mn[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+                                                                                })() : <span className="text-slate-400 font-medium">Select Pay Date...</span>}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
