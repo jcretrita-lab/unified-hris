@@ -173,6 +173,7 @@ interface PolicyState {
     lastPayHoldMonths: number;
     requireAttendanceBeforeAfterHoliday: boolean;
     autoRejectDays: number;
+    shiftRequestDeadlineDays: number;
 };
 
 const INITIAL_STATE: PolicyState = {
@@ -247,7 +248,8 @@ const INITIAL_STATE: PolicyState = {
     performanceBonusBasis: '13th Month',
     performanceBonusRequiresAppraisal: false,
     requireAttendanceBeforeAfterHoliday: false,
-    autoRejectDays: 7
+    autoRejectDays: 7,
+    shiftRequestDeadlineDays: 5,
 
 };
 
@@ -1044,6 +1046,29 @@ const PoliciesPage: React.FC = () => {
 
                                                 <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
                                                     Final pay will be released after the specified number of months. Clearance from Accounting is required for negative last pay scenarios.
+                                                </p>
+                                            </label>
+                                        </div>
+
+                                        {/* Shift Request Deadline */}
+                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors flex flex-col justify-between">
+                                            <label className="block">
+                                                <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-3 block">
+                                                    Shift Request Deadline
+                                                </span>
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        max={30}
+                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        value={policies.shiftRequestDeadlineDays}
+                                                        onChange={(e) => updatePolicy('shiftRequestDeadlineDays', Number(e.target.value))}
+                                                    />
+                                                    <span className="text-sm font-bold text-slate-700">Days Before Cutoff</span>
+                                                </div>
+                                                <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
+                                                    Shift change requests must be submitted at least this many days before the cutoff ends. Requests after this deadline will not be processed for the current period.
                                                 </p>
                                             </label>
                                         </div>

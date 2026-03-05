@@ -56,6 +56,7 @@ interface Shift {
   compressedStartTime?: string;
   compressedEndTime?: string;
   compressedWorkdays?: string;
+  compressedDayOff?: string; // The specific day left out when compressed
 
   lastModifiedBy: string;
   lastModified: string;
@@ -257,17 +258,18 @@ const MOCK_SHIFTS: Shift[] = [
     id: '11',
     name: 'Diwa Employees',
     isCompressible: true,
-    // Non-compressed (9-hour workday, Mon–Fri)
+    // Non-compressed (9-hour workday, Mon–Sat)
     workHours: 9,
     startTime: '08:00',
     endTime: '17:00',
-    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    workdays: 'Mon – Fri',
-    // Compressed (10-hour workday, Mon–Fri)
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    workdays: 'Mon – Sat',
+    // Compressed (10-hour workday, Mon–Fri; Saturday is the day left out)
     compressedWorkHours: 10,
     compressedStartTime: '08:00',
     compressedEndTime: '18:00',
     compressedWorkdays: 'Mon – Fri',
+    compressedDayOff: 'Sat',
     lastModifiedBy: 'HR Admin',
     lastModified: 'Mar 4, 2026 10:15',
     isDefault: false,
@@ -337,6 +339,7 @@ const ShiftManagement: React.FC = () => {
         compressedStartTime: '06:00',
         compressedEndTime: '18:00',
         compressedWorkdays: 'Mon – Thu',
+        compressedDayOff: '',
         isDefault: false,
         subShifts: []
       });
@@ -386,7 +389,8 @@ const ShiftManagement: React.FC = () => {
         ),
         compressedStartTime: formData.compressedStartTime,
         compressedEndTime: formData.compressedEndTime,
-        compressedWorkdays: formData.compressedWorkdays || 'Mon – Thu'
+        compressedWorkdays: formData.compressedWorkdays || 'Mon – Thu',
+        ...(formData.compressedDayOff && { compressedDayOff: formData.compressedDayOff }),
       }),
 
       lastModifiedBy: 'Current User',
@@ -624,37 +628,78 @@ const ShiftManagement: React.FC = () => {
                       {shift.isCompressible ? (
                         <>
                           <div>
-                            <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider block mb-1">
-                              Compressed · {shift.compressedWorkdays} · {shift.compressedWorkHours}h
+                            <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider block mb-1.5">
+                              Compressed · {shift.compressedWorkHours}h/day
                             </span>
+                            <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                              {shift.workDays.map(day => {
+                                const isOff = day === shift.compressedDayOff;
+                                return (
+                                  <span key={day} title={isOff ? `${day} — day off (compressed)` : day} className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${isOff ? 'bg-rose-50 text-rose-400 border-rose-200 line-through decoration-rose-300' : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
+                                    {day}
+                                  </span>
+                                );
+                              })}
+                            </div>
                             <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 w-fit">
                               <span className="text-xs font-mono font-bold text-amber-700">
                                 {formatTime(shift.compressedStartTime!)} – {formatTime(shift.compressedEndTime!)}
                               </span>
                             </div>
+                            <span className="text-[9px] text-amber-500 font-medium mt-1 block">
+                              Weekly: {(shift.compressedWorkHours || 0) * shift.workDays.filter(d => d !== shift.compressedDayOff).length}h
+                            </span>
+                            {shift.compressedDayOff && (
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase">Day Off:</span>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-500 border border-rose-100">
+                                  {shift.compressedDayOff}
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           <div>
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                              Non-Compressed · {shift.workdays} · {shift.workHours}h
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                              Non-Compressed · {shift.workHours}h/day
                             </span>
+                            <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                              {shift.workDays.map(day => (
+                                <span key={day} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                  {day}
+                                </span>
+                              ))}
+                            </div>
                             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
                               <span className="text-xs font-mono font-bold text-slate-700">
                                 {formatTime(shift.startTime)} – {formatTime(shift.endTime)}
                               </span>
                             </div>
+                            <span className="text-[9px] text-slate-400 font-medium mt-1 block">
+                              Weekly: {(shift.workHours || 0) * (shift.workDays?.length || 5)}h
+                            </span>
                           </div>
                         </>
                       ) : (
                         <div>
-                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                            {shift.workdays} · {shift.workHours}h
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                            {shift.workHours}h/day
                           </span>
+                          <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                            {shift.workDays.map(day => (
+                              <span key={day} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                {day}
+                              </span>
+                            ))}
+                          </div>
                           <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
                             <span className="text-xs font-mono font-bold text-slate-700">
                               {formatTime(shift.startTime)} – {formatTime(shift.endTime)}
                             </span>
                           </div>
+                          <span className="text-[9px] text-slate-400 font-medium mt-1 block">
+                            Weekly: {(shift.workHours || 0) * (shift.workDays?.length || 5)}h
+                          </span>
                         </div>
                       )}
 
@@ -900,6 +945,22 @@ const ShiftManagement: React.FC = () => {
                           setFormData({ ...formData, compressedWorkdays: e.target.value })
                         }
                       />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">
+                        Compressed Day Off
+                      </label>
+                      <select
+                        className="w-full border border-amber-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-sm font-bold text-slate-900"
+                        value={formData.compressedDayOff || ''}
+                        onChange={(e) => setFormData({ ...formData, compressedDayOff: e.target.value })}
+                      >
+                        <option value="">-- None / Auto --</option>
+                        {(formData.workDays || []).map(day => (
+                          <option key={day} value={day}>{day}</option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-amber-600 mt-1">The day left out (rest day) when compressed schedule is active.</p>
                     </div>
                   </div>
                 </div>
