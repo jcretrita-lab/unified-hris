@@ -635,6 +635,7 @@ const ApprovalSetupPage: React.FC = () => {
                         <option value="Leave Management">Leave Management</option>
                         <option value="Time & Attendance">Time & Attendance</option>
                         <option value="Payroll Dispute">Payroll Dispute</option>
+                        <option value="PAF Request">PAF Request</option>
                         <option value="Official Business">Official Business</option>
                         <option value="Shift Change Request">Shift Change Request</option>
                       </select>
