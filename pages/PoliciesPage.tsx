@@ -33,6 +33,7 @@ import {
     Calculator,
     ArrowLeftRight,
     Check,
+    X,
     ToggleLeft,
     ToggleRight,
     Building2,
@@ -2610,20 +2611,42 @@ const PoliciesPage: React.FC = () => {
                                 <div className="space-y-10">
 
                                     {/* === RETIREMENT PAY TOGGLE === */}
-                                    <div className="border border-emerald-200 bg-emerald-50 rounded-xl p-5">
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <button onClick={() => updatePolicy('retirementPayEnabled', !policies.retirementPayEnabled)} className="shrink-0">
-                                                {policies.retirementPayEnabled ? (
-                                                    <ToggleRight size={28} className="text-emerald-600" />
-                                                ) : (
-                                                    <ToggleLeft size={28} className="text-slate-300" />
-                                                )}
+                                    <div className="border-2 border-emerald-200 bg-emerald-50/50 rounded-2xl p-6">
+                                        <div className="flex items-center gap-5">
+                                            <button 
+                                                onClick={() => updatePolicy('retirementPayEnabled', !policies.retirementPayEnabled)}
+                                                className={`shrink-0 relative inline-flex h-10 w-20 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-200/50 cursor-pointer ${policies.retirementPayEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                aria-pressed={policies.retirementPayEnabled}
+                                                type="button"
+                                            >
+                                                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-transform duration-300 ${policies.retirementPayEnabled ? 'translate-x-10' : 'translate-x-1'}`}>
+                                                    {policies.retirementPayEnabled ? (
+                                                        <Check size={18} className="text-emerald-500" />
+                                                    ) : (
+                                                        <X size={18} className="text-slate-400" />
+                                                    )}
+                                                </span>
                                             </button>
-                                            <div>
-                                                <span className="text-sm font-bold text-slate-800 block">Enable Retirement Pay</span>
-                                                <span className="text-[11px] text-slate-500 block mt-0.5">Toggle to enable or disable retirement pay calculations and processing.</span>
+                                            <div 
+                                                className="flex-1 cursor-pointer" 
+                                                onClick={() => updatePolicy('retirementPayEnabled', !policies.retirementPayEnabled)}
+                                                role="switch"
+                                                aria-checked={policies.retirementPayEnabled}
+                                                tabIndex={0}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        updatePolicy('retirementPayEnabled', !policies.retirementPayEnabled);
+                                                    }
+                                                }}
+                                            >
+                                                <span className={`text-base font-bold block transition-colors duration-200 ${policies.retirementPayEnabled ? 'text-emerald-700' : 'text-slate-600'}`}>Enable Retirement Pay</span>
+                                                <span className="text-xs text-slate-500 block mt-1">Toggle to enable or disable retirement pay calculations and processing.</span>
                                             </div>
-                                        </label>
+                                            <div className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider ${policies.retirementPayEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>
+                                                {policies.retirementPayEnabled ? 'Active' : 'Inactive'}
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* === RETIREMENT PAY === */}

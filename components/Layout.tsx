@@ -109,6 +109,7 @@ const SEARCHABLE_PATHS: string[] = [
   '/monitor/approvals',
   '/monitor/reports',
   '/monitor/notifications',
+  '/monitor/overtime',
   // Settings
   '/settings/overview',
   '/settings/employee-fields',
@@ -126,6 +127,7 @@ const SEARCHABLE_PATHS: string[] = [
   '/settings/roles',
   '/settings/notifications',
   '/settings/audit',
+  '/settings/employee-schedule',
 ];
 
 const SEARCH_ITEMS: SearchItem[] = SEARCHABLE_PATHS.map(pathToSearchItem);
