@@ -611,6 +611,7 @@ const ApprovalSetupPage: React.FC = () => {
                         <option value="Leave Management">Leave Management</option>
                         <option value="Time & Attendance">Time & Attendance</option>
                         <option value="Payroll Dispute">Payroll Dispute</option>
+                        <option value="PAF Request">PAF Request</option>
                         <option value="Official Business">Official Business</option>
                       </select>
                       <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-slate-400 pointer-events-none" size={16} />
