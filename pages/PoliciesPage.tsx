@@ -44,6 +44,7 @@ import {
     ShieldPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MOCK_SETUPS, ApprovalSetup } from './ApprovalSetup';
 
 // --- Types & Constants ---
 
@@ -138,7 +139,7 @@ interface PolicyState {
     retirementAgeMax: number;
     retirementPayMultiplier: number;
     noticePeriodDays: number;
-    
+
 
     // Special Laws
     maternityLeave: number;
@@ -170,7 +171,7 @@ interface PolicyState {
 
     lastPayHoldMonths: number;
     requireAttendanceBeforeAfterHoliday: boolean;
-
+    autoRejectDays: number;
 };
 
 const INITIAL_STATE: PolicyState = {
@@ -243,7 +244,8 @@ const INITIAL_STATE: PolicyState = {
     performanceBonusEnabled: false,
     performanceBonusBasis: '13th Month',
     performanceBonusRequiresAppraisal: false,
-    requireAttendanceBeforeAfterHoliday: false
+    requireAttendanceBeforeAfterHoliday: false,
+    autoRejectDays: 7
 
 };
 
@@ -339,6 +341,10 @@ const PoliciesPage: React.FC = () => {
     const [editingDivisorId, setEditingDivisorId] = useState<string | null>(null);
     const [divisorForm, setDivisorForm] = useState<Partial<Divisor>>({ name: '', days: 0 });
     const [hasChanges, setHasChanges] = useState(false);
+
+    // Approvals State
+    const [isApprovalsEditMode, setIsApprovalsEditMode] = useState(false);
+    const [approvalsSetups, setApprovalsSetups] = useState<ApprovalSetup[]>(MOCK_SETUPS);
 
     // --- Separation Pay Calculator ---
     const [sepCalcSalary, setSepCalcSalary] = useState<number>(20000);
@@ -616,6 +622,7 @@ const PoliciesPage: React.FC = () => {
                                                 { id: 'Divisor', icon: Calculator },
                                                 { id: 'Works', icon: Clock },
                                                 { id: 'PostEmployment', icon: Briefcase },
+                                                { id: 'Approvals', icon: Clock },
                                                 { id: 'Special', icon: Heart },
                                             ];
                                             const tabs = primaryTab === 'Government' ? govTabs : companyTabs;
@@ -640,7 +647,8 @@ const PoliciesPage: React.FC = () => {
                                                 activeTab === 'Divisor' ? 'Divisor Setup' :
                                                     activeTab === 'Works' ? 'Works & Wages' :
                                                         activeTab === 'PostEmployment' ? 'Separation & Retirement' :
-                                                            'Special Laws & Leaves'
+                                                            activeTab === 'Approvals' ? 'Approvals Policy' :
+                                                                'Special Laws & Leaves'
                                             )}
                                         </div>
                                     </div>
@@ -677,6 +685,7 @@ const PoliciesPage: React.FC = () => {
                                                     { id: 'Divisor', icon: Calculator, label: 'Divisor Setup', desc: 'Configure working days per year' },
                                                     { id: 'Works', icon: Clock, label: 'Works & Wages', desc: 'Company-specific attendance rules' },
                                                     { id: 'PostEmployment', icon: Briefcase, label: 'Separation & Retirement', desc: 'Internal calculators & policies' },
+                                                    { id: 'Approvals', icon: Clock, label: 'Approvals Policy', desc: 'Auto-rejection & workflows' },
                                                     { id: 'Special', icon: Heart, label: 'Special Laws & Leaves', desc: 'Company-specific leave benefits' },
                                                 ]).map((item) => (
                                                     <button
@@ -994,47 +1003,47 @@ const PoliciesPage: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         {/* Require Attendance Before/After Holiday */}
                                         <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors flex flex-col justify-between">
-                                        <label className="flex items-start gap-4 cursor-pointer">
-                                            <input
-                                            type="checkbox"
-                                            className="mt-1 w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                                            checked={policies.requireAttendanceBeforeAfterHoliday}
-                                            onChange={(e) => updatePolicy('requireAttendanceBeforeAfterHoliday', e.target.checked)}
-                                            />
+                                            <label className="flex items-start gap-4 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="mt-1 w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+                                                    checked={policies.requireAttendanceBeforeAfterHoliday}
+                                                    onChange={(e) => updatePolicy('requireAttendanceBeforeAfterHoliday', e.target.checked)}
+                                                />
 
-                                            <div className="flex flex-col">
-                                            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">
-                                                Require attendance before and after holiday
-                                            </span>
-                                            <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                                                Employees must be present on the working day before and after a holiday to qualify for holiday pay.
-                                            </p>
-                                            </div>
-                                        </label>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-slate-700 uppercase tracking-widest">
+                                                        Require attendance before and after holiday
+                                                    </span>
+                                                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                                        Employees must be present on the working day before and after a holiday to qualify for holiday pay.
+                                                    </p>
+                                                </div>
+                                            </label>
                                         </div>
 
                                         {/* Last Pay Hold Duration */}
                                         <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors flex flex-col justify-between">
-                                        <label className="block">
-                                            <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-3 block">
-                                            Last Pay Hold Duration
-                                            </span>
+                                            <label className="block">
+                                                <span className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-3 block">
+                                                    Last Pay Hold Duration
+                                                </span>
 
-                                            <div className="flex items-center gap-3">
-                                            <input
-                                                type="number"
-                                                min={0}
-                                                className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
-                                                value={policies.lastPayHoldMonths}
-                                                onChange={(e) => updatePolicy('lastPayHoldMonths', Number(e.target.value))}
-                                            />
-                                            <span className="text-sm font-bold text-slate-700">Months</span>
-                                            </div>
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        value={policies.lastPayHoldMonths}
+                                                        onChange={(e) => updatePolicy('lastPayHoldMonths', Number(e.target.value))}
+                                                    />
+                                                    <span className="text-sm font-bold text-slate-700">Months</span>
+                                                </div>
 
-                                            <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
-                                            Final pay will be released after the specified number of months. Clearance from Accounting is required for negative last pay scenarios.
-                                            </p>
-                                        </label>
+                                                <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
+                                                    Final pay will be released after the specified number of months. Clearance from Accounting is required for negative last pay scenarios.
+                                                </p>
+                                            </label>
                                         </div>
                                     </div>
 
@@ -1104,8 +1113,8 @@ const PoliciesPage: React.FC = () => {
                                                             key={basis}
                                                             onClick={() => updatePolicy('thirteenthMonthBasis', basis)}
                                                             className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all border ${policies.thirteenthMonthBasis === basis
-                                                                    ? 'bg-amber-50 border-amber-500 text-amber-700'
-                                                                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                                                                ? 'bg-amber-50 border-amber-500 text-amber-700'
+                                                                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
                                                                 }`}
                                                         >
                                                             {basis}
@@ -1140,8 +1149,8 @@ const PoliciesPage: React.FC = () => {
                                                                         key={basis}
                                                                         onClick={() => updatePolicy('performanceBonusBasis', basis)}
                                                                         className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold border transition-all ${policies.performanceBonusBasis === basis
-                                                                                ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                                                                                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                                                                            ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                                                                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
                                                                             }`}
                                                                     >
                                                                         {basis}
@@ -2698,6 +2707,75 @@ const PoliciesPage: React.FC = () => {
                                                     Multiplier ({policies.retirementPayMultiplier} days) and age thresholds (optional: {policies.retirementAgeMin}, compulsory: {policies.retirementAgeMax}) are set in Government Standards › Book VI.
                                                 </p>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- COMPANY: APPROVALS --- */}
+                            {primaryTab === 'Company' && activeTab === 'Approvals' && (
+                                <div className="space-y-10">
+                                    <div className="flex justify-between items-start">
+                                        <SectionTitle
+                                            icon={Clock}
+                                            title="Approvals Policy"
+                                            description="View and edit automated rules and auto-rejection standards across all approval requests."
+                                            citation="Company Policy"
+                                        />
+                                        <button
+                                            onClick={() => setIsApprovalsEditMode(!isApprovalsEditMode)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isApprovalsEditMode ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                                        >
+                                            {isApprovalsEditMode ? <Check size={16} /> : <Edit size={16} />}
+                                            {isApprovalsEditMode ? 'Done Editing' : 'Edit Mode'}
+                                        </button>
+                                    </div>
+                                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Approval Setup Name</th>
+                                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-48">Auto-Rejection Policy (Days)</th>
+                                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-32">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {approvalsSetups.map(setup => (
+                                                        <tr key={setup.id} className="hover:bg-slate-50 transition-colors">
+                                                            <td className="px-6 py-4 font-bold text-slate-700">{setup.name}</td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                {isApprovalsEditMode ? (
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            min="0"
+                                                                            className="w-16 text-center py-1.5 px-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-100 outline-none"
+                                                                            value={setup.autoRejectDays}
+                                                                            onChange={(e) => {
+                                                                                const updated = approvalsSetups.map(s => s.id === setup.id ? { ...s, autoRejectDays: Number(e.target.value) } : s);
+                                                                                setApprovalsSetups(updated);
+                                                                                setHasChanges(true);
+                                                                            }}
+                                                                        />
+                                                                        <span className="text-[10px] text-slate-500">Days</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="font-bold text-slate-900">{setup.autoRejectDays}</span>
+                                                                        <span className="text-[10px] text-slate-500 ml-1">Days</span>
+                                                                    </>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md ${setup.autoRejectDays > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                                    {setup.autoRejectDays > 0 ? 'Active' : 'Disabled'}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>

@@ -26,7 +26,7 @@ import Modal from '../../components/Modal';
 export const MOCK_FORMULA_TEMPLATES = [
     {
         id: 'sss',
-        name: 'SSS Contribution Table (2024)',
+        name: 'SSS Contribution Table',
         description: 'Standard Social Security System contribution rates for 2024. Includes employee and employer shares.',
         type: 'contribution',
         columns: ['Min Salary', 'Max Salary', 'Base Amount', 'Excess Rate', 'Employee Share', 'Employer Share'],
@@ -38,11 +38,12 @@ export const MOCK_FORMULA_TEMPLATES = [
             ['6250', '6749.99', '0', '0', '292.50', '617.50'],
             ['6750', '7249.99', '0', '0', '315.00', '665.00'],
             ['7250', '7749.99', '0', '0', '337.50', '712.50']
-        ]
+        ],
+        _initialVersion: '2024'
     },
     {
         id: 'philhealth',
-        name: 'PhilHealth Premium (2025)',
+        name: 'PhilHealth Premium',
         description: 'PhilHealth contribution rates revised for 2025. Based on monthly basic salary.',
         type: 'contribution',
         columns: ['Min Salary', 'Max Salary', 'Base Amount', 'Excess Rate', 'Employee Share', 'Employer Share'],
@@ -50,11 +51,12 @@ export const MOCK_FORMULA_TEMPLATES = [
             ['10000', '10000', '0', '0', '250.00', '250.00'],
             ['10000.01', '99999.99', '0', '0.025', 'varies', 'varies'],
             ['100000', '100000', '0', '0', '2500.00', '2500.00'],
-        ]
+        ],
+        _initialVersion: '2025'
     },
     {
         id: 'pagibig',
-        name: 'Pag-IBIG HDMF (New)',
+        name: 'Pag-IBIG HDMF',
         description: 'Revised Pag-IBIG HDMF contribution rates for 2024-2025 with up to ₱5,000 ceiling.',
         type: 'contribution',
         columns: ['Min Salary', 'Max Salary', 'Base Amount', 'Excess Rate', 'Employee Share', 'Employer Share'],
@@ -62,7 +64,8 @@ export const MOCK_FORMULA_TEMPLATES = [
             ['1', '1500', '0', '0', '15.00', '30.00'],
             ['1501', '5000', '0', '0', '100.00', '100.00'],
             ['5001', 'null', '0', '0', '200.00', '200.00'],
-        ]
+        ],
+        _initialVersion: '2024'
     },
     {
         id: 'tax',
@@ -77,7 +80,8 @@ export const MOCK_FORMULA_TEMPLATES = [
             ['66667', '166666', '8541.67', '25', '0', '0'],
             ['166667', '666666', '33541.67', '30', '0', '0'],
             ['666667', 'null', '183541.67', '35', '0', '0'],
-        ]
+        ],
+        _initialVersion: '2018'
     },
     {
         id: 'hmo',
@@ -90,7 +94,8 @@ export const MOCK_FORMULA_TEMPLATES = [
             ['30001', '60000', '2500.00', '0', '500.00', '2000.00'],
             ['60001', '120000', '4500.00', '0', '900.00', '3600.00'],
             ['120001', 'null', '8000.00', '0', '1600.00', '6400.00'],
-        ]
+        ],
+        _initialVersion: '2024'
     },
     {
         id: 'insurance',
@@ -103,7 +108,8 @@ export const MOCK_FORMULA_TEMPLATES = [
             ['50001', '250000', '300.00', '0.20', '50.00', 'Declining'],
             ['250001', '1000000', '600.00', '0.15', '100.00', 'Declining'],
             ['1000001', 'null', '1200.00', '0.10', '250.00', 'Declining'],
-        ]
+        ],
+        _initialVersion: '2024'
     }
 ];
 
@@ -148,12 +154,29 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
     handleRestoreVersion,
     fileInputRef,
 }) => {
-    // Template Download Modal State (local to this tab)
+    // Initialize system templates with a version history 
+    const [systemTemplates, setSystemTemplates] = React.useState<any[]>(() =>
+        MOCK_FORMULA_TEMPLATES.map(t => ({
+            ...t,
+            versions: [{ version: t._initialVersion, rows: t.rows }],
+            currentVersion: t._initialVersion
+        }))
+    );
+
+    // Template Download Modal State
     const [isTemplateDownloadOpen, setIsTemplateDownloadOpen] = React.useState(false);
-    const [selectedTemplateForDownload, setSelectedTemplateForDownload] = React.useState<any>(MOCK_FORMULA_TEMPLATES[0]);
+    const [selectedTemplateForDownload, setSelectedTemplateForDownload] = React.useState<any>(() => {
+        const t = MOCK_FORMULA_TEMPLATES[0];
+        return { ...t, versions: [{ version: t._initialVersion, rows: t.rows }], currentVersion: t._initialVersion };
+    });
     const [customTemplates, setCustomTemplates] = React.useState<any[]>([]);
     const [templateSearch, setTemplateSearch] = React.useState('');
     const customTemplateInputRef = useRef<HTMLInputElement>(null);
+
+    // Template Editing State
+    const [isEditingTemplate, setIsEditingTemplate] = React.useState(false);
+    const [templateEditRows, setTemplateEditRows] = React.useState<any[]>([]);
+    const [newVersionName, setNewVersionName] = React.useState('');
 
     const downloadTemplateAsCSV = (template: any) => {
         const rows = template.rows.map((row: any) => Array.isArray(row) ? row.join(',') : Object.values(row).join(',')).join('\n');
@@ -166,6 +189,91 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    // Upload Wizard Modal State
+    const [isUploadWizardOpen, setIsUploadWizardOpen] = React.useState(false);
+    const [uploadWizardTemplateId, setUploadWizardTemplateId] = React.useState<string>(MOCK_FORMULA_TEMPLATES[0].id);
+    const [uploadWizardVersionName, setUploadWizardVersionName] = React.useState<string>(MOCK_FORMULA_TEMPLATES[0]._initialVersion || '2024');
+    const [uploadWizardStatus, setUploadWizardStatus] = React.useState<'idle' | 'matching' | 'success' | 'error'>('idle');
+    const [uploadWizardRows, setUploadWizardRows] = React.useState<any[] | null>(null);
+    const [uploadWizardError, setUploadWizardError] = React.useState('');
+    const uploadWizardInputRef = useRef<HTMLInputElement>(null);
+
+    const handleWizardFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploadWizardStatus('matching');
+        setUploadWizardError('');
+
+        const selectedTemplate = systemTemplates.find(t => t.id === uploadWizardTemplateId) || systemTemplates[0];
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const text = e.target?.result as string;
+            if (!text) {
+                setUploadWizardStatus('error');
+                setUploadWizardError('Empty or invalid file.');
+                return;
+            }
+
+            const lines = text.split('\n');
+            let startIndex = 0;
+            const firstLine = lines[0].split(',').map(c => c.trim());
+
+            if (lines.length > 0 && isNaN(Number(firstLine[0]))) {
+                startIndex = 1;
+                // Optional validation: check column count against template
+                if (firstLine.length < selectedTemplate.columns.length) {
+                    setUploadWizardStatus('error');
+                    setUploadWizardError(`Header columns do not match the expected template count. Expected ${selectedTemplate.columns.length}, found ${firstLine.length}.`);
+                    return;
+                }
+            }
+
+            const newRows: any[] = [];
+            for (let i = startIndex; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const cols = line.split(',');
+                if (cols.length < 4) continue; // simplistic check
+
+                newRows.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    min: parseFloat(cols[0]) || 0,
+                    max: cols[1].toLowerCase() === 'null' || !cols[1] ? null : parseFloat(cols[1]),
+                    baseAmount: parseFloat(cols[2]) || 0,
+                    rate: parseFloat(cols[3]) || 0,
+                    employeeShare: cols[4] ? parseFloat(cols[4]) : 0,
+                    employerShare: cols[5] ? parseFloat(cols[5]) : 0
+                });
+            }
+
+            if (newRows.length > 0) {
+                setUploadWizardRows(newRows);
+                setUploadWizardStatus('success');
+            } else {
+                setUploadWizardStatus('error');
+                setUploadWizardError('No valid data rows found in the file.');
+            }
+            if (uploadWizardInputRef.current) uploadWizardInputRef.current.value = '';
+        };
+        reader.readAsText(file);
+    };
+
+    const confirmWizardUpload = () => {
+        if (uploadWizardRows && uploadWizardRows.length > 0) {
+            const selectedTemplate = systemTemplates.find(t => t.id === uploadWizardTemplateId);
+            const autoName = selectedTemplate ? `${selectedTemplate.name} (${uploadWizardVersionName})` : tableEditor.name;
+            setTableEditor({
+                ...tableEditor,
+                name: tableEditor.name || autoName,
+                rows: [...(tableEditor.rows || []), ...uploadWizardRows]
+            });
+            setIsUploadWizardOpen(false);
+        }
     };
 
     const handleUploadCustomTemplate = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -334,15 +442,13 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
                         <div className="flex items-center justify-between mb-3 px-2">
                             <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Table Tiers</h4>
                             <div className="flex gap-2">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleCSVUpload}
-                                    accept=".csv"
-                                    className="hidden"
-                                />
                                 <button
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={() => {
+                                        setIsUploadWizardOpen(true);
+                                        setUploadWizardStatus('idle');
+                                        setUploadWizardRows(null);
+                                        setUploadWizardError('');
+                                    }}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition-all"
                                     title="Upload CSV Template"
                                 >
@@ -504,10 +610,13 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
 
                             <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Standard Templates</div>
-                                {MOCK_FORMULA_TEMPLATES.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase())).map(t => (
+                                {systemTemplates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase())).map(t => (
                                     <button
                                         key={t.id}
-                                        onClick={() => setSelectedTemplateForDownload(t)}
+                                        onClick={() => {
+                                            setSelectedTemplateForDownload(t);
+                                            setIsEditingTemplate(false);
+                                        }}
                                         className={`w-full text-left p-3 rounded-xl transition-all border ${selectedTemplateForDownload?.id === t.id ? 'bg-white border-indigo-200 shadow-sm' : 'border-transparent hover:bg-white/50'}`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -529,7 +638,10 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
                                         {customTemplates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase())).map(t => (
                                             <button
                                                 key={t.id}
-                                                onClick={() => setSelectedTemplateForDownload(t)}
+                                                onClick={() => {
+                                                    setSelectedTemplateForDownload(t);
+                                                    setIsEditingTemplate(false);
+                                                }}
                                                 className={`w-full text-left p-3 rounded-xl transition-all border ${selectedTemplateForDownload?.id === t.id ? 'bg-white border-indigo-200 shadow-sm' : 'border-transparent hover:bg-white/50'}`}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -571,15 +683,49 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
                                     <div className="p-8 border-b border-slate-50 shrink-0">
                                         <div className="flex items-start justify-between mb-2">
                                             <h4 className="text-2xl font-extrabold text-slate-900">{selectedTemplateForDownload.name}</h4>
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${selectedTemplateForDownload.type === 'contribution' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                                                {selectedTemplateForDownload.type}
-                                            </span>
+                                            <div className="flex items-center gap-3">
+                                                {!selectedTemplateForDownload.isCustom && (
+                                                    <select
+                                                        value={selectedTemplateForDownload.currentVersion}
+                                                        onChange={(e) => {
+                                                            const ver = selectedTemplateForDownload.versions.find((v: any) => v.version === e.target.value);
+                                                            if (ver) {
+                                                                setSelectedTemplateForDownload({ ...selectedTemplateForDownload, currentVersion: ver.version, rows: ver.rows });
+                                                                setIsEditingTemplate(false);
+                                                            }
+                                                        }}
+                                                        className="text-xs font-bold bg-white border border-slate-200 text-slate-700 py-1 pl-2 pr-6 rounded-lg outline-none cursor-pointer focus:ring-2 ring-indigo-100"
+                                                    >
+                                                        {selectedTemplateForDownload.versions?.map((v: any) => (
+                                                            <option key={v.version} value={v.version}>{v.version}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${selectedTemplateForDownload.type === 'contribution' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                                    {selectedTemplateForDownload.type}
+                                                </span>
+                                            </div>
                                         </div>
                                         <p className="text-sm text-slate-500 max-w-2xl leading-relaxed">{selectedTemplateForDownload.description}</p>
                                     </div>
 
                                     <div className="flex-1 overflow-auto p-8 pt-4">
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Structure Preview</div>
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Structure Preview</div>
+                                            {!selectedTemplateForDownload.isCustom && !isEditingTemplate && (
+                                                <button
+                                                    onClick={() => {
+                                                        setIsEditingTemplate(true);
+                                                        setTemplateEditRows(JSON.parse(JSON.stringify(selectedTemplateForDownload.rows)));
+                                                        const currentYear = new Date().getFullYear();
+                                                        setNewVersionName(`${currentYear + 1}`);
+                                                    }}
+                                                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1.5"
+                                                >
+                                                    <Calculator size={12} /> Edit Template Rows
+                                                </button>
+                                            )}
+                                        </div>
                                         <div className="border border-slate-100 rounded-2xl overflow-x-auto shadow-sm bg-slate-50/20">
                                             <table className="w-full text-xs text-left min-w-[1000px]">
                                                 <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-widest border-b border-slate-100">
@@ -593,11 +739,27 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
                                                     {selectedTemplateForDownload.rows.slice(0, 8).map((row: any, i: number) => (
                                                         <tr key={i} className="hover:bg-slate-50 transition-colors">
                                                             {(Array.isArray(row) ? row : Object.values(row)).map((val: any, j: number) => (
-                                                                <td key={j} className="px-6 py-3 font-mono text-slate-700">{val === null ? '∞' : val}</td>
+                                                                <td key={j} className="px-6 py-3 font-mono text-slate-700">
+                                                                    {isEditingTemplate ? (
+                                                                        <input
+                                                                            type="text"
+                                                                            value={templateEditRows[i]?.[j] ?? (val === null ? '' : val)}
+                                                                            onChange={(e) => {
+                                                                                const newRows = [...templateEditRows];
+                                                                                newRows[i] = [...(newRows[i] || [])];
+                                                                                newRows[i][j] = e.target.value === '' ? null : e.target.value;
+                                                                                setTemplateEditRows(newRows);
+                                                                            }}
+                                                                            className="w-full border border-indigo-200 rounded px-2 py-1 outline-none text-xs focus:ring-1 focus:ring-indigo-500"
+                                                                        />
+                                                                    ) : (
+                                                                        val === null ? '∞' : val
+                                                                    )}
+                                                                </td>
                                                             ))}
                                                         </tr>
                                                     ))}
-                                                    {selectedTemplateForDownload.rows.length > 8 && (
+                                                    {!isEditingTemplate && selectedTemplateForDownload.rows.length > 8 && (
                                                         <tr>
                                                             <td colSpan={selectedTemplateForDownload.columns.length} className="px-6 py-4 bg-slate-50/50 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">
                                                                 ...and {selectedTemplateForDownload.rows.length - 8} more rows
@@ -608,23 +770,63 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
                                             </table>
                                         </div>
 
-                                        <div className="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
-                                            <div className="shrink-0 p-2 bg-white rounded-xl text-amber-600 shadow-sm h-fit">
-                                                <Zap size={20} />
+                                        {isEditingTemplate ? (
+                                            <div className="mt-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 flex flex-col gap-4">
+                                                <div className="flex justify-between items-center w-full">
+                                                    <div>
+                                                        <h5 className="text-sm font-bold text-indigo-900 mb-1">Save New Version</h5>
+                                                        <p className="text-xs text-indigo-700">Provide a version identifier to save these modifications.</p>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        value={newVersionName}
+                                                        onChange={e => setNewVersionName(e.target.value)}
+                                                        placeholder="e.g. 2026"
+                                                        className="px-4 py-2 rounded-xl text-sm font-bold border border-indigo-200 outline-none w-48 text-indigo-900"
+                                                    />
+                                                </div>
+                                                <div className="flex gap-3 justify-end mt-2">
+                                                    <button onClick={() => setIsEditingTemplate(false)} className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-indigo-100 rounded-xl transition-all">Cancel</button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!newVersionName) return;
+                                                            const updatedTemplate = { ...selectedTemplateForDownload };
+                                                            const newVersionObj = { version: newVersionName, rows: templateEditRows };
+                                                            updatedTemplate.versions = [newVersionObj, ...(updatedTemplate.versions || [])];
+                                                            updatedTemplate.currentVersion = newVersionName;
+                                                            updatedTemplate.rows = templateEditRows;
+
+                                                            setSystemTemplates(systemTemplates.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
+                                                            setSelectedTemplateForDownload(updatedTemplate);
+                                                            setIsEditingTemplate(false);
+                                                        }}
+                                                        disabled={!newVersionName}
+                                                        className="px-6 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl shadow-sm transition-all"
+                                                    >
+                                                        Save to Versions
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h5 className="text-sm font-bold text-amber-900 mb-1">Quick Implementation Tip</h5>
-                                                <p className="text-xs text-amber-700 leading-relaxed">
-                                                    This template matches the system's CSV parser. Download it, fill in your specific values, and use the <strong>Upload</strong> feature to populate your lookup table instantly.
-                                                </p>
+                                        ) : (
+                                            <div className="mt-8 p-6 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
+                                                <div className="shrink-0 p-2 bg-white rounded-xl text-amber-600 shadow-sm h-fit">
+                                                    <Zap size={20} />
+                                                </div>
+                                                <div>
+                                                    <h5 className="text-sm font-bold text-amber-900 mb-1">Quick Implementation Tip</h5>
+                                                    <p className="text-xs text-amber-700 leading-relaxed">
+                                                        This template matches the system's CSV parser. Download it, fill in your specific values, and use the <strong>Upload</strong> feature to populate your lookup table instantly.
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
 
                                     <div className="p-8 border-t border-slate-100 bg-white shrink-0 flex gap-4">
                                         <button
                                             onClick={() => downloadTemplateAsCSV(selectedTemplateForDownload)}
-                                            className="flex-1 flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]"
+                                            disabled={isEditingTemplate}
+                                            className="flex-1 flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]"
                                         >
                                             <Download size={18} /> Download CSV Template
                                         </button>
@@ -646,6 +848,102 @@ const LookupTablesTab: React.FC<LookupTablesTabProps> = ({
                                     <FileSpreadsheet size={64} className="mb-4 opacity-10" />
                                     <p className="text-lg font-bold text-slate-500">Select a template to preview</p>
                                     <p className="text-sm max-w-xs mt-1">Choose from our standardized Philippine government templates or upload your own.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </Modal>
+            {/* Upload Wizard Modal */}
+            <Modal isOpen={isUploadWizardOpen} onClose={() => setIsUploadWizardOpen(false)} className="max-w-4xl w-[90vw]">
+                <div className="flex flex-col h-[70vh] overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                <Upload size={18} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900">Upload Table Template</h3>
+                                <p className="text-xs text-slate-500 font-medium">Select a format and upload your CSV data</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setIsUploadWizardOpen(false)} className="p-2 hover:bg-slate-50 rounded-full transition-colors"><X size={18} className="text-slate-400" /></button>
+                    </div>
+
+                    <div className="flex-1 flex overflow-hidden">
+                        {/* Sidebar for Template Selection */}
+                        <div className="w-1/3 border-r border-slate-100 bg-slate-50 overflow-y-auto p-4 space-y-2">
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 mb-2">Select Template Format</div>
+                            {systemTemplates.map(t => (
+                                <button
+                                    key={t.id}
+                                    onClick={() => { setUploadWizardTemplateId(t.id); setUploadWizardVersionName(t.currentVersion); setUploadWizardStatus('idle'); setUploadWizardRows(null); setUploadWizardError(''); }}
+                                    className={`w-full text-left p-3 rounded-xl transition-all border ${uploadWizardTemplateId === t.id ? 'bg-white border-blue-500 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                                >
+                                    <div className={`text-xs font-bold mb-1 ${uploadWizardTemplateId === t.id ? 'text-blue-700' : 'text-slate-700'}`}>{t.name}</div>
+                                    <div className="text-[10px] text-slate-500 truncate">{t.columns.length} Expected Columns</div>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Main Upload Area */}
+                        <div className="flex-1 p-8 bg-white flex flex-col items-center justify-center">
+                            {uploadWizardStatus === 'idle' || uploadWizardStatus === 'error' ? (
+                                <>
+                                    <div className="w-full max-w-md mb-6 flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                                        <span className="text-xs font-bold text-slate-600">Target Template Version:</span>
+                                        <select
+                                            value={uploadWizardVersionName}
+                                            onChange={e => setUploadWizardVersionName(e.target.value)}
+                                            className="bg-white border text-xs font-bold text-slate-700 border-slate-200 rounded-lg outline-none px-2 py-1.5 focus:ring-2 ring-blue-100"
+                                        >
+                                            {systemTemplates.find(t => t.id === uploadWizardTemplateId)?.versions?.map((v: any) => (
+                                                <option key={v.version} value={v.version}>{v.version}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        ref={uploadWizardInputRef}
+                                        className="hidden"
+                                        accept=".csv,.xlsx"
+                                        onChange={handleWizardFileUpload}
+                                    />
+                                    <button
+                                        onClick={() => uploadWizardInputRef.current?.click()}
+                                        className="bg-slate-50 hover:bg-slate-100 border-2 border-dashed border-slate-200 rounded-2xl w-full max-w-md p-10 flex flex-col items-center justify-center gap-4 transition-all"
+                                    >
+                                        <div className="p-4 bg-white rounded-full shadow-sm text-blue-500">
+                                            <Upload size={32} />
+                                        </div>
+                                        <div className="text-center">
+                                            <h4 className="font-bold text-slate-700 mb-1">Click to browse CSV file</h4>
+                                            <p className="text-xs text-slate-500">Must match the selected template format.</p>
+                                        </div>
+                                    </button>
+                                    {uploadWizardStatus === 'error' && (
+                                        <div className="mt-4 text-xs font-bold text-rose-500 bg-rose-50 px-4 py-2 rounded-lg border border-rose-100">
+                                            Error: {uploadWizardError}
+                                        </div>
+                                    )}
+                                </>
+                            ) : uploadWizardStatus === 'matching' ? (
+                                <div className="flex flex-col items-center text-slate-500">
+                                    <div className="animate-spin mb-4"><Zap size={32} className="text-blue-500" /></div>
+                                    <p className="font-bold text-sm">Validating Template...</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center animate-in zoom-in-95 duration-300">
+                                    <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                    <h4 className="text-lg font-bold text-slate-800 mb-2">Template Match Successful!</h4>
+                                    <p className="text-sm text-slate-500 mb-8">Successfully validated {uploadWizardRows?.length} rows against the template.</p>
+
+                                    <div className="flex gap-3">
+                                        <button onClick={() => { setUploadWizardStatus('idle'); setUploadWizardRows(null); }} className="px-6 py-2.5 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm hover:bg-slate-200 transition-all">Cancel</button>
+                                        <button onClick={confirmWizardUpload} className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow-emerald-200 shadow hover:bg-emerald-700 transition-all">Confirm & Add Rows</button>
+                                    </div>
                                 </div>
                             )}
                         </div>

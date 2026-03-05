@@ -32,7 +32,7 @@ import { motion } from 'framer-motion';
 import Modal from '../components/Modal';
 
 // --- MOCK DATA ---
-interface Approver {
+export interface Approver {
   id: string;
   orderLabel: string;
   name: string;
@@ -54,7 +54,7 @@ interface Approver {
   secondaryRole?: string;
 }
 
-interface ApprovalSetup {
+export interface ApprovalSetup {
   id: string;
   name: string;
   connectedEmployees: number;
@@ -71,7 +71,7 @@ interface ApprovalSetup {
   approvers: Approver[];
 }
 
-const MOCK_SETUPS: ApprovalSetup[] = [
+export const MOCK_SETUPS: ApprovalSetup[] = [
   {
     id: '1',
     name: 'IT Leave Request',
@@ -151,6 +151,31 @@ const MOCK_SETUPS: ApprovalSetup[] = [
     startDate: '2026-01-01',
     approvers: []
   },
+  {
+    id: '5',
+    name: 'Shift Change Request',
+    connectedEmployees: 32,
+    dateAdded: 'Mar 4, 2026',
+    lastModifiedBy: 'Louis Panganiban',
+    lastModified: 'Mar 4, 2026 10:00',
+    feature: 'Shift Change Request',
+    autoRejectDays: 3,
+    department: 'Operations',
+    unitType: 'Division',
+    startDate: '2026-03-01',
+    approvers: [
+      {
+        id: 'a3',
+        orderLabel: 'Approver 1',
+        name: 'Sarah Wilson',
+        role: 'HR Manager',
+        avatar: 'SW',
+        department: 'HR Department',
+        lastModifiedBy: 'Louis Panganiban',
+        lastModified: 'Mar 4, 2026'
+      }
+    ]
+  }
 ];
 
 const INITIAL_ASSIGNED_EMPLOYEES = [
@@ -569,8 +594,8 @@ const ApprovalSetupPage: React.FC = () => {
                     key={tab}
                     onClick={() => setActiveTab(tab as any)}
                     className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === tab
-                        ? 'bg-white text-slate-900 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
                       }`}
                   >
                     {tab}
@@ -687,30 +712,23 @@ const ApprovalSetupPage: React.FC = () => {
                 <div className="w-full h-px bg-slate-100"></div>
 
                 {/* Auto Rejection Policy Box */}
-                <div className="flex flex-col sm:flex-row items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-indigo-200 transition-colors">
+                <div className="flex flex-col sm:flex-row items-center justify-between p-5 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl opacity-70">
                       <Clock size={20} />
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-slate-900">Auto-Rejection Policy</h4>
                       <p className="text-xs text-slate-500 mt-1 max-w-md leading-relaxed">
-                        Automatically reject pending requests if no action is taken by approvers within the specified timeframe. Set to 0 to disable.
+                        Automatically reject pending requests if no action is taken by approvers within the specified timeframe. <i>Configured in Company Policies - Rules & Policies.</i>
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 mt-4 sm:mt-0">
+                  <div className="flex items-center gap-3 mt-4 sm:mt-0 opacity-70">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Reject after</span>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="365"
-                        className="w-20 pl-4 pr-8 py-2 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all bg-white"
-                        value={editorAutoReject}
-                        onChange={(e) => setEditorAutoReject(Number(e.target.value))}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">Days</span>
+                    <div className="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900">{editorAutoReject}</span>
+                      <span className="text-[10px] font-bold text-slate-400">Days</span>
                     </div>
                   </div>
                 </div>
