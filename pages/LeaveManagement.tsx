@@ -55,6 +55,18 @@ const MOCK_LEAVES: LeaveType[] = [
     resetFrequency: 'Yearly'
   },
   {
+    id: '2b',
+    name: 'Emergency Leave',
+    maxDays: 5,
+    minDays: 1,
+    perEmployee: 5,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-orange-500',
+    resetDate: '01-01',
+    resetFrequency: 'Yearly'
+  },
+  {
     id: '3',
     name: 'Maternity Leave',
     maxDays: 105,
@@ -101,6 +113,18 @@ const MOCK_LEAVES: LeaveType[] = [
     color: 'bg-rose-500',
     resetDate: '01-01',
     resetFrequency: 'Never'
+  },
+  {
+    id: '9',
+    name: 'VAWC Leave',
+    maxDays: 10,
+    minDays: 1,
+    perEmployee: 10,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-purple-500',
+    resetDate: '01-01',
+    resetFrequency: 'Yearly'
   },
   {
     id: '7',
