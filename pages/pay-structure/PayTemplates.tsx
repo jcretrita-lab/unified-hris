@@ -34,7 +34,8 @@ import {
     CalendarDays,
     Coins,
     Sparkles,
-    ArrowLeft
+    ArrowLeft,
+    Search,
 } from 'lucide-react';
 
 // --- MOCK DATA FOR SIMULATION & INSTANCES ---
@@ -80,6 +81,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
     const positions = MOCK_POSITIONS;
     const employees = MOCK_EMPLOYEES_FULL;
 
+    const [templateSearch, setTemplateSearch] = useState('');
     const [mode, setMode] = useState<'edit' | 'simulate'>('edit');
     const [templateSubTab, setTemplateSubTab] = useState<'configuration' | 'instances'>('configuration');
     const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -669,15 +671,33 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                         <FileSpreadsheet className="text-amber-500" size={20} /> Pay Templates
                     </h2>
                     <p className="text-xs text-slate-500 mb-3 font-medium">Define earnings & deductions for groups.</p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mb-3">
                         <button onClick={handleOpenCreate} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200 active:scale-95"><Plus size={14} /> New</button>
                         <button onClick={() => setMode(mode === 'edit' ? 'simulate' : 'edit')} className={`px-3 py-2 rounded-xl transition-all border ${mode === 'simulate' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`} title="Stack Simulator"><Play size={16} fill="currentColor" /></button>
+                    </div>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Search templates..."
+                            className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 outline-none focus:ring-2 focus:ring-amber-100 focus:border-amber-400 transition-all"
+                            value={templateSearch}
+                            onChange={(e) => setTemplateSearch(e.target.value)}
+                        />
+                        {templateSearch && (
+                            <button onClick={() => setTemplateSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                <X size={12} />
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     {templates.length === 0 && <div className="p-8 text-center text-slate-400"><p className="text-sm">No templates found.</p></div>}
+                    {templateSearch && templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase())).length === 0 && (
+                        <div className="p-8 text-center text-slate-400"><p className="text-sm">No templates match "{templateSearch}".</p></div>
+                    )}
                     <div className="divide-y divide-slate-200 space-y-2">
-                        {templates.map(t => (
+                        {templates.filter(t => !templateSearch || t.name.toLowerCase().includes(templateSearch.toLowerCase())).map(t => (
                             <div key={t.id} onClick={() => { setSelectedTemplateId(t.id); setMode('edit'); setTemplateSubTab('configuration'); }} className={`p-4 rounded-2xl cursor-pointer hover:bg-white hover:shadow-sm transition-all border ${selectedTemplateId === t.id && mode === 'edit' ? 'bg-white border-amber-500 shadow-md shadow-amber-100' : 'bg-transparent border-transparent text-slate-600'}`}>
                                 <div className="flex justify-between items-start mb-1"><h3 className={`font-bold text-sm ${selectedTemplateId === t.id && mode === 'edit' ? 'text-slate-800' : 'text-slate-600'}`}>{t.name}</h3><button onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(t.id); }} className="text-slate-300 hover:text-red-500"><Trash2 size={14} /></button></div>
                                 <div className="flex items-center gap-2 text-xs mb-2"><span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-lg flex items-center gap-1 truncate max-w-[180px] font-bold text-[10px] uppercase tracking-wide"><Filter size={10} /> {getTargetLabel(t)}</span></div>
