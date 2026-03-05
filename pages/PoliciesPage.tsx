@@ -648,7 +648,7 @@ const PoliciesPage: React.FC = () => {
                                             ) : (
                                                 activeTab === 'Divisor' ? 'Divisor Setup' :
                                                     activeTab === 'Works' ? 'Works & Wages' :
-                                                        activeTab === 'PostEmployment' ? 'Separation & Retirement' :
+                                                        activeTab === 'PostEmployment' ? 'Retirement Pay' :
                                                             activeTab === 'Approvals' ? 'Approvals Policy' :
                                                                 'Special Laws & Leaves'
                                             )}
@@ -686,7 +686,7 @@ const PoliciesPage: React.FC = () => {
                                                 ] : [
                                                     { id: 'Divisor', icon: Calculator, label: 'Divisor Setup', desc: 'Configure working days per year' },
                                                     { id: 'Works', icon: Clock, label: 'Works & Wages', desc: 'Company-specific attendance rules' },
-                                                    { id: 'PostEmployment', icon: Briefcase, label: 'Separation & Retirement', desc: 'Internal calculators & policies' },
+                                                    { id: 'PostEmployment', icon: Briefcase, label: 'Retirement Pay', desc: 'Internal calculators & policies' },
                                                     { id: 'Approvals', icon: Clock, label: 'Approvals Policy', desc: 'Auto-rejection & workflows' },
                                                     { id: 'Special', icon: Heart, label: 'Special Laws & Leaves', desc: 'Company-specific leave benefits' },
                                                 ]).map((item) => (
