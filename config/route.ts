@@ -55,6 +55,7 @@ export const SEGMENT_LABELS: Record<string, string> = {
   'employee-fields': 'Employee Fields',
   adjustments: 'Adjustments',
   audit: 'Audit Logs',
+  'employee-schedule': 'Employee Schedule',
 };
 
 /**
