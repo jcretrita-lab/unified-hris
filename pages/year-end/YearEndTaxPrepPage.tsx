@@ -18,14 +18,13 @@ const YearEndTaxPrepPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedYear, setSelectedYear] = useState('2026');
     const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
-    const [detailStage, setDetailStage] = useState<'assumed' | 'actual'>('assumed');
 
     const filteredData = MOCK_YEAR_END_DATA.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const selectedEmployeeData = MOCK_YEAR_END_DATA.find(d => d.id === selectedEmpId);
-    const monthlyHistory = selectedEmployeeData ? generate13thMonthHistory(selectedEmployeeData.ytdGross, selectedEmployeeData.id, detailStage === 'assumed') : [];
+    const monthlyHistory = selectedEmployeeData ? generate13thMonthHistory(selectedEmployeeData.ytdGross, selectedEmployeeData.id, false) : [];
 
     const formatCurrency = (amount: number) => {
         const val = amount || 0;
@@ -85,25 +84,15 @@ const YearEndTaxPrepPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right px-6 border-r border-slate-100 hidden lg:block">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Tax (Assumed)</div>
-                            <div className="text-xl font-black text-slate-900">₱ 1,425,000.00</div>
-                        </div>
-                        <div className="text-right px-6 border-r border-slate-100 hidden lg:block">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Tax (Actual)</div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Actual Tax Remittance</div>
                             <div className="text-xl font-black text-emerald-600">₱ 1,450,000.00</div>
                         </div>
                         <div className="flex gap-3">
                             <button
-                                onClick={() => navigate('/manage/year-end-batch-tax?stage=assumed')}
-                                className="flex items-center gap-2 px-6 py-3.5 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95 shadow-lg shadow-slate-100"
-                            >
-                                <Calculator size={16} /> Batch Process Assumed (Dec)
-                            </button>
-                            <button
                                 onClick={() => navigate('/manage/year-end-batch-tax?stage=actual')}
-                                className="flex items-center gap-2 px-6 py-3.5 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-2xl shadow-slate-200"
+                                className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-2xl shadow-slate-200"
                             >
-                                <ShieldCheck size={16} /> Batch Process Actual (Jan)
+                                <ShieldCheck size={16} /> Batch Process Tax (Jan)
                             </button>
                         </div>
                     </div>
@@ -113,18 +102,10 @@ const YearEndTaxPrepPage: React.FC = () => {
                     <table className="min-w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th rowSpan={2} className="pl-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Employee Information</th>
-                                <th colSpan={3} className="px-6 py-4 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100 bg-indigo-50/20">Tax Assumed (Dec)</th>
-                                <th colSpan={3} className="px-6 py-4 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100 bg-emerald-50/20">Tax Actual (Jan)</th>
-                                <th rowSpan={2} className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">Adjustment</th>
-                            </tr>
-                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right border-l border-slate-100">Amount</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Action</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right border-l border-slate-100">Amount</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Action</th>
+                                <th className="pl-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Employee Information</th>
+                                <th className="px-6 py-6 text-[11px] font-black text-right text-slate-400 uppercase tracking-widest border-l border-slate-100">Annual Tax Liability</th>
+                                <th className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">Filing Status</th>
+                                <th className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -141,29 +122,10 @@ const YearEndTaxPrepPage: React.FC = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-5 text-right font-mono text-sm font-black text-slate-900 border-l border-slate-50">
-                                        {formatCurrency(item.assumedTax)}
-                                    </td>
-                                    <td className="px-6 py-5 text-center">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${item.assumedTaxStatus === 'Finalized'
-                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                            : 'bg-amber-50 text-amber-600 border-amber-100'
-                                            }`}>
-                                            {item.assumedTaxStatus}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-5 text-center">
-                                        <button
-                                            onClick={() => { setSelectedEmpId(item.id); setDetailStage('assumed'); }}
-                                            className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-indigo-100 shadow-sm"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                    </td>
                                     <td className="px-6 py-5 text-right font-mono text-sm font-black text-indigo-600 border-l border-slate-50 bg-indigo-50/5">
                                         {formatCurrency(item.actualTax)}
                                     </td>
-                                    <td className="px-6 py-5 text-center">
+                                    <td className="px-6 py-5 text-center border-l border-slate-50">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${item.actualTaxStatus === 'Finalized'
                                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                             : 'bg-indigo-50 text-indigo-600 border-indigo-100'
@@ -171,18 +133,13 @@ const YearEndTaxPrepPage: React.FC = () => {
                                             {item.actualTaxStatus}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-5 text-center">
+                                    <td className="px-6 py-5 text-center border-l border-slate-50">
                                         <button
-                                            onClick={() => { setSelectedEmpId(item.id); setDetailStage('actual'); }}
+                                            onClick={() => { setSelectedEmpId(item.id); }}
                                             className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-indigo-100 shadow-sm"
                                         >
                                             <Eye size={18} />
                                         </button>
-                                    </td>
-                                    <td className={`px-6 py-5 text-right font-mono text-sm font-black border-l border-slate-50 ${(item.actualTax - item.assumedTax) > 0 ? 'text-rose-600 bg-rose-50/30' :
-                                        (item.actualTax - item.assumedTax) < 0 ? 'text-emerald-600 bg-emerald-50/30' : 'text-slate-400'
-                                        }`}>
-                                        {formatCurrency(item.actualTax - item.assumedTax)}
                                     </td>
                                 </tr>
                             ))}
@@ -218,25 +175,9 @@ const YearEndTaxPrepPage: React.FC = () => {
                                 <div className="flex items-center justify-between mb-4">
                                     <h4 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                                         <Calculator className="text-indigo-600" size={20} />
-                                        Tax Annualization Ledger ({detailStage === 'assumed' ? 'Assumed' : 'Actual'})
+                                        Tax Annualization Ledger (Final Statement)
                                     </h4>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                                            <button
-                                                onClick={() => setDetailStage('assumed')}
-                                                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${detailStage === 'assumed' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                            >
-                                                Assumed
-                                            </button>
-                                            <button
-                                                onClick={() => setDetailStage('actual')}
-                                                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${detailStage === 'actual' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                            >
-                                                Actual
-                                            </button>
-                                        </div>
-                                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference: Fiscal Year {selectedYear}</div>
-                                    </div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference: Fiscal Year {selectedYear}</div>
                                 </div>
 
                                 <div className="border-2 border-slate-300 overflow-hidden bg-white shadow-xl">
@@ -302,21 +243,16 @@ const YearEndTaxPrepPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="bg-indigo-900 rounded-[2rem] p-8 text-white shadow-2xl">
-                                        <div className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-4">Total Taxable Income</div>
+                                        <div className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-4">Total Taxable Income (YTD)</div>
                                         <div className="text-4xl font-black">{formatCurrency(selectedEmployeeData?.ytdGross || 0)}</div>
-                                        <div className="text-[10px] text-indigo-400 font-bold mt-2 uppercase tracking-tight italic">Consolidated YTD Salary</div>
+                                        <div className="text-[10px] text-indigo-400 font-bold mt-2 uppercase tracking-tight italic">Consolidated Annual Salary</div>
                                     </div>
-                                    <div className="bg-rose-900 rounded-[2rem] p-8 text-white shadow-2xl">
-                                        <div className="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-4">Total Tax Withheld</div>
-                                        <div className="text-4xl font-black">{formatCurrency((selectedEmployeeData?.actualTax || 0) * 0.95)}</div>
-                                        <div className="text-[10px] text-rose-400 font-bold mt-2 uppercase tracking-tight italic">Total Monthly Remittances</div>
-                                    </div>
-                                    <div className={`rounded-[2rem] p-8 text-white shadow-2xl ${(selectedEmployeeData?.actualTax || 0) > (selectedEmployeeData?.assumedTax || 0) ? 'bg-rose-600' : 'bg-emerald-600'}`}>
-                                        <div className="text-[10px] font-black text-white/70 uppercase tracking-widest mb-4">{(selectedEmployeeData?.actualTax || 0) > (selectedEmployeeData?.assumedTax || 0) ? 'Annual Payable' : 'Annual Refund'}</div>
-                                        <div className="text-4xl font-black">{formatCurrency(Math.abs((selectedEmployeeData?.actualTax || 0) - (selectedEmployeeData?.assumedTax || 0)))}</div>
-                                        <div className="text-[10px] text-white/50 font-bold mt-2 uppercase tracking-tight italic">Year-End Reconciliation Result</div>
+                                    <div className="bg-slate-900 rounded-[2rem] p-8 text-white shadow-2xl">
+                                        <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Total Annual Tax Liability</div>
+                                        <div className="text-4xl font-black">{formatCurrency(selectedEmployeeData?.actualTax || 0)}</div>
+                                        <div className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-tight italic">Final Reconciliation Result</div>
                                     </div>
                                 </div>
                             </div>
@@ -325,7 +261,7 @@ const YearEndTaxPrepPage: React.FC = () => {
                         <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
                             <button onClick={() => setSelectedEmpId(null)} className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all">Close</button>
                             <button className="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-lg flex items-center gap-2">
-                                <Download size={16} /> Export Detail
+                                <Download size={16} /> Export Detailed Ledger
                             </button>
                         </div>
                     </div>

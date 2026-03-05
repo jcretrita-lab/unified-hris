@@ -23,9 +23,15 @@ import {
     Trash2,
     LogOut,
     ShieldOff,
+    ShieldCheck,
     ClipboardCheck,
     Coins,
-    Heart
+    Heart,
+    Wallet,
+    Package,
+    UserCheck,
+    AlertTriangle,
+    Star
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Employee, EmployeeStatus } from '../types';
@@ -185,61 +191,76 @@ const OffboardingEmployee: React.FC = () => {
 
     const InputField = ({ label, value, field, type = 'text', placeholder = '', className = '', disabled = false }: any) => (
         <div className={className}>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{label}</label>
-            <input
-                type={type}
-                className={`w-full p-3 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none transition-all placeholder:font-medium placeholder:text-slate-400 ${disabled ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-50 focus:ring-2 focus:ring-rose-100 focus:bg-white'}`}
-                placeholder={placeholder}
-                value={value}
-                onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-                disabled={disabled}
-            />
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">{label}</label>
+            <div className="relative group">
+                <input
+                    type={type}
+                    className={`w-full p-4 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none transition-all duration-300 placeholder:font-medium placeholder:text-slate-400 
+                        ${disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed opacity-60' : 'bg-white hover:border-slate-300 focus:border-rose-300 focus:ring-4 focus:ring-rose-500/5'}`}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                    disabled={disabled}
+                />
+                {!disabled && <div className="absolute inset-0 rounded-2xl border-2 border-rose-500/0 group-focus-within:border-rose-500/10 pointer-events-none transition-all duration-300" />}
+            </div>
         </div>
     );
 
     const SelectField = ({ label, value, field, options, className = '', disabled = false }: any) => (
         <div className={className}>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{label}</label>
-            <select
-                className={`w-full p-3 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 outline-none transition-all cursor-pointer ${disabled ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-slate-50 focus:ring-2 focus:ring-rose-100 focus:bg-white'}`}
-                value={value}
-                onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
-                disabled={disabled}
-            >
-                <option value="">Select {label}</option>
-                {options.map((opt: string) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                ))}
-            </select>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">{label}</label>
+            <div className="relative group">
+                <select
+                    className={`w-full p-4 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none transition-all duration-300 cursor-pointer appearance-none
+                        ${disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed opacity-60' : 'bg-white hover:border-slate-300 focus:border-rose-300 focus:ring-4 focus:ring-rose-500/5'}`}
+                    value={value}
+                    onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+                    disabled={disabled}
+                >
+                    <option value="">Select {label}</option>
+                    {options.map((opt: string) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <ChevronRight size={16} className="rotate-90" />
+                </div>
+                {!disabled && <div className="absolute inset-0 rounded-2xl border-2 border-rose-500/0 group-focus-within:border-rose-500/10 pointer-events-none transition-all duration-300" />}
+            </div>
         </div>
     );
 
     const ToggleField = ({ label, value, field }: any) => (
-        <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
-            <span className="text-sm font-bold text-slate-700">{label}</span>
+        <label className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-[24px] cursor-pointer hover:bg-slate-50 hover:border-slate-200 transition-all duration-300 group shadow-sm hover:shadow-md">
+            <div className="flex flex-col">
+                <span className="text-sm font-black text-slate-800 tracking-tight">{label}</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{value ? 'Active / Enabled' : 'Disabled'}</span>
+            </div>
             <button
+                type="button"
                 onClick={() => setFormData({ ...formData, [field]: !value })}
-                className={`relative w-11 h-6 transition-colors rounded-full ${value ? 'bg-rose-500' : 'bg-slate-300'}`}
+                className={`relative w-14 h-8 transition-all duration-500 rounded-full p-1 ${value ? 'bg-rose-500 shadow-lg shadow-rose-200' : 'bg-slate-200'}`}
             >
-                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${value ? 'translate-x-5' : 'translate-x-0'}`} />
+                <div className={`w-6 h-6 bg-white rounded-full transition-all duration-500 shadow-sm ${value ? 'translate-x-[1.5rem]' : 'translate-x-0'}`} />
             </button>
-        </div>
+        </label>
     );
 
     const StepContent = () => {
         switch (currentStepKey) {
             case 'SELECT':
                 return (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+                    <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-700 max-w-4xl mx-auto pb-10">
                         {/* Search & Select */}
-                        <div className="space-y-4">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">1. Select Employee</label>
-                            <div className="relative">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <div className="space-y-5">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Stage 01: Identification & Workflow</label>
+                            <div className="relative group">
+                                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-rose-500 transition-colors" size={20} />
                                 <input
                                     type="text"
-                                    className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-rose-100 transition-all outline-none"
-                                    placeholder="Search employee by name or ID..."
+                                    className="w-full pl-14 pr-6 py-5 bg-white border border-slate-200 rounded-[24px] text-sm font-bold shadow-sm focus:ring-4 focus:ring-rose-500/5 focus:border-rose-300 transition-all outline-none"
+                                    placeholder="Execute search by Personnel Name or Serial ID..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -247,66 +268,98 @@ const OffboardingEmployee: React.FC = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {filteredEmployees.map(emp => (
-                                    <div
+                                    <motion.div
+                                        whileHover={{ y: -2 }}
+                                        whileTap={{ scale: 0.98 }}
                                         key={emp.id}
                                         onClick={() => setSelectedEmployee(emp)}
-                                        className={`p-4 rounded-2xl border flex items-center gap-4 cursor-pointer transition-all ${selectedEmployee?.id === emp.id ? 'border-rose-500 bg-rose-50 shadow-md ring-1 ring-rose-500' : 'border-slate-100 bg-white hover:border-rose-200'}`}
+                                        className={`p-5 rounded-[28px] border-2 cursor-pointer transition-all duration-300 flex items-center gap-5 relative overflow-hidden group 
+                                            ${selectedEmployee?.id === emp.id ? 'border-rose-500 bg-rose-50/30' : 'border-slate-100 bg-white hover:border-slate-200'}`}
                                     >
-                                        <div className="relative">
-                                            <img src={emp.avatar} alt="" className="w-12 h-12 rounded-xl object-cover" />
+                                        <div className="relative shrink-0">
+                                            <img src={emp.avatar} alt="" className="w-14 h-14 rounded-[20px] object-cover ring-4 ring-white shadow-sm" />
                                             {selectedEmployee?.id === emp.id && (
-                                                <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
-                                                    <Check size={12} className="text-rose-500" strokeWidth={4} />
+                                                <div className="absolute -top-2 -right-2 bg-rose-500 rounded-full p-1.5 shadow-lg border-2 border-white">
+                                                    <Check size={10} className="text-white" strokeWidth={5} />
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-slate-900 truncate">{emp.name}</h4>
-                                            <p className="text-xs text-slate-500 truncate">{emp.role} • {emp.id}</p>
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <h4 className="font-black text-slate-900 text-sm tracking-tight truncate">{emp.name}</h4>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider truncate mb-1">{emp.role}</p>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-black">ID: {emp.id}</span>
+                                                <span className="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-black uppercase">Active</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                        <div className={`absolute right-0 top-0 h-full w-1 transition-all duration-300 ${selectedEmployee?.id === emp.id ? 'bg-rose-500' : 'bg-transparent group-hover:bg-slate-200'}`} />
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
 
                         {/* Offboarding Type Selection */}
-                        <div className="space-y-4">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">2. Type of Separation</label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="space-y-5">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Stage 02: Classification</label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {OFFBOARDING_TYPES.map(type => (
-                                    <div
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
                                         key={type.id}
                                         onClick={() => {
                                             setFormData({ ...formData, offboardingType: type.label });
-                                            // Reset progress when type changes
                                             if (currentStepIdx > 0) setCurrentStepIdx(0);
                                         }}
-                                        className={`p-4 rounded-2xl border flex flex-col items-center justify-center gap-3 text-center cursor-pointer transition-all ${formData.offboardingType === type.label ? 'border-rose-500 bg-rose-50 shadow-md ring-1 ring-rose-500 scale-[1.02]' : 'border-slate-100 bg-white hover:border-rose-200'}`}
+                                        className={`p-6 rounded-[32px] border-2 flex flex-col items-center justify-center gap-4 text-center cursor-pointer transition-all duration-300 relative overflow-hidden
+                                            ${formData.offboardingType === type.label ? 'border-rose-500 bg-rose-500 text-white shadow-xl shadow-rose-200' : 'border-slate-100 bg-white hover:border-slate-200'}`}
                                     >
-                                        <div className={`p-3 rounded-xl transition-colors ${formData.offboardingType === type.label ? 'bg-rose-500 text-white' : 'bg-slate-50 text-slate-400'}`}>
-                                            {type.icon}
+                                        <div className={`p-4 rounded-[20px] transition-all duration-300 ${formData.offboardingType === type.label ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
+                                            {React.cloneElement(type.icon as React.ReactElement, { size: 24, strokeWidth: 2.5 })}
                                         </div>
-                                        <span className={`text-[10px] font-bold leading-tight ${formData.offboardingType === type.label ? 'text-rose-900' : 'text-slate-600'}`}>{type.label}</span>
-                                    </div>
+                                        <span className={`text-[11px] font-black leading-tight uppercase tracking-widest ${formData.offboardingType === type.label ? 'text-white' : 'text-slate-600'}`}>
+                                            {type.label.split('/')[0]}
+                                        </span>
+                                        {formData.offboardingType === type.label && (
+                                            <div className="absolute top-2 right-2">
+                                                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                                            </div>
+                                        )}
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
 
                         {selectedEmployee && (
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="p-6 bg-slate-900 rounded-2xl text-white flex items-center gap-6 shadow-xl shadow-rose-900/10"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="mt-8 p-10 bg-slate-900 rounded-[40px] text-white flex flex-col md:flex-row items-center gap-10 shadow-2xl shadow-slate-200 relative overflow-hidden"
                             >
-                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center text-2xl font-black shadow-lg shadow-rose-900/40">
-                                    {selectedEmployee.name.split(' ').map(n => n[0]).join('')}
+                                <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
+                                    <UserMinus size={120} />
                                 </div>
-                                <div>
-                                    <h3 className="text-xl font-bold">{selectedEmployee.name}</h3>
-                                    <p className="text-rose-300 font-medium text-sm">{selectedEmployee.role}</p>
-                                    <div className="flex items-center gap-4 mt-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                        <span className="flex items-center gap-1"><Building2 size={12} /> {selectedEmployee.department}</span>
-                                        <span className="flex items-center gap-1 border-l border-slate-700 pl-4"><Briefcase size={12} /> {selectedEmployee.jobType}</span>
+                                <div className="relative">
+                                    <img src={selectedEmployee.avatar} alt="" className="w-24 h-24 rounded-[32px] object-cover ring-8 ring-white/10" />
+                                    <div className="absolute -bottom-2 -right-2 bg-emerald-500 p-2 rounded-2xl border-4 border-slate-900 shadow-xl">
+                                        <ShieldCheck size={20} className="text-white" />
+                                    </div>
+                                </div>
+                                <div className="text-center md:text-left relative z-10">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+                                        <h3 className="text-3xl font-black tracking-tight">{selectedEmployee.name}</h3>
+                                        <span className="inline-block px-3 py-1 bg-white/10 text-rose-300 text-[10px] font-black rounded-full border border-white/10 uppercase tracking-widest">
+                                            {selectedEmployee.id}
+                                        </span>
+                                    </div>
+                                    <p className="text-slate-400 font-bold text-lg mb-6">{selectedEmployee.role}</p>
+                                    <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                                        <div className="flex items-center gap-2 bg-white/5 py-2 px-4 rounded-2xl border border-white/5">
+                                            <Building2 size={14} className="text-rose-400" /> {selectedEmployee.department}
+                                        </div>
+                                        <div className="flex items-center gap-2 bg-white/5 py-2 px-4 rounded-2xl border border-white/5">
+                                            <Briefcase size={14} className="text-rose-400" /> {selectedEmployee.jobType}
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -315,116 +368,119 @@ const OffboardingEmployee: React.FC = () => {
                 );
             case 'DETAILS':
                 return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputField label="Last Working Day" value={formData.lastDay} field="lastDay" type="date" />
-                            <InputField label="Official Separation Date" value={formData.separationDate} field="separationDate" type="date" />
+                    <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-700 max-w-2xl mx-auto py-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <InputField label="Operational Last Day" value={formData.lastDay} field="lastDay" type="date" />
+                            <InputField label="Official Status Cessation" value={formData.separationDate} field="separationDate" type="date" />
                         </div>
-                        <SelectField label="Primary Reason for Leaving" value={formData.reason} field="reason" options={OFFBOARDING_REASONS} />
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Detailed Reason/Comments</label>
+                        <SelectField label="Administrative Protocol Root" value={formData.reason} field="reason" options={OFFBOARDING_REASONS} />
+                        <div className="space-y-3">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Case Narrative & Additional Remarks</label>
                             <textarea
-                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-rose-100 focus:bg-white transition-all h-32"
-                                placeholder="Describe the reason for offboarding..."
+                                className="w-full p-6 bg-white border border-slate-200 rounded-[32px] text-sm font-bold text-slate-900 outline-none focus:ring-4 focus:ring-rose-500/5 focus:border-rose-300 hover:border-slate-300 transition-all h-40 shadow-sm"
+                                placeholder="Provide comprehensive context regarding this personnel separation event..."
                                 value={formData.detailedReason}
                                 onChange={(e) => setFormData({ ...formData, detailedReason: e.target.value })}
                             />
                         </div>
-                        <ToggleField label="Eligible for Rehire" value={formData.isEligibleForRehire} field="isEligibleForRehire" />
+                        <ToggleField label="Post-Separation Rehire Eligibility" value={formData.isEligibleForRehire} field="isEligibleForRehire" />
                     </div>
                 );
             case 'TRANSFER':
                 return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-                        <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center gap-3 text-indigo-700 mb-2">
-                            <Zap size={18} />
-                            <span className="text-xs font-bold">Promotion / Lateral Transfer Configuration</span>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputField label="Target Department" value={formData.newDepartment} field="newDepartment" placeholder="e.g. Engineering" />
-                            <InputField label="New Position/Title" value={formData.newPosition} field="newPosition" placeholder="e.g. Senior Lead" />
-                            <InputField label="Effective Date of Transfer" value={formData.transferEffectiveDate} field="transferEffectiveDate" type="date" className="md:col-span-2" />
-                        </div>
-
-                        <div className="space-y-4">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Benefit Handling</label>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <ToggleField label="Transfer Leave Balances" value={formData.transferLeaves} field="transferLeaves" />
-                                <ToggleField label="Record Accrued 13th Month" value={formData.record13thMonth} field="record13thMonth" />
-                                <ToggleField label="Carry Over Years of Service" value={formData.transferTenure} field="transferTenure" />
+                    <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-700 max-w-2xl mx-auto py-6">
+                        <div className="p-6 bg-slate-900 rounded-[32px] flex items-center gap-5 text-white shadow-xl shadow-slate-200">
+                            <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                                <Zap size={24} className="text-white" />
+                            </div>
+                            <div>
+                                <h4 className="font-black text-sm uppercase tracking-tight">Internal Transition Audit</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Protocol-104: Lateral Movement Adjustment</p>
                             </div>
                         </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <InputField label="Destination Department" value={formData.newDepartment} field="newDepartment" placeholder="e.g. Strategic Growth" />
+                            <InputField label="Succession Title" value={formData.newPosition} field="newPosition" placeholder="e.g. Lead Technologist" />
+                            <InputField label="Transition Effective Date" value={formData.transferEffectiveDate} field="transferEffectiveDate" type="date" className="md:col-span-2" />
+                        </div>
 
-                        <div className="p-6 bg-blue-50 border border-blue-100 rounded-2xl">
-                            <div className="flex items-start gap-3">
-                                <Info size={16} className="text-blue-600 mt-0.5" />
-                                <div className="space-y-1">
-                                    <p className="text-xs font-bold text-blue-900">Internal Movement Policy</p>
-                                    <p className="text-[10px] text-blue-700 leading-relaxed">
-                                        Carrying over benefits ensures the employee's seniority and accrued credits remain intact in the new department.
-                                        If unselected, the system will treat this as a payout event in the next step.
-                                    </p>
-                                </div>
-                            </div>
+                        <div className="grid grid-cols-1 gap-4">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Benefit Inheritance Parameters</label>
+                            <ToggleField label="Migrate PTO/Leave Balance" value={formData.transferLeaves} field="transferLeaves" />
+                            <ToggleField label="Preserve 13th Month Accrual" value={formData.record13thMonth} field="record13thMonth" />
+                            <ToggleField label="Synthesize Service Seniority" value={formData.transferTenure} field="transferTenure" />
                         </div>
                     </div>
                 );
             case 'BENEFICIARY':
                 return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-                        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-3 text-emerald-700 mb-2">
-                            <Heart size={18} />
-                            <span className="text-xs font-bold">Beneficiary & Estate Information</span>
+                    <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-700 max-w-2xl mx-auto py-6">
+                        <div className="p-6 bg-slate-900 rounded-[32px] flex items-center gap-5 text-white shadow-xl shadow-slate-200">
+                            <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                                <Heart size={24} className="text-white" />
+                            </div>
+                            <div>
+                                <h4 className="font-black text-sm uppercase tracking-tight">Estate & Legal Beneficiary Audit</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Protocol-902: Settlement Disbursement Agent</p>
+                            </div>
                         </div>
-                        <InputField label="Primary Beneficiary Full Name" value={formData.beneficiaryName} field="beneficiaryName" />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputField label="Relationship" value={formData.beneficiaryRelation} field="beneficiaryRelation" placeholder="e.g. Spouse, Child" />
-                            <InputField label="Contact Number" value={formData.beneficiaryContact} field="beneficiaryContact" />
+                        <InputField label="Designated Primary Recipient" value={formData.beneficiaryName} field="beneficiaryName" placeholder="Legal Name of Claimant" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <InputField label="Kinship/Legal Relation" value={formData.beneficiaryRelation} field="beneficiaryRelation" placeholder="e.g. Spouse / Next of Kin" />
+                            <InputField label="Authorization Contact" value={formData.beneficiaryContact} field="beneficiaryContact" placeholder="+63 900 000 0000" />
                         </div>
                     </div>
                 );
             case 'CLEARANCE':
                 return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-                        <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-center gap-3 text-orange-700 mb-2">
-                            <ShieldOff size={18} />
-                            <span className="text-xs font-bold">Departmental & Role-Based Approvals</span>
+                    <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-700 max-w-2xl mx-auto py-6">
+                        <div className="p-6 bg-slate-900 rounded-[32px] flex items-center gap-5 text-white shadow-xl shadow-slate-200">
+                            <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                                <ShieldOff size={24} className="text-white" />
+                            </div>
+                            <div>
+                                <h4 className="font-black text-sm uppercase tracking-tight">Operational Divestment Checklist</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Protocol-401: Asset & Access Recovery Audit</p>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <ToggleField label="Immediate Supervisor Clearance" value={formData.supervisorCleared} field="supervisorCleared" />
-                            <ToggleField label="Asset / Company Property (Admin)" value={formData.adminPropertyReturned} field="adminPropertyReturned" />
-                            <ToggleField label="IT Access & Credentials Revoked" value={formData.itAccessRevoked} field="itAccessRevoked" />
-                            <ToggleField label="HR Final Records Clearance" value={formData.hrCleared} field="hrCleared" />
-                        </div>
-                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                            <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                                Note: This step ensures that all physical and digital handovers are documented by the respective department heads.
-                            </p>
+                        <div className="grid grid-cols-1 gap-4">
+                            <ToggleField label="Line Manager Approval Protocol" value={formData.supervisorCleared} field="supervisorCleared" />
+                            <ToggleField label="Physical Asset Recovery Confirmed" value={formData.adminPropertyReturned} field="adminPropertyReturned" />
+                            <ToggleField label="Directory & IAM Access Revocation" value={formData.itAccessRevoked} field="itAccessRevoked" />
+                            <ToggleField label="HR Registry Audit Completion" value={formData.hrCleared} field="hrCleared" />
                         </div>
                     </div>
                 );
             case 'FINANCIAL_CLEARANCE':
                 return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-                        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3 text-blue-700 mb-2">
-                            <CreditCard size={18} />
-                            <span className="text-xs font-bold">Financial Audit & Liabilities</span>
+                    <div className="space-y-10 animate-in fade-in slide-in-from-right-8 duration-700 max-w-2xl mx-auto py-6">
+                        <div className="p-6 bg-slate-900 rounded-[32px] flex items-center gap-5 text-white shadow-xl shadow-slate-200">
+                            <div className="w-12 h-12 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                                <CreditCard size={24} className="text-white" />
+                            </div>
+                            <div>
+                                <h4 className="font-black text-sm uppercase tracking-tight">Financial Liability Audit</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Protocol-505: Treasury & Benefits Reconciliation</p>
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputField label="Remaining Loan Balance" value={formData.remainingLoanBalance} field="remainingLoanBalance" type="number" />
-                            <SelectField label="HMO / Health Card Status" value={formData.hmoConsolidation} field="hmoConsolidation" options={['Cleared', 'Card Returned', 'Lost - For Deduction', 'N/A']} />
-                            <SelectField label="Insurance / Benefits" value={formData.insuranceStatus} field="insuranceStatus" options={['Cancelled', 'Converted to Individual', 'Policy Transferred', 'N/A']} />
-                            <InputField label="Unused Leave Credits (Days)" value={formData.leaveCreditsToConvert} field="leaveCreditsToConvert" type="number" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <InputField label="Secured Loan Balance Recovery" value={formData.remainingLoanBalance} field="remainingLoanBalance" type="number" />
+                            <SelectField label="Medical Benefits (HMO) Status" value={formData.hmoConsolidation} field="hmoConsolidation" options={['Cleared', 'Card Returned', 'Lost - For Deduction', 'N/A']} />
+                            <SelectField label="Policy / Insurance Termination" value={formData.insuranceStatus} field="insuranceStatus" options={['Cancelled', 'Converted to Individual', 'Policy Transferred', 'N/A']} />
+                            <InputField label="Accrued Unused Leave Allotment" value={formData.leaveCreditsToConvert} field="leaveCreditsToConvert" type="number" />
                         </div>
 
-                        <div className="mt-4 p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl">
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h4 className="text-sm font-bold text-slate-900">Final Financial Audit Status</h4>
-                                    <p className="text-xs text-slate-500">Confirm all external liabilities are reconciled</p>
-                                </div>
-                                <ToggleField label="Audit Complete" value={formData.isFinancialAuditComplete} field="isFinancialAuditComplete" />
+                        <div className="mt-4 p-10 bg-white border border-slate-100 rounded-[40px] shadow-lg shadow-slate-100/50 flex flex-col items-center text-center space-y-6">
+                            <div className={`p-5 rounded-[32px] transition-all duration-500 ${formData.isFinancialAuditComplete ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-200' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
+                                <ShieldCheck size={48} strokeWidth={2.5} />
+                            </div>
+                            <div className="space-y-2">
+                                <h4 className="text-xl font-black text-slate-900 tracking-tight">Final Financial Integrity Verification</h4>
+                                <p className="text-xs text-slate-500 font-medium max-w-[280px]">Ensure all external liabilities, HMO cards, and insurance policies are reconciled before issuing the last pay statement.</p>
+                            </div>
+                            <div className="w-full pt-4">
+                                <ToggleField label="Financial Audit Integrity Check" value={formData.isFinancialAuditComplete} field="isFinancialAuditComplete" />
                             </div>
                         </div>
                     </div>
@@ -432,269 +488,387 @@ const OffboardingEmployee: React.FC = () => {
             case 'FINANCIAL':
                 const isRetrenchment = formData.offboardingType === 'Retrenchment/Redundancy';
                 const isRetirement = formData.offboardingType === 'Retirement';
-                const showStatutoryPay = isRetrenchment || isRetirement;
-                const statutoryPayLabel = isRetrenchment ? 'Separation Pay' : 'Retirement Pay';
 
-                const lastPayTotal = Number(formData.lastSalary) +
-                    Number(formData.proRated13thMonth) +
-                    Number(formData.unusedLeaveConversion) +
-                    Number(formData.otherEarnings) -
-                    Number(formData.outstandingLoans) -
-                    Number(formData.remainingLoanBalance);
+                // Core Data - Wire to formData for dynamic updates
+                const basicSalary1 = Number(formData.lastSalary) / 2 || 260.00;
+                const basicSalary2 = Number(formData.lastSalary) / 2 || 260.00;
+                const lastPayrollTotal = basicSalary1 + basicSalary2;
 
-                const finalTotal = lastPayTotal + Number(formData.severancePay);
+                const totalBasicFor13th = 3640.00;
+                const thirteenthMonthTotal = Number(formData.proRated13thMonth) || 390.00;
+
+                const serviceCharge = Number(formData.otherEarnings) || 419.45;
+                const otherIncomeTotal = serviceCharge;
+
+                const taxRefundGross = 4680.00;
+                const govDeductionsTotal = 512.00;
+
+                const sssContri = 250.00;
+                const philHealthContri = 312.00;
+                const pagIbigContri = 200.00;
+                const totalFinalDeductions = sssContri + philHealthContri + pagIbigContri + Number(formData.outstandingLoans) + Number(formData.remainingLoanBalance);
+
+                const grossSettlement = lastPayrollTotal + thirteenthMonthTotal + otherIncomeTotal;
+                const netPay = grossSettlement - totalFinalDeductions;
 
                 return (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
-                        {/* Section 1: Standard Last Pay (Final Settlement) */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 text-slate-800">
-                                <FileText size={16} className="text-slate-400" />
-                                <h3 className="text-xs font-black uppercase tracking-widest">1. Last Pay Breakdown</h3>
+                    <div className="animate-in fade-in slide-in-from-right-8 duration-700 max-w-4xl mx-auto pb-20">
+                        <div className="bg-white p-12 shadow-[0_40px_100px_rgba(0,0,0,0.08)] border border-slate-200 min-h-[1050px] font-mono text-[11px] text-slate-800 leading-relaxed relative overflow-hidden ring-1 ring-slate-100">
+
+                            {/* Security Stamp overlay */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 pointer-events-none opacity-[0.03] select-none">
+                                <div className="border-[15px] border-slate-900 px-16 py-8 rounded-[60px] flex flex-col items-center">
+                                    <span className="text-[12rem] font-black tracking-tighter leading-none">OFFICIALLY</span>
+                                    <span className="text-[12rem] font-black tracking-tighter leading-none">PROCESSED</span>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <InputField label="Remaining Salary (Pro-rated)" value={formData.lastSalary} field="lastSalary" type="number" />
-                                <InputField
-                                    label="Accrued 13th Month"
-                                    value={formData.offboardingType === 'Transfer' && formData.record13thMonth ? 0 : formData.proRated13thMonth}
-                                    field="proRated13thMonth"
-                                    type="number"
-                                    disabled={formData.offboardingType === 'Transfer' && formData.record13thMonth}
-                                />
-                                <InputField
-                                    label="Leave Conversion"
-                                    value={formData.offboardingType === 'Transfer' && formData.transferLeaves ? 0 : formData.unusedLeaveConversion}
-                                    field="unusedLeaveConversion"
-                                    type="number"
-                                    disabled={formData.offboardingType === 'Transfer' && formData.transferLeaves}
-                                />
-                                <InputField label="Other Earnings" value={formData.otherEarnings} field="otherEarnings" type="number" />
-                                <InputField label="Outstanding Deductions" value={formData.outstandingLoans} field="outstandingLoans" type="number" className="md:col-span-2" />
+
+                            {/* Paper Texture/Header Decoration */}
+                            <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-900 opacity-90"></div>
+
+                            {/* Simple Header */}
+                            <div className="text-center mb-12">
+                                <h1 className="text-3xl font-black tracking-tight text-slate-900">Last Pay of <span className="text-rose-600">{selectedEmployee?.name}</span></h1>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-2">Official Settlement Summary</p>
                             </div>
-                            {formData.offboardingType === 'Transfer' && (formData.transferLeaves || formData.record13thMonth) && (
-                                <p className="text-[10px] text-blue-600 font-bold italic">
-                                    Note: Some items are {formData.transferLeaves && formData.record13thMonth ? 'both' : 'partially'} set to 0 because they are marked for Transfer/Carry-over.
-                                </p>
-                            )}
+
+                            {/* LAST PAYROLL SECTION */}
+                            <div className="grid grid-cols-12 mb-10">
+                                <div className="col-span-3 font-bold uppercase tracking-widest text-[9px]">A. LAST PAYROLL</div>
+                                <div className="col-span-9 space-y-8">
+                                    {/* Period 1 */}
+                                    <div className="grid grid-cols-9">
+                                        <div className="col-span-6">
+                                            <div className="font-bold underline mb-1">(Period 1: 01 - 15)</div>
+                                            <div className="flex justify-between pr-8"><span>Basic Salary</span> <span>{basicSalary1.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                                            <div className="flex justify-between pr-8 text-slate-400"><span>Absences</span> <span>(0.00)</span></div>
+                                            <div className="flex justify-between pr-8 text-slate-400"><span>Lates / Undertime</span> <span>(0.00)</span></div>
+                                        </div>
+                                        <div className="col-span-3 text-right flex flex-col justify-end">
+                                            <div className="font-bold border-t border-slate-200 pt-1">{basicSalary1.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Period 2 */}
+                                    <div className="grid grid-cols-9">
+                                        <div className="col-span-6">
+                                            <div className="font-bold underline mb-1">(Period 2: 16 - 28)</div>
+                                            <div className="flex justify-between pr-8"><span>Basic Salary</span> <span>{basicSalary2.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                                            <div className="flex justify-between pr-8"><span>Incentives / Adhoc</span> <span>0.00</span></div>
+                                        </div>
+                                        <div className="col-span-3 text-right flex flex-col justify-end">
+                                            <div className="font-bold border-t border-slate-200 pt-1">{basicSalary2.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+
+                                            <div className="grid grid-cols-2 mt-4 font-black h-6 border-t-2 border-slate-900 pt-1">
+                                                <div className="text-right">{lastPayrollTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                <div className="text-right">{lastPayrollTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 13TH MONTH SECTION */}
+                            <div className="grid grid-cols-12 mb-10">
+                                <div className="col-span-3 font-bold uppercase tracking-widest text-[9px]">B. 13TH MONTH</div>
+                                <div className="col-span-9">
+                                    <div className="grid grid-cols-9">
+                                        <div className="col-span-6 space-y-1">
+                                            <div className="flex justify-between pr-8"><span>Accrued Basis</span> <span>{totalBasicFor13th.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                                            <div className="flex justify-between pr-8"><span>Annual Factor</span> <span>/ 12.00</span></div>
+                                        </div>
+                                        <div className="col-span-3 text-right flex flex-col justify-end">
+                                            <div className="font-black h-6 flex justify-between items-center mt-1 border-t-2 border-slate-900 pt-1">
+                                                <span></span>
+                                                <div className="grid grid-cols-2 w-full">
+                                                    <div className="text-right">{thirteenthMonthTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                    <div className="text-right">{thirteenthMonthTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* OTHER INCOME SECTION */}
+                            <div className="grid grid-cols-12 mb-10">
+                                <div className="col-span-3 font-bold uppercase tracking-widest text-[9px]">C. ADJUSTMENTS</div>
+                                <div className="col-span-9">
+                                    <div className="grid grid-cols-9">
+                                        <div className="col-span-6">
+                                            <div className="flex justify-between pr-8"><span>Service Charge Allotment</span> <span>{serviceCharge.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                                            <div className="flex justify-between pr-8"><span>Leave Encashment</span> <span>0.00</span></div>
+                                        </div>
+                                        <div className="col-span-3 text-right flex flex-col justify-end">
+                                            <div className="font-black h-6 flex justify-between items-center mt-1 border-t-2 border-slate-900 pt-1">
+                                                <span></span>
+                                                <div className="grid grid-cols-2 w-full">
+                                                    <div className="text-right">{otherIncomeTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                    <div className="text-right">{otherIncomeTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* GROSS / NET PAY SECTION */}
+                            <div className="space-y-4 pt-10 border-t-4 border-slate-900">
+                                <div className="grid grid-cols-12">
+                                    <div className="col-span-3 font-bold text-xs uppercase">TOTAL GROSS</div>
+                                    <div className="col-span-9 text-right font-black text-sm border-b-2 border-slate-900 pb-1">
+                                        PHP {grossSettlement.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-12 mt-6">
+                                    <div className="col-span-3 font-bold text-rose-600 uppercase tracking-widest text-[9px]">D. LESS DEDUCTIONS</div>
+                                    <div className="col-span-9 grid grid-cols-9">
+                                        <div className="col-span-6 space-y-1">
+                                            <div className="flex justify-between pr-8"><span>SSS / PhilHealth / Pag-IBIG</span> <span>{govDeductionsTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                                            <div className="flex justify-between pr-8"><span>Outstanding Loans / Dues</span> <span>{(Number(formData.outstandingLoans) + Number(formData.remainingLoanBalance)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                                        </div>
+                                        <div className="col-span-3 text-right space-y-1 flex flex-col justify-end">
+                                            <div className="font-bold border-t border-slate-200 pt-1 text-rose-600 tracking-tighter">
+                                                ({totalFinalDeductions.toLocaleString(undefined, { minimumFractionDigits: 2 })})
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-12 pt-12">
+                                    <div className="col-span-3 flex flex-col">
+                                        <span className="font-black text-lg tracking-tighter uppercase">NET PAY</span>
+                                        <span className="text-[8px] text-slate-400 font-bold uppercase italic">Final Settlement Amount</span>
+                                    </div>
+                                    <div className="col-span-9 text-right">
+                                        <div className="inline-block bg-slate-900 text-white px-16 py-3 font-black text-2xl tracking-tighter shadow-2xl">
+                                            {netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Official Signature Lines */}
+                            <div className="mt-24 grid grid-cols-3 gap-12 grayscale">
+                                <div className="space-y-4">
+                                    <div className="border-b border-slate-900 h-8 flex items-end justify-center font-bold text-[10px]">
+                                        AUDIT_ADMIN_BOT
+                                    </div>
+                                    <div className="text-[8px] font-black uppercase text-center tracking-widest text-slate-400">Prepared By</div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="border-b border-slate-900 h-8"></div>
+                                    <div className="text-[8px] font-black uppercase text-center tracking-widest text-slate-400">Checked / Verified By</div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="border-b border-slate-900 h-8"></div>
+                                    <div className="text-[8px] font-black uppercase text-center tracking-widest text-slate-400">Noted / Received By</div>
+                                </div>
+                            </div>
+
+                            {/* Verification Footer */}
+                            <div className="mt-20 pt-8 border-t border-slate-100 flex justify-between items-center opacity-30 grayscale">
+                                <div className="flex gap-4">
+                                    <div className="w-8 h-8 rounded-full border border-slate-900 flex items-center justify-center font-bold">QR</div>
+                                    <div className="text-[7px] max-w-[200px] leading-[1.2]">
+                                        Document digitally signed and authenticated. Valid only with official corporate seal for redundancy claims.
+                                    </div>
+                                </div>
+                                <div className="text-[7px] font-bold">PAGE 01 / 01</div>
+                            </div>
                         </div>
 
-                        {/* Section 2: Statutory/Supplemental Pay (Optional based on type) */}
-                        {showStatutoryPay && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="space-y-4 p-6 bg-rose-50 border border-rose-100 rounded-2xl"
-                            >
-                                <div className="flex items-center gap-2 text-rose-900">
-                                    <DollarSign size={16} className="text-rose-400" />
-                                    <h3 className="text-xs font-black uppercase tracking-widest">2. {statutoryPayLabel} (Book VI)</h3>
-                                </div>
-                                <InputField
-                                    label={`Net ${statutoryPayLabel}`}
-                                    value={formData.severancePay}
-                                    field="severancePay"
-                                    type="number"
-                                    placeholder={`Enter computed ${statutoryPayLabel}...`}
-                                />
-                                <p className="text-[10px] text-rose-600 font-medium italic">
-                                    Ref: Company Policy › Separation Pay Calculator. Fraction of 6 mos = 1 whole year.
-                                </p>
-                            </motion.div>
-                        )}
-
-                        {/* Summary Card */}
-                        <div className="p-6 bg-slate-900 rounded-2xl text-white shadow-2xl shadow-rose-900/20 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-600 rounded-full blur-[80px] opacity-10 -mr-16 -mt-16"></div>
-                            <div className="relative z-10 space-y-4">
-                                <div className="flex justify-between items-center text-slate-400 uppercase tracking-widest text-[10px] font-bold">
-                                    <span>Total Payout Calculation</span>
-                                    {showStatutoryPay && <span>Last Pay + {statutoryPayLabel}</span>}
-                                </div>
-                                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                                    <div>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Total Estimated Payout</p>
-                                        <div className="text-4xl font-black text-white">
-                                            ₱{finalTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                        </div>
-                                    </div>
-                                    <div className="text-right space-y-1">
-                                        <div className="text-[10px] flex justify-between gap-8">
-                                            <span className="text-slate-500 font-bold uppercase tracking-widest">Base Last Pay:</span>
-                                            <span className="text-slate-300 font-mono font-bold">₱{lastPayTotal.toLocaleString()}</span>
-                                        </div>
-                                        <div className="text-[10px] flex justify-between gap-8 text-rose-300">
-                                            <span className="font-bold uppercase tracking-widest">Loan Deductions:</span>
-                                            <span className="font-mono font-bold">- ₱{Number(formData.remainingLoanBalance).toLocaleString()}</span>
-                                        </div>
-                                        {showStatutoryPay && (
-                                            <div className="text-[10px] flex justify-between gap-8 border-t border-slate-800 pt-1">
-                                                <span className="text-rose-500 font-bold uppercase tracking-widest">{statutoryPayLabel}:</span>
-                                                <span className="text-rose-400 font-mono font-bold">+ ₱{Number(formData.severancePay).toLocaleString()}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                        {/* Wizard Context Notification */}
+                        <div className="mt-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4">
+                            <div className="p-2 bg-emerald-500 rounded-lg text-white">
+                                <ShieldCheck size={18} />
                             </div>
+                            <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest">
+                                The statement above is dynamically linked to your current offboarding workflow.
+                            </p>
                         </div>
                     </div>
                 );
             case 'REVIEW':
-                const reviewLastPayT = Number(formData.lastSalary) + Number(formData.proRated13thMonth) + Number(formData.unusedLeaveConversion) + Number(formData.otherEarnings) - Number(formData.outstandingLoans);
+                const reviewLastPayT = Number(formData.lastSalary) + Number(formData.proRated13thMonth) + Number(formData.unusedLeaveConversion) + Number(formData.otherEarnings) - Number(formData.outstandingLoans) - Number(formData.remainingLoanBalance) - 762;
                 const reviewGrandT = reviewLastPayT + Number(formData.severancePay);
                 const isSpecialFinal = formData.offboardingType === 'Retrenchment/Redundancy' || formData.offboardingType === 'Retirement';
 
                 return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
-                        <div className="bg-rose-50 border border-rose-100 p-6 rounded-2xl flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-rose-600 shadow-xl shadow-rose-200">
-                                <LogOut size={24} strokeWidth={3} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-rose-900">Final Confirmation</h3>
-                                <p className="text-sm text-rose-700">Type: <strong>{formData.offboardingType}</strong></p>
+                    <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-700 max-w-4xl mx-auto pb-20">
+                        {/* Final Payout Hero Section */}
+                        <div className="bg-slate-900 rounded-[32px] p-10 text-white relative overflow-hidden shadow-2xl shadow-slate-200">
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-[100px] -mr-32 -mt-32"></div>
+
+                            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[24px] flex items-center justify-center border border-white/20">
+                                        <Wallet size={32} className="text-rose-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-black tracking-tight text-white mb-1">Final Settlement Payout</h3>
+                                        <p className="text-sm text-slate-400 font-medium">Verified Net Amount for Disbursement</p>
+                                    </div>
+                                </div>
+                                <div className="text-left md:text-right">
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-rose-400 mb-1">Grand Total (PHP)</div>
+                                    <div className="text-5xl font-black tracking-tighter text-white">
+                                        {reviewGrandT.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-8 shadow-sm">
-                            <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
-                                <img src={selectedEmployee?.avatar} alt="" className="w-16 h-16 rounded-2xl object-cover ring-4 ring-slate-50" />
-                                <div>
-                                    <h4 className="text-xl font-bold text-slate-900">{selectedEmployee?.name}</h4>
-                                    <p className="text-sm text-slate-500 font-medium">{selectedEmployee?.role}</p>
-                                    <span className="mt-2 inline-flex px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-full uppercase tracking-tighter">
-                                        ID: {selectedEmployee?.id}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                <div>
-                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Effective Date</p>
-                                    <p className="text-sm text-slate-900 font-bold">{formData.offboardingType === 'Transfer' ? formData.transferEffectiveDate : (formData.separationDate || formData.lastDay) || '-'}</p>
+                        {/* Summary Details Grid */}
+                        <div className="bg-white border border-slate-200 rounded-[32px] p-10 space-y-12 shadow-sm">
+                            {/* Employee Identity */}
+                            <div className="flex items-center gap-8 pb-8 border-b border-slate-100">
+                                <div className="relative">
+                                    <img src={selectedEmployee?.avatar} alt="" className="w-20 h-20 rounded-[24px] object-cover ring-4 ring-slate-50" />
+                                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full"></div>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Total Payout</p>
-                                    <p className="text-lg text-rose-600 font-black">₱{reviewGrandT.toLocaleString()}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Clearance Status</p>
-                                    <p className="text-sm text-slate-900 font-bold">{(formData.supervisorCleared && formData.hrCleared) ? 'Clearing Success' : 'Pending Approvals'}</p>
-                                </div>
-                            </div>
-
-                            <div className="bg-slate-50 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Departmental Audit</h5>
-                                    <ul className="space-y-2">
-                                        {[
-                                            { label: 'Supervisor', val: formData.supervisorCleared },
-                                            { label: 'IT Access', val: formData.itAccessRevoked },
-                                            { label: 'Admin/Inventory', val: formData.adminPropertyReturned },
-                                            { label: 'HR Compliance', val: formData.hrCleared }
-                                        ].map(item => (
-                                            <li key={item.label} className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-600 font-medium">{item.label}</span>
-                                                {item.val ? <Check size={14} className="text-emerald-500" strokeWidth={3} /> : <X size={14} className="text-rose-500" strokeWidth={3} />}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="space-y-4">
-                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Audit</h5>
-                                    <ul className="space-y-2 text-xs">
-                                        <li className="flex justify-between"><span className="text-slate-600">Loan Dues</span> <span className="font-bold text-slate-900">₱{Number(formData.remainingLoanBalance).toLocaleString()}</span></li>
-                                        <li className="flex justify-between"><span className="text-slate-600">HMO Status</span> <span className="font-bold text-slate-900">{formData.hmoConsolidation}</span></li>
-                                        <li className="flex justify-between"><span className="text-slate-600">Leave Conversion</span> <span className="font-bold text-slate-900">{formData.leaveCreditsToConvert} Days</span></li>
-                                        <li className="flex justify-between pt-2 border-t border-slate-200">
-                                            <span className="text-slate-600 font-bold">Audit Complete</span>
-                                            {formData.isFinancialAuditComplete ? <Check size={14} className="text-emerald-500" strokeWidth={3} /> : <X size={14} className="text-rose-500" strokeWidth={3} />}
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div className="bg-slate-900 rounded-3xl p-6 text-white grid grid-cols-1 md:grid-cols-2 gap-8 ring-4 ring-slate-100">
-                                <div className="space-y-4">
-                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Separation Details</h5>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <p className="text-[10px] text-slate-500 uppercase">Reason for Separation</p>
-                                            <p className="text-xs font-bold text-white">{formData.reason || 'Not Specified'}</p>
-                                        </div>
-                                        {formData.detailedReason && (
-                                            <div>
-                                                <p className="text-[10px] text-slate-500 uppercase">Detailed Remarks</p>
-                                                <p className="text-[10px] text-slate-300 line-clamp-2">{formData.detailedReason}</p>
-                                            </div>
-                                        )}
-                                        <div className="flex gap-4">
-                                            <div>
-                                                <p className="text-[10px] text-slate-500 uppercase">Rehire Eligibility</p>
-                                                <p className="text-xs font-bold text-white">{formData.isEligibleForRehire ? 'Eligible' : 'Non-Eligible'}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {formData.beneficiaryName && (
-                                    <div className="space-y-4">
-                                        <h5 className="text-[10px] font-black uppercase tracking-widest text-rose-400">Beneficiary Info (Estate)</h5>
-                                        <div className="space-y-3">
-                                            <div>
-                                                <p className="text-[10px] text-slate-500 uppercase">Primary Claimant</p>
-                                                <p className="text-xs font-bold text-white uppercase">{formData.beneficiaryName}</p>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <p className="text-[10px] text-slate-500 uppercase">Relation</p>
-                                                    <p className="text-[10px] font-bold text-white">{formData.beneficiaryRelation}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-slate-500 uppercase">Contact</p>
-                                                    <p className="text-[10px] font-bold text-white">{formData.beneficiaryContact}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {formData.offboardingType === 'Transfer' && (
-                                    <div className="space-y-4">
-                                        <h5 className="text-[10px] font-black uppercase tracking-widest text-blue-400">Transfer Destination</h5>
-                                        <div className="space-y-3">
-                                            <div>
-                                                <p className="text-[10px] text-slate-500 uppercase">Department</p>
-                                                <p className="text-xs font-bold text-white">{formData.newDepartment}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] text-slate-500 uppercase">New Position</p>
-                                                <p className="text-xs font-bold text-white">{formData.newPosition}</p>
-                                            </div>
-                                            <div className="pt-2 border-t border-slate-800">
-                                                <p className="text-[10px] text-slate-500 uppercase mb-1">Carry-over Status</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {formData.transferLeaves && <span className="text-[9px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">Leaves</span>}
-                                                    {formData.record13thMonth && <span className="text-[9px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">13th Month</span>}
-                                                    {formData.transferTenure && <span className="text-[9px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">Tenure</span>}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {isSpecialFinal && (
-                                <div className="p-4 border-2 border-rose-100 bg-rose-50/30 rounded-2xl flex justify-between items-center">
-                                    <span className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Supplemental Calculation</span>
-                                    <div className="flex gap-2">
-                                        <span className="px-3 py-1 bg-white border border-rose-200 rounded-full text-[10px] font-bold text-rose-700 shadow-sm">Last Pay Payout</span>
-                                        <span className="px-3 py-1 bg-rose-500 text-white rounded-full text-[10px] font-bold shadow-sm shadow-rose-200">
-                                            {formData.offboardingType === 'Retrenchment/Redundancy' ? 'Separation Pay' : 'Retirement Pay'}
+                                    <h4 className="text-2xl font-black text-slate-900 tracking-tight">{selectedEmployee?.name}</h4>
+                                    <p className="text-slate-500 font-bold text-sm">{selectedEmployee?.role}</p>
+                                    <div className="mt-2 flex gap-3">
+                                        <span className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black rounded-full uppercase tracking-widest border border-slate-200">
+                                            ID: {selectedEmployee?.id}
+                                        </span>
+                                        <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-black rounded-full uppercase tracking-widest border border-rose-100">
+                                            {formData.offboardingType}
                                         </span>
                                     </div>
                                 </div>
-                            )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                {/* Audits & Checks */}
+                                <div className="space-y-8">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-4 bg-rose-500 rounded-full"></div>
+                                            <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Departmental Clearances</h5>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {[
+                                                { label: 'Asset Recovery', val: formData.adminPropertyReturned, icon: Package },
+                                                { label: 'Digital Access', val: formData.itAccessRevoked, icon: ShieldOff },
+                                                { label: 'Supervisor Audit', val: formData.supervisorCleared, icon: UserCheck }
+                                            ].map(item => (
+                                                <div key={item.label} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group transition-all">
+                                                    <div className="flex items-center gap-3">
+                                                        <item.icon size={16} className="text-slate-400" />
+                                                        <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{item.label}</span>
+                                                    </div>
+                                                    {item.val ?
+                                                        <div className="bg-emerald-500/10 p-1.5 rounded-lg"><Check size={14} className="text-emerald-500" strokeWidth={4} /></div> :
+                                                        <div className="bg-rose-500/10 p-1.5 rounded-lg"><X size={14} className="text-rose-500" strokeWidth={4} /></div>
+                                                    }
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-4 bg-emerald-500 rounded-full"></div>
+                                            <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Financial Verification</h5>
+                                        </div>
+                                        <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-slate-500 font-medium">Outstanding Balances</span>
+                                                <span className="font-black text-rose-600">₱{Number(formData.remainingLoanBalance).toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-slate-500 font-medium">Leave Conversion Status</span>
+                                                <span className="font-black text-slate-800 uppercase tracking-tighter">{formData.leaveCreditsToConvert} CALENDAR DAYS</span>
+                                            </div>
+                                            <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Audit Integrity</span>
+                                                {formData.isFinancialAuditComplete ?
+                                                    <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-600 uppercase tracking-widest"><ShieldCheck size={14} /> CERTIFIED</span> :
+                                                    <span className="flex items-center gap-1.5 text-[10px] font-black text-rose-600 uppercase tracking-widest"><AlertTriangle size={14} /> PENDING</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Separation Overview */}
+                                <div className="space-y-8">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-4 bg-slate-900 rounded-full"></div>
+                                            <h5 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Exit Information</h5>
+                                        </div>
+                                        <div className="space-y-6">
+                                            <div className="grid grid-cols-2 gap-8">
+                                                <div className="group">
+                                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5 group-hover:text-rose-500 transition-colors">Separation Date</p>
+                                                    <p className="text-sm text-slate-900 font-black tracking-tight">{formData.separationDate || formData.lastDay || '-'}</p>
+                                                </div>
+                                                <div className="group">
+                                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1.5 group-hover:text-rose-500 transition-colors">Rehire Policy</p>
+                                                    <p className="text-sm text-slate-900 font-black tracking-tight">{formData.isEligibleForRehire ? 'ELIGIBLE' : 'NON-ELIGIBLE'}</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="p-6 bg-slate-50 rounded-3xl border border-dotted border-slate-300">
+                                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">Administrative Reason</p>
+                                                <p className="text-xs font-bold text-slate-800 leading-relaxed mb-1">{formData.reason || 'N/A'}</p>
+                                                {formData.detailedReason && (
+                                                    <p className="text-[10px] text-slate-500 italic line-clamp-3">"{formData.detailedReason}"</p>
+                                                )}
+                                            </div>
+
+                                            {formData.beneficiaryName && (
+                                                <div className="p-6 bg-rose-50 rounded-3xl border border-rose-100 space-y-4 relative overflow-hidden">
+                                                    <div className="absolute top-0 right-0 p-4 opacity-10"><Heart size={48} className="text-rose-500" /></div>
+                                                    <h6 className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Beneficiary Designation</h6>
+                                                    <div className="space-y-3 relative z-10">
+                                                        <div>
+                                                            <p className="text-[9px] text-rose-400 font-black uppercase">Primary Recipient</p>
+                                                            <p className="text-xs font-black text-rose-900 uppercase tracking-tight">{formData.beneficiaryName}</p>
+                                                        </div>
+                                                        <div className="flex gap-12">
+                                                            <div>
+                                                                <p className="text-[9px] text-rose-400 font-black uppercase">Relationship</p>
+                                                                <p className="text-[10px] font-bold text-rose-800">{formData.beneficiaryRelation}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[9px] text-rose-400 font-black uppercase">Contact</p>
+                                                                <p className="text-[10px] font-bold text-rose-800">{formData.beneficiaryContact}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        {/* Special Notification for Supplemental Pay */}
+                        {isSpecialFinal && (
+                            <div className="bg-gradient-to-r from-rose-500 to-rose-600 rounded-3xl p-6 text-white shadow-xl shadow-rose-100 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                                        <Star size={24} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-sm uppercase tracking-tight">Supplemental Compensation Applied</h4>
+                                        <p className="text-[10px] text-rose-100 font-medium opacity-80 uppercase tracking-widest">
+                                            {formData.offboardingType === 'Retrenchment/Redundancy' ? 'Redundancy Separation Pay Calculated' : 'Early Retirement Benefit Package Included'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="px-6 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 font-black text-xs">
+                                    PHP {Number(formData.severancePay).toLocaleString()}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
             default: return null;
@@ -751,34 +925,46 @@ const OffboardingEmployee: React.FC = () => {
 
                 {/* Content Area */}
                 <div className="flex-1 flex flex-col h-full bg-white relative">
-                    <div className="px-10 py-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/20">
-                        <div>
-                            <h2 className="text-2xl font-extrabold text-slate-900">{activeSteps[currentStepIdx]?.title}</h2>
-                            <p className="text-sm text-slate-500 font-medium mt-1">{activeSteps[currentStepIdx]?.description}</p>
+                    <div className="px-12 py-10 border-b border-slate-100 flex justify-between items-center bg-white">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-3">
+                                <span className="text-[10px] bg-slate-100 text-slate-500 font-black px-2.5 py-1 rounded-full uppercase tracking-widest">
+                                    Step 0{currentStepIdx + 1} of 0{activeSteps.length}
+                                </span>
+                                <div className="h-px w-8 bg-slate-200"></div>
+                                <span className="text-[10px] text-rose-500 font-black uppercase tracking-[0.2em]">{formData.offboardingType || 'UNSPECIFIED'}</span>
+                            </div>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight">{activeSteps[currentStepIdx]?.title}</h2>
+                            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{activeSteps[currentStepIdx]?.description}</p>
                         </div>
-                        <div className="p-3 bg-white border border-slate-100 rounded-xl shadow-sm text-rose-500">
+                        <div className="w-14 h-14 bg-slate-50 rounded-[20px] border border-slate-100 flex items-center justify-center text-slate-700 shadow-sm">
                             {activeSteps[currentStepIdx]?.icon}
                         </div>
                     </div>
 
-                    <div className="flex-1 px-10 py-8 overflow-y-auto">
+                    <div className="flex-1 px-12 py-10 overflow-y-auto bg-slate-50/10">
                         <StepContent />
                     </div>
 
-                    <div className="px-10 py-6 border-t border-slate-50 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky bottom-0">
+                    <div className="px-12 py-8 border-t border-slate-100 flex justify-between items-center bg-white/80 backdrop-blur-md sticky bottom-0 z-20">
                         <button
                             onClick={handleBack}
-                            className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                            className={`flex items-center gap-3 px-8 py-4 rounded-[20px] font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300
+                                ${isFirstStep ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200' : 'text-slate-500 hover:bg-slate-100 border border-slate-200'}`}
                         >
-                            <ArrowLeft size={16} /> {isFirstStep ? 'Cancel' : 'Back'}
+                            <ArrowLeft size={14} strokeWidth={3} /> {isFirstStep ? 'Exit Wizard' : 'Go Back'}
                         </button>
 
-                        <button
-                            onClick={handleNext}
-                            className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
-                        >
-                            {isLastStep ? 'Complete Process' : 'Next Step'} <ArrowRight size={16} />
-                        </button>
+                        <div className="flex items-center gap-4">
+                            {!isLastStep && <span className="text-[9px] text-slate-300 font-bold uppercase tracking-widest hidden md:block">Requires Verification</span>}
+                            <button
+                                onClick={handleNext}
+                                className="flex items-center gap-3 px-10 py-4 bg-slate-900 text-white rounded-[20px] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all duration-300 shadow-2xl shadow-slate-200 active:scale-95 group border-b-4 border-slate-950"
+                            >
+                                {isLastStep ? 'Finalize & Sign' : 'Proceed to Next'}
+                                <ArrowRight size={14} strokeWidth={3} className="transition-transform group-hover:translate-x-1" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </motion.div>

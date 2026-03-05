@@ -32,8 +32,7 @@ const ChevronRight = ({ size, className }: { size: number, className: string }) 
 
 const YearEndBatchTaxPage: React.FC = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const stage = new URLSearchParams(location.search).get('stage') || 'assumed'; // 'assumed' or 'actual'
+    const stage = 'actual';
     const [employees] = useState(MOCK_YEAR_END_DATA);
     const [activeId, setActiveId] = useState<string>(employees[0]?.id || '');
     const [processedIds, setProcessedIds] = useState<Set<string>>(new Set());
@@ -52,7 +51,7 @@ const YearEndBatchTaxPage: React.FC = () => {
     // Get the current history for the active employee, prioritize overrides
     const monthlyHistory = useMemo(() => {
         if (!activeEmployee) return [];
-        const base = ledgerStates[activeId] || generate13thMonthHistory(activeEmployee.ytdGross, activeId, stage === 'assumed');
+        const base = ledgerStates[activeId] || generate13thMonthHistory(activeEmployee.ytdGross, activeId, false);
 
         // Enrich with taxableIncome if not present or needs refresh
         return base.map(m => {
@@ -178,7 +177,7 @@ const YearEndBatchTaxPage: React.FC = () => {
         if (nextIndex < employees.length) {
             setActiveId(employees[nextIndex].id);
         } else {
-            alert(`Batch Tax Annualization (${stage.toUpperCase()}) Completed!`);
+            alert(`Batch Tax Annualization Completed!`);
             navigate('/manage/year-end/tax');
         }
     };
@@ -263,7 +262,7 @@ const YearEndBatchTaxPage: React.FC = () => {
                         <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                             Tax Annualization Adjustment Ledger
                             <span className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100">
-                                {stage === 'assumed' ? 'Assumed (Dec)' : 'Actual (Jan)'}
+                                Final Reconciliation (Jan)
                             </span>
                         </h2>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Workspace: Review YTD taxable income and verify final tax liability</span>
@@ -585,7 +584,7 @@ const YearEndBatchTaxPage: React.FC = () => {
                             </div>
                         ))}
                     </div>
-                    <p className="text-xs font-bold text-slate-400 ml-2">Reviewing list for <span className="text-slate-900">Tax Annualization 2026 ({stage.toUpperCase()})</span></p>
+                    <p className="text-xs font-bold text-slate-400 ml-2">Reviewing list for <span className="text-slate-900">Tax Annualization 2026</span></p>
                 </div>
 
                 <div className="flex gap-3">
