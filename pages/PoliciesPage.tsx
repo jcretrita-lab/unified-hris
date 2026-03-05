@@ -41,7 +41,8 @@ import {
     Edit,
     TrendingUp,
     ChevronDown,
-    ShieldPlus
+    ShieldPlus,
+    Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_SETUPS, ApprovalSetup } from './ApprovalSetup';
@@ -182,6 +183,7 @@ interface PolicyState {
     lastPayHoldMonths: number;
     requireAttendanceBeforeAfterHoliday: boolean;
     autoRejectDays: number;
+    leaveMonetizationTaxFreeLimit: number;
 };
 
 const INITIAL_STATE: PolicyState = {
@@ -263,8 +265,8 @@ const INITIAL_STATE: PolicyState = {
     performanceBonusBasis: '13th Month',
     performanceBonusRequiresAppraisal: false,
     requireAttendanceBeforeAfterHoliday: false,
-    autoRejectDays: 7
-
+    autoRejectDays: 7,
+    leaveMonetizationTaxFreeLimit: 10
 };
 
 // Leave Monetization Types
@@ -458,8 +460,49 @@ const PoliciesPage: React.FC = () => {
                 setPolicies(prev => ({ ...prev, [syncMap[id]]: value }));
             }
         }
-
         setHasChanges(true);
+    };
+
+    const handleAddCustomLeave = () => {
+        const newId = `custom_${Math.random().toString(36).substr(2, 9)}`;
+        const newLeave: LeaveConfig = {
+            id: newId,
+            name: 'New Custom Leave',
+            code: 'NCL',
+            isStatutory: false,
+            enabled: true,
+            days: 0,
+            icon: Heart,
+            color: 'text-indigo-400',
+            citation: 'Company Policy',
+            monetizationEnabled: false,
+            monetizationMaxDays: 0,
+            monetizationRate: 100,
+            monetizationBasis: 'Daily Rate',
+            eligibility: ['Regular'],
+            accrualPolicy: 'Immediate',
+            maxFiledPerMonth: 0,
+            expiration: 'Every Year-End',
+            maxAccrued: 0,
+            isForfeited: true
+        };
+        setLeaveSettings(prev => ({ ...prev, [newId]: newLeave }));
+        setSelectedLeaveId(newId);
+        setHasChanges(true);
+    };
+
+    const handleDeleteLeave = (id: string) => {
+        if (leaveSettings[id].isStatutory) {
+            alert("Statutory leaves cannot be deleted.");
+            return;
+        }
+        if (confirm("Are you sure you want to delete this custom leave?")) {
+            const newSettings = { ...leaveSettings };
+            delete newSettings[id];
+            setLeaveSettings(newSettings);
+            setSelectedLeaveId('sil');
+            setHasChanges(true);
+        }
     };
 
     const handleSaveDivisor = () => {
@@ -1564,72 +1607,469 @@ const PoliciesPage: React.FC = () => {
                             {/* --- COMPANY: SPECIAL LAWS --- */}
                             {primaryTab === 'Company' && activeTab === 'Special' && (
                                 <div className="space-y-8">
-                                    <SectionTitle
-                                        icon={Heart}
-                                        title="Extended Benefits"
-                                        description="Additional leaves and benefits provided by the company beyond minimal requirements."
-                                        citation="Corporate Policy"
-                                    />
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {[
-                                            { label: 'Service Incentive Leave', key: 'serviceIncentiveLeave', icon: Calendar, color: 'text-slate-400' },
-                                            { label: 'Maternity Leave', key: 'maternityLeave', icon: Baby, color: 'text-pink-400' },
-                                            { label: 'Paternity Leave', key: 'paternityLeave', icon: Baby, color: 'text-blue-400' },
-                                            { label: 'Solo Parent Leave', key: 'soloParentLeave', icon: User, color: 'text-amber-400' },
-                                            { label: 'VAWC Leave', key: 'vawcLeave', icon: ShieldCheck, color: 'text-purple-400' },
-                                            { label: 'Magna Carta (Surgery)', key: 'magnaCartaLeave', icon: Heart, color: 'text-rose-400' },
-                                        ].map((item) => (
-                                            <div key={item.key} className="p-5 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <item.icon size={16} className={item.color} />
-                                                    <span className="text-sm font-bold text-slate-800">{item.label}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        className="w-16 p-1 border-b border-slate-300 font-bold text-lg text-center outline-none focus:border-blue-500 bg-white"
-                                                        value={(policies as any)[item.key]}
-                                                        onChange={(e) => updatePolicy(item.key as any, Number(e.target.value))}
-                                                    />
-                                                    <span className="text-xs text-slate-500 font-bold">Days</span>
-                                                </div>
-                                                <p className="mt-3 text-[10px] text-slate-400 italic">Overrides statutory min.</p>
-                                            </div>
-                                        ))}
+                                    <div className="flex justify-between items-center mb-6">
+                                        <SectionTitle
+                                            icon={BookMarked}
+                                            title="Company Special Laws & Leaves"
+                                            description="Configure additional leave benefits provided by the company, including custom leaves and monetization rules."
+                                            citation="Corporate Policy"
+                                        />
+                                        <button
+                                            onClick={handleAddCustomLeave}
+                                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition-all shadow-lg active:scale-95 uppercase tracking-widest"
+                                        >
+                                            <Plus size={16} /> Add Custom Leave
+                                        </button>
                                     </div>
 
-                                    <div className="w-full h-px bg-slate-100 my-10"></div>
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
+                                        {/* Left Panel: Leave Picker */}
+                                        <div className="lg:col-span-3 space-y-6">
+                                            <div className="bg-slate-900 rounded-[32px] p-6 shadow-2xl relative overflow-hidden border border-slate-800">
+                                                <div className="absolute top-0 right-0 p-6 opacity-5">
+                                                    <Calendar size={80} className="text-white" />
+                                                </div>
+                                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6 relative z-10">Available Benefits</h4>
 
-                                    <SectionTitle
-                                        icon={DollarSign}
-                                        title="Leave Monetization"
-                                        description="Company-specific rules for leave encashment."
-                                        citation="Company Handbook Section 5"
-                                    />
+                                                <div className="space-y-2 relative z-10 max-h-[500px] overflow-y-auto custom-scrollbar-vertical pr-1">
+                                                    {Object.values(leaveSettings).filter(l => !l.isStatutory).map(leave => {
+                                                        const isSelected = selectedLeaveId === leave.id;
+                                                        const isEnabled = leave.enabled;
+                                                        return (
+                                                            <button
+                                                                key={leave.id}
+                                                                onClick={() => setSelectedLeaveId(leave.id)}
+                                                                className={`w-full text-left p-4 rounded-2xl flex items-center justify-between transition-all duration-500 relative overflow-hidden group ${isSelected
+                                                                    ? 'text-slate-900'
+                                                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                                                    }`}
+                                                            >
+                                                                {isSelected && (
+                                                                    <motion.div
+                                                                        layoutId="activeLeaveCompany"
+                                                                        className="absolute inset-0 bg-white"
+                                                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                                                    />
+                                                                )}
 
-                                    <div className="bg-white border border-slate-200 rounded-3xl p-8">
-                                        <div className="flex flex-col md:flex-row gap-8 items-start">
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-slate-900 text-sm mb-2">Tax-Exempt Monetization Limit</h4>
-                                                <p className="text-xs text-slate-500 mb-6 max-w-md">Maximum number of SIL/Vacation days that can be converted to cash tax-free.</p>
-                                                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 w-fit">
-                                                    <input
-                                                        type="number"
-                                                        className="w-20 p-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-center"
-                                                        value={policies.leaveConversionTaxExemptDays}
-                                                        onChange={(e) => updatePolicy('leaveConversionTaxExemptDays', Number(e.target.value))}
-                                                    />
-                                                    <span className="text-sm font-bold text-slate-700">Days / Year</span>
+                                                                <div className="flex items-center gap-4 relative z-10">
+                                                                    <div className={`p-2.5 rounded-xl transition-all duration-500 ${isSelected ? (leave.color.replace('text', 'bg') + ' text-white shadow-lg scale-110 rotate-3') : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700'}`}>
+                                                                        <leave.icon size={18} />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className={`w-2 h-2 rounded-full ${isEnabled ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`} />
+                                                                            <div className="text-[12px] font-black tracking-tight">{leave.name}</div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg border ${isSelected ? 'bg-slate-50 text-slate-500 border-slate-100' : 'bg-slate-800 text-slate-500 border-slate-700'}`}>
+                                                                                {leave.code}
+                                                                            </span>
+                                                                            {!leave.isStatutory && (
+                                                                                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Custom</span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <ArrowRight size={16} className={`relative z-10 transition-all duration-500 ${isSelected ? 'translate-x-0 opacity-100 text-indigo-500' : '-translate-x-4 opacity-0'}`} />
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
-                                            <div className="w-full md:w-80 p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                                                <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider mb-2">
-                                                    <Info size={14} /> Compliance Note
+
+                                            <div className="bg-white border-2 border-slate-100 p-6 rounded-[24px] shadow-sm">
+                                                <h5 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                    <ShieldCheck size={16} className="text-emerald-500" /> Compliance Tips
+                                                </h5>
+                                                <div className="space-y-4">
+                                                    <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                                                        <p className="text-[10px] text-blue-700 leading-relaxed font-bold">
+                                                            Custom leaves can be configured with strict eligibility to target specific employee demographics.
+                                                        </p>
+                                                    </div>
+                                                    <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+                                                        <p className="text-[10px] text-indigo-700 leading-relaxed font-bold">
+                                                            Monetization settings above De Minimis limits will automatically be categorized as taxable earnings.
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-[11px] text-blue-600 leading-relaxed font-medium">
-                                                    Under RR 11-2018, monetization of unused SIL of up to 10 days is considered De Minimis and is tax-exempt. Excess will be taxed.
-                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Panel: Configuration */}
+                                        <div className="lg:col-span-9">
+                                            <div className="bg-white border-2 border-slate-50 rounded-[40px] p-8 shadow-2xl min-h-full flex flex-col relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full -mr-32 -mt-32 opacity-40 blur-3xl" />
+
+                                                {/* Panel Header */}
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10 pb-8 border-b border-slate-100 relative">
+                                                    <div className="flex items-center gap-6 text-left relative z-10">
+                                                        <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center text-white shadow-2xl ${currentLeaveConfig.color.replace('text', 'bg')} transform -rotate-3 ring-8 ring-white`}>
+                                                            <currentLeaveConfig.icon size={32} />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                                                <input
+                                                                    type="text"
+                                                                    className="text-3xl font-black text-slate-900 tracking-tight bg-transparent border-none p-0 focus:ring-0 w-fit outline-none"
+                                                                    value={currentLeaveConfig.name}
+                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'name', e.target.value)}
+                                                                />
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full border border-slate-200">
+                                                                        <input
+                                                                            type="text"
+                                                                            className="text-[10px] font-black uppercase tracking-[0.2em] bg-transparent border-none p-0 focus:ring-0 w-16 text-center"
+                                                                            value={currentLeaveConfig.code}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'code', e.target.value.toUpperCase())}
+                                                                        />
+                                                                    </div>
+                                                                    {!currentLeaveConfig.isStatutory && (
+                                                                        <button
+                                                                            onClick={() => handleDeleteLeave(selectedLeaveId)}
+                                                                            className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                                                            title="Delete Custom Leave"
+                                                                        >
+                                                                            <Trash2 size={18} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 mt-3">
+                                                                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
+                                                                    <BookMarked size={14} className="text-slate-400" />
+                                                                    <input
+                                                                        type="text"
+                                                                        className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-transparent border-none p-0 focus:ring-0 w-32"
+                                                                        value={currentLeaveConfig.citation}
+                                                                        onChange={(e) => updateLeaveConfig(selectedLeaveId, 'citation', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-8 bg-slate-50/50 backdrop-blur-md px-8 py-5 rounded-[28px] border border-white shadow-xl group transition-all hover:bg-white">
+                                                        <div className="text-right">
+                                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Benefit Status</div>
+                                                            <div className={`text-xs font-black tracking-widest flex items-center gap-2 justify-end ${currentLeaveConfig.enabled ? 'text-emerald-500' : 'text-slate-300'}`}>
+                                                                {currentLeaveConfig.enabled && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />}
+                                                                {currentLeaveConfig.enabled ? 'ACTIVE' : 'INACTIVE'}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => updateLeaveConfig(selectedLeaveId, 'enabled', !currentLeaveConfig.enabled)}
+                                                            className={`w-16 h-8 rounded-full relative transition-all duration-700 ease-in-out px-1 flex items-center ${currentLeaveConfig.enabled ? 'bg-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-200'}`}
+                                                        >
+                                                            <div className={`w-6 h-6 bg-white rounded-full shadow-2xl transition-all duration-500 ease-spring transform ${currentLeaveConfig.enabled ? 'translate-x-[2rem]' : 'translate-x-0'}`} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className={`flex-1 space-y-10 transition-all duration-700 ${currentLeaveConfig.enabled ? 'opacity-100 scale-100 translate-y-0' : 'opacity-20 scale-[0.98] translate-y-4 pointer-events-none'}`}>
+
+                                                    {/* Configuration Grid */}
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+                                                        {/* Credits Section */}
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-4 mb-2">
+                                                                <div className="p-2.5 bg-indigo-50 rounded-2xl text-indigo-600 shadow-sm border border-indigo-100/50">
+                                                                    <CalendarCheck size={20} />
+                                                                </div>
+                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Credits & Accrual</h4>
+                                                            </div>
+
+                                                            <div className="bg-slate-50/30 rounded-[32px] p-8 space-y-8 border border-slate-100 shadow-inner">
+                                                                <div className="group">
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 group-hover:text-slate-600 transition-colors">Annual Days Alloted</label>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <div className="relative group">
+                                                                            <input
+                                                                                type="number"
+                                                                                className="w-24 p-4 bg-white border-2 border-slate-100 rounded-[20px] text-3xl font-black text-slate-900 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-500/5 outline-none transition-all shadow-xl"
+                                                                                value={currentLeaveConfig.days}
+                                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'days', Number(e.target.value))}
+                                                                            />
+                                                                            <div className="absolute -top-3 -right-3 bg-indigo-600 text-white text-[9px] px-3 py-1.5 rounded-[10px] font-black shadow-lg shadow-indigo-200 uppercase tracking-widest">Fixed</div>
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Days / Year</div>
+                                                                            <div className="text-[10px] font-bold text-slate-400 mt-1 tracking-tight">Standard full credit weight</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Accrual Policy</label>
+                                                                    <div className="grid grid-cols-2 gap-3">
+                                                                        {['Immediate', 'Monthly', 'Yearly', 'Upon regularization'].map(policy => {
+                                                                            const active = currentLeaveConfig.accrualPolicy === policy;
+                                                                            return (
+                                                                                <button
+                                                                                    key={policy}
+                                                                                    onClick={() => updateLeaveConfig(selectedLeaveId, 'accrualPolicy', policy)}
+                                                                                    className={`p-4 rounded-2xl border-2 text-[10px] font-black text-left transition-all relative overflow-hidden group ${active ? 'bg-slate-950 border-slate-950 text-white shadow-2xl scale-[1.02]' : 'bg-white border-slate-50 text-slate-400 hover:border-slate-200'}`}
+                                                                                >
+                                                                                    <div className="flex items-center justify-between relative z-10 gap-2">
+                                                                                        <span>{policy}</span>
+                                                                                        {active && <CheckCircle2 size={12} className="text-indigo-400" />}
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Limits Section */}
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-4 mb-2">
+                                                                <div className="p-2.5 bg-amber-50 rounded-2xl text-amber-600 shadow-sm border border-amber-100/50">
+                                                                    <History size={20} />
+                                                                </div>
+                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Lifecycle & Limits</h4>
+                                                            </div>
+
+                                                            <div className="bg-slate-50/30 rounded-[32px] p-8 space-y-8 border border-slate-100 shadow-inner">
+                                                                <div className="group">
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Maximum Accrued Balance</label>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-24 p-4 bg-white border-2 border-slate-100 rounded-[20px] text-3xl font-black text-slate-900 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-500/5 outline-none transition-all shadow-xl"
+                                                                            value={currentLeaveConfig.maxAccrued}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxAccrued', Number(e.target.value))}
+                                                                        />
+                                                                        <div>
+                                                                            <div className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Credit Cap</div>
+                                                                            <div className="text-[10px] font-bold text-slate-400 mt-1 tracking-tight">Maximum allowed storage</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="space-y-6">
+                                                                    <div className="relative group">
+                                                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Expiration Cycle</label>
+                                                                        <div className="relative">
+                                                                            <select
+                                                                                className="w-full pl-6 pr-12 py-5 bg-white border-2 border-slate-100 rounded-[24px] font-black text-sm text-slate-800 focus:border-indigo-500 outline-none appearance-none cursor-pointer shadow-xl transition-all"
+                                                                                value={currentLeaveConfig.expiration}
+                                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'expiration', e.target.value)}
+                                                                            >
+                                                                                <option>Never</option>
+                                                                                <option>Every Year-End</option>
+                                                                                <option>After 12 Months</option>
+                                                                            </select>
+                                                                            <div className="absolute right-6 inset-y-0 flex items-center pointer-events-none text-slate-400 transition-transform group-hover:translate-y-0.5">
+                                                                                <ChevronDown size={20} />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <button
+                                                                        onClick={() => updateLeaveConfig(selectedLeaveId, 'isForfeited', !currentLeaveConfig.isForfeited)}
+                                                                        className={`w-full p-5 rounded-[24px] border-2 transition-all group flex items-start gap-4 ${currentLeaveConfig.isForfeited ? 'bg-rose-50 border-rose-100 text-rose-600 shadow-xl' : 'bg-white border-slate-50 text-slate-400 hover:border-slate-200'}`}
+                                                                    >
+                                                                        <div className={`p-2.5 rounded-2xl transition-all duration-500 ${currentLeaveConfig.isForfeited ? 'bg-rose-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
+                                                                            {currentLeaveConfig.isForfeited ? <Ban size={20} /> : <RotateCcw size={20} />}
+                                                                        </div>
+                                                                        <div className="text-left mt-0.5">
+                                                                            <span className="text-[11px] font-black uppercase tracking-widest block leading-none">Automatic Forfeiture</span>
+                                                                            <span className="text-[9px] font-bold opacity-60 uppercase tracking-[0.1em] mt-2 block italic">Unused credits are wiped on cycle reset</span>
+                                                                        </div>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 2: Governance & Constraints */}
+                                                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-10 border-t border-slate-100 pt-10">
+                                                            <div className="space-y-6">
+                                                                <div className="flex items-center gap-4 mb-2">
+                                                                    <div className="p-2.5 bg-purple-50 rounded-2xl text-purple-600 shadow-sm border border-purple-100/50">
+                                                                        <Users size={20} />
+                                                                    </div>
+                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Eligibility Bounds</h4>
+                                                                </div>
+
+                                                                <div className="bg-slate-50/30 rounded-[32px] p-8 border border-slate-100 shadow-inner">
+                                                                    <div className="flex flex-wrap gap-3">
+                                                                        {['Regular', 'Probationary', 'Full-time', 'Part-time', 'Male', 'Female', 'Solo Parent', 'Married'].map(tag => {
+                                                                            const active = currentLeaveConfig.eligibility.includes(tag);
+                                                                            return (
+                                                                                <button
+                                                                                    key={tag}
+                                                                                    onClick={() => {
+                                                                                        const exists = active;
+                                                                                        const newVal = exists
+                                                                                            ? currentLeaveConfig.eligibility.filter((t: string) => t !== tag)
+                                                                                            : [...currentLeaveConfig.eligibility, tag];
+                                                                                        updateLeaveConfig(selectedLeaveId, 'eligibility', newVal);
+                                                                                    }}
+                                                                                    className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all border-2 relative overflow-hidden group ${active ? 'bg-slate-950 border-slate-950 text-white shadow-xl' : 'bg-white border-slate-50 text-slate-400 hover:border-slate-200'}`}
+                                                                                >
+                                                                                    <div className="relative z-10 flex items-center gap-2">
+                                                                                        {active && <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />}
+                                                                                        {tag}
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-3 mt-6 opacity-60">
+                                                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-ping"></div>
+                                                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selected groups inherit this entitlement automatically.</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="space-y-6">
+                                                                <div className="flex items-center gap-4 mb-2">
+                                                                    <div className="p-2.5 bg-rose-50 rounded-2xl text-rose-600 shadow-sm border border-rose-100/50">
+                                                                        <Activity size={20} />
+                                                                    </div>
+                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Usage Velocity</h4>
+                                                                </div>
+
+                                                                <div className="bg-slate-50/30 rounded-[32px] p-8 border border-slate-100 shadow-inner flex flex-col items-center justify-center">
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center w-full">Concurrent Filing Cap</label>
+                                                                    <div className="flex items-center gap-6 bg-white p-5 rounded-3xl border border-slate-100 shadow-xl">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-24 bg-transparent text-4xl font-black text-rose-600 outline-none text-center"
+                                                                            value={currentLeaveConfig.maxFiledPerMonth}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxFiledPerMonth', Number(e.target.value))}
+                                                                        />
+                                                                        <div className="h-12 w-[2px] bg-slate-100"></div>
+                                                                        <div className="text-[12px] font-black text-slate-400 uppercase tracking-widest leading-tight">Days<br />/ Month</div>
+                                                                    </div>
+                                                                    <p className="text-[10px] text-slate-400 font-bold mt-6 text-center">Maximum number of days that can be filed within a single calendar month.</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="md:col-span-2 mt-4">
+                                                            <div className="flex items-center gap-4 mb-6">
+                                                                <div className="p-2.5 bg-emerald-50 rounded-2xl text-emerald-600 shadow-sm border border-emerald-100/50">
+                                                                    <DollarSign size={20} />
+                                                                </div>
+                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Monetization & Conversion</h4>
+                                                            </div>
+
+                                                            <div className={`p-10 rounded-[40px] border-4 transition-all duration-700 relative overflow-hidden group/mon ${currentLeaveConfig.monetizationEnabled ? 'bg-emerald-50/30 border-emerald-100 shadow-2xl' : 'bg-slate-50 border-slate-100'}`}>
+                                                                <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10">
+                                                                    <div className="flex-1 max-w-md">
+                                                                        <div className="flex items-center gap-4 mb-4">
+                                                                            <div className={`p-4 rounded-[22px] transition-all duration-700 ${currentLeaveConfig.monetizationEnabled ? 'bg-emerald-600 text-white shadow-2xl rotate-6' : 'bg-slate-200 text-slate-400'}`}>
+                                                                                <Coins size={32} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <h5 className={`text-xl font-black tracking-tight ${currentLeaveConfig.monetizationEnabled ? 'text-emerald-900' : 'text-slate-500'}`}>Encashment Logic</h5>
+                                                                                <p className="text-xs text-slate-500/80 font-bold mt-1">Configure how unused credits are converted to salary.</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => updateLeaveConfig(selectedLeaveId, 'monetizationEnabled', !currentLeaveConfig.monetizationEnabled)}
+                                                                            className={`mt-4 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${currentLeaveConfig.monetizationEnabled ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                                                                        >
+                                                                            {currentLeaveConfig.monetizationEnabled ? 'Disable Encashment' : 'Enable Encashment'}
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div className={`flex flex-wrap gap-8 transition-all duration-700 ${currentLeaveConfig.monetizationEnabled ? 'opacity-100 translate-y-0 scale-100' : 'opacity-30 translate-y-6 scale-95 pointer-events-none'}`}>
+                                                                        <div className="space-y-4">
+                                                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Max Days</label>
+                                                                            <div className="flex items-center gap-4">
+                                                                                <input
+                                                                                    type="number"
+                                                                                    className="w-20 p-4 bg-white border-2 border-emerald-100 rounded-2xl text-2xl font-black text-slate-900 focus:border-emerald-500 outline-none shadow-xl transition-all"
+                                                                                    value={currentLeaveConfig.monetizationMaxDays}
+                                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationMaxDays', Number(e.target.value))}
+                                                                                />
+                                                                                <span className="text-[10px] font-black text-slate-400 uppercase vertical-text tracking-widest">Limit</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="space-y-4">
+                                                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Payout Rate</label>
+                                                                            <div className="flex items-center gap-4">
+                                                                                <div className="relative">
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        className="w-20 p-4 bg-white border-2 border-emerald-100 rounded-2xl text-2xl font-black text-slate-900 focus:border-emerald-500 outline-none shadow-xl transition-all pl-10"
+                                                                                        value={currentLeaveConfig.monetizationRate}
+                                                                                        onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationRate', Number(e.target.value))}
+                                                                                    />
+                                                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-300 font-black text-xl">%</span>
+                                                                                </div>
+                                                                                <span className="text-[10px] font-black text-slate-400 uppercase vertical-text tracking-widest">Rate</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="space-y-4 min-w-[180px]">
+                                                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Calculation Basis</label>
+                                                                            <div className="relative group">
+                                                                                <select
+                                                                                    className="w-full p-4 bg-white border-2 border-emerald-100 rounded-2xl font-black text-xs text-slate-800 focus:border-emerald-500 outline-none appearance-none cursor-pointer shadow-xl transition-all"
+                                                                                    value={currentLeaveConfig.monetizationBasis}
+                                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationBasis', e.target.value)}
+                                                                                >
+                                                                                    <option>Daily Rate</option>
+                                                                                    <option>Monthly Rate</option>
+                                                                                </select>
+                                                                                <div className="absolute right-4 inset-y-0 flex items-center pointer-events-none text-emerald-400">
+                                                                                    <ChevronDown size={18} />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Monetization Tax-Free Limit */}
+                                                            <div className="mt-10 p-10 bg-slate-950 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
+                                                                <div className="absolute top-0 right-0 p-10 opacity-5 -mr-10 -mt-10">
+                                                                    <ShieldPlus size={180} />
+                                                                </div>
+                                                                <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10">
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-4 mb-4">
+                                                                            <div className="p-3 bg-white/10 rounded-2xl text-emerald-400 border border-white/10 backdrop-blur-md">
+                                                                                <ShieldCheck size={24} />
+                                                                            </div>
+                                                                            <h4 className="text-xl font-black tracking-tight">Tax-Exempt Monetization Limit</h4>
+                                                                        </div>
+                                                                        <p className="text-xs text-slate-400 font-bold max-w-sm leading-relaxed mb-6">
+                                                                            Global threshold for non-taxable leave conversion as per RR 11-2018 (TRAIN Law).
+                                                                        </p>
+                                                                        <div className="flex items-center gap-6 p-6 bg-white/5 rounded-3xl border border-white/10 w-fit backdrop-blur-sm group-hover:bg-white/10 transition-all">
+                                                                            <input
+                                                                                type="number"
+                                                                                className="w-24 p-4 bg-slate-900 border-2 border-white/10 rounded-[20px] font-black text-white text-3xl text-center focus:border-emerald-500 focus:ring-8 focus:ring-emerald-500/10 outline-none transition-all shadow-2xl"
+                                                                                value={policies.leaveMonetizationTaxFreeLimit}
+                                                                                onChange={(e) => updatePolicy('leaveMonetizationTaxFreeLimit', Number(e.target.value))}
+                                                                            />
+                                                                            <div>
+                                                                                <div className="text-[12px] font-black text-white uppercase tracking-widest leading-none">Days / Year</div>
+                                                                                <div className="text-[10px] font-bold text-slate-500 mt-1 tracking-tight">De Minimis Ceiling</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="w-full lg:w-80 p-8 bg-white text-slate-900 rounded-[32px] shadow-2xl relative">
+                                                                        <div className="absolute -top-3 -left-3 p-2 bg-emerald-500 text-white rounded-lg shadow-lg">
+                                                                            <Info size={16} />
+                                                                        </div>
+                                                                        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Statutory Rule</h5>
+                                                                        <p className="text-[11px] text-slate-800 leading-relaxed font-bold">
+                                                                            Monetization of unused SIL credits of up to <span className="text-emerald-600 font-black">10 days</span> is considered De Minimis and is <span className="underline decoration-emerald-500 decoration-2 underline-offset-4">tax-exempt</span>. Conversion of more than the specified limit is taxable.
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2284,7 +2724,7 @@ const PoliciesPage: React.FC = () => {
                                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 relative z-10">Benefit Types</h4>
 
                                                 <div className="space-y-1 relative z-10">
-                                                    {LEAVE_TYPES_LIST.map(leave => {
+                                                    {LEAVE_TYPES_LIST.filter(l => l.isStatutory).map(leave => {
                                                         const isSelected = selectedLeaveId === leave.id;
                                                         const isEnabled = leaveSettings[leave.id]?.enabled ?? true;
                                                         return (
