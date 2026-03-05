@@ -69,22 +69,30 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
               <tr>
                 <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider">Employee</th>
                 <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider">Department</th>
-                <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider">Hire Date</th>
-                <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider">Deadline</th>
+                <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider text-right">Deadline</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {[
-                { name: 'Marcus Villanueva', dept: 'Engineering', hire: 'Oct 04, 2025', deadline: 'Apr 04, 2026' },
-                { name: 'Elena Rossi', dept: 'Marketing', hire: 'Oct 04, 2025', deadline: 'Apr 04, 2026' },
-                { name: 'Samuel Kim', dept: 'Operations', hire: 'Oct 10, 2025', deadline: 'Apr 10, 2026' },
-                { name: 'Jasmine Wright', dept: 'Product', hire: 'Oct 12, 2025', deadline: 'Apr 12, 2026' },
+                { name: 'Marcus Villanueva', dept: 'Engineering', status: 'Regular', deadline: 'Apr 04, 2026', badge: 'bg-emerald-50 text-emerald-600' },
+                { name: 'Elena Rossi', dept: 'Marketing', status: 'Extended (Mutual)', deadline: 'May 04, 2026', badge: 'bg-indigo-50 text-indigo-600', note: 'Performance Review Extension' },
+                { name: 'Samuel Kim', dept: 'Operations', status: 'Regular', deadline: 'Apr 10, 2026', badge: 'bg-emerald-50 text-emerald-600' },
+                { name: 'Maria Santos', dept: 'Finance', status: 'Extended (Maternity)', deadline: 'Jul 15, 2026', badge: 'bg-amber-50 text-amber-600', note: 'RA 11210 Tolling Applied' },
+                { name: 'Jasmine Wright', dept: 'Product', hire: 'Oct 12, 2025', deadline: 'Apr 12, 2026', status: 'Regular', badge: 'bg-emerald-50 text-emerald-600' },
               ].map((emp, i) => (
                 <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-4 py-3 font-bold text-slate-900">{emp.name}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-bold text-slate-900">{emp.name}</div>
+                    {emp.note && <div className="text-[9px] text-slate-400 font-medium italic">{emp.note}</div>}
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{emp.dept}</td>
-                  <td className="px-4 py-3 text-slate-600">{emp.hire}</td>
-                  <td className="px-4 py-3 text-amber-600 font-bold">{emp.deadline}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter ${emp.badge}`}>
+                      {emp.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-amber-600 font-bold text-right">{emp.deadline}</td>
                 </tr>
               ))}
             </tbody>
@@ -290,8 +298,8 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
     ),
     actionLink: { label: 'View Attendance Record', url: '/monitor/attendance' },
     metadata: [
-        { label: 'Date', value: 'Aug 28, 2025' },
-        { label: 'Department', value: 'IT Department' }
+      { label: 'Date', value: 'Aug 28, 2025' },
+      { label: 'Department', value: 'IT Department' }
     ]
   },
   'n12': {
@@ -326,8 +334,8 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
     ),
     actionLink: { label: 'View Pay Structure', url: '/manage/payroll' },
     metadata: [
-        { label: 'Effective Date', value: 'Sep 01, 2025' },
-        { label: 'Adjustment Type', value: 'Salary Increase' }
+      { label: 'Effective Date', value: 'Sep 01, 2025' },
+      { label: 'Adjustment Type', value: 'Salary Increase' }
     ]
   },
   'n13': {
@@ -357,8 +365,8 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
     ),
     actionLink: { label: 'Update Bank Details', url: '/manage/employee' },
     metadata: [
-        { label: 'Required By', value: 'Sep 01, 2025 (Payroll Date)' },
-        { label: 'Status', value: 'Missing' }
+      { label: 'Required By', value: 'Sep 01, 2025 (Payroll Date)' },
+      { label: 'Status', value: 'Missing' }
     ]
   },
   'n6': {
@@ -420,8 +428,8 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
     ),
     actionLink: { label: 'View Evaluation Details', url: '/my-profile/evaluations' },
     metadata: [
-        { label: 'Days Remaining', value: '33 days' },
-        { label: 'Department', value: 'IT Department' }
+      { label: 'Days Remaining', value: '33 days' },
+      { label: 'Department', value: 'IT Department' }
     ]
   },
   'n8': {
@@ -452,8 +460,8 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
     ),
     actionLink: { label: 'Review Activity Logs', url: '/monitor/audit-logs' },
     metadata: [
-        { label: 'Risk Level', value: 'Medium' },
-        { label: 'Status', value: 'Flagged' }
+      { label: 'Risk Level', value: 'Medium' },
+      { label: 'Status', value: 'Flagged' }
     ]
   },
   'n9': {
@@ -512,8 +520,8 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
     ),
     actionLink: { label: 'Secure Your Account', url: '/monitor/security' },
     metadata: [
-        { label: 'Risk Level', value: 'High' },
-        { label: 'Account Status', value: 'Secure' }
+      { label: 'Risk Level', value: 'High' },
+      { label: 'Account Status', value: 'Secure' }
     ]
   }
 };

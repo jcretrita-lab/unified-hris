@@ -2394,7 +2394,7 @@ const PoliciesPage: React.FC = () => {
                                                             <ScaleIcon size={18} className="text-slate-400" />
                                                             <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Legal Exceptions & Scenarios</h5>
                                                         </div>
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                                             {/* Performance Extension */}
                                                             <div className={`p-5 rounded-[20px] border-2 transition-all group relative overflow-hidden ${policies.isProbationExtensionEnabled ? 'bg-indigo-50 border-indigo-200 shadow-md ring-4 ring-indigo-500/5' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
                                                                 <div className="flex items-center justify-between relative z-10 mb-4">
@@ -2417,31 +2417,6 @@ const PoliciesPage: React.FC = () => {
                                                                 </div>
                                                                 <div className="mt-4 pt-3 border-t border-indigo-100/50 flex justify-between items-center relative z-10">
                                                                     <span className="text-[9px] font-black text-indigo-400 uppercase tracking-tighter">Mariwasa SC</span>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Apprenticeship */}
-                                                            <div className={`p-5 rounded-[20px] border-2 transition-all group relative overflow-hidden ${policies.isApprenticeshipEnabled ? 'bg-emerald-50 border-emerald-200 shadow-md ring-4 ring-emerald-500/5' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
-                                                                <div className="flex items-center justify-between relative z-10 mb-4">
-                                                                    <div className={`p-2 rounded-lg ${policies.isApprenticeshipEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                                                                        <GraduationCap size={16} />
-                                                                    </div>
-                                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            className="sr-only peer"
-                                                                            checked={policies.isApprenticeshipEnabled}
-                                                                            onChange={e => updatePolicy('isApprenticeshipEnabled', e.target.checked)}
-                                                                        />
-                                                                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                                                                    </label>
-                                                                </div>
-                                                                <div className="relative z-10">
-                                                                    <h6 className={`text-xs font-black uppercase tracking-wider mb-2 ${policies.isApprenticeshipEnabled ? 'text-emerald-900' : 'text-slate-800'}`}>Apprentice Prog.</h6>
-                                                                    <p className="text-[10px] text-slate-500 leading-relaxed font-bold">Programs exceeding 6 months for specialized technical trades.</p>
-                                                                </div>
-                                                                <div className="mt-4 pt-3 border-t border-emerald-100/50 flex justify-between items-center relative z-10">
-                                                                    <span className="text-[9px] font-black text-emerald-400 uppercase tracking-tighter">Art. 61 / TESDA</span>
                                                                 </div>
                                                             </div>
 
@@ -2509,20 +2484,6 @@ const PoliciesPage: React.FC = () => {
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-indigo-200 transition-colors">
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Apprentice Wage</label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
-                                                    value={policies.apprenticeWagePercent}
-                                                    onChange={(e) => updatePolicy('apprenticeWagePercent', Number(e.target.value))}
-                                                />
-                                                <span className="text-sm font-bold text-slate-700">% of Minimum Wage</span>
-                                            </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.apprenticeWagePercent, LEGAL_STANDARDS.APPRENTICE_WAGE_PERCENT, 'min')} citation="Art. 61/75" />
                                         </div>
                                     </div>
                                 </div>
