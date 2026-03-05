@@ -102,13 +102,13 @@ const YearEnd13thPrepPage: React.FC = () => {
                             onClick={() => navigate('/manage/year-end-prep/batch-13th?stage=assumed')}
                             className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-900 text-slate-900 rounded-xl text-xs font-black hover:bg-slate-50 transition-all shadow-sm active:scale-95 uppercase tracking-widest"
                         >
-                            <Layers size={16} /> Batch Process Assumed (Dec)
+                            <Layers size={16} /> Batch Process Assumed
                         </button>
                         <button
                             onClick={() => navigate('/manage/year-end-prep/batch-13th?stage=actual')}
                             className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-indigo-600 transition-all shadow-lg active:scale-95 uppercase tracking-widest"
                         >
-                            <Layers size={16} /> Batch Process Actual (Jan)
+                            <Layers size={16} /> Batch Process Actual
                         </button>
                     </div>
                 </div>
