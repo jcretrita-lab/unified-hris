@@ -1,7 +1,8 @@
-
 import React, { useState } from "react";
+import RankLabelsModal from "../components/RankLabelsComponent";
 import { Rank, SalaryGrade, SubRank } from "../types";
 import {
+  Settings,
   Plus,
   Trash2,
   Shield,
@@ -121,6 +122,7 @@ const MOCK_RANKS: Rank[] = [
 
 const RankSettingsPage: React.FC = () => {
   const [ranks, setRanks] = useState<Rank[]>(MOCK_RANKS);
+  const [isRankLabelsModalOpen, setIsRankLabelsModalOpen] = useState(false);
   const [grades] = useState<SalaryGrade[]>(MOCK_SALARY_GRADES);
 
   return (
@@ -129,7 +131,22 @@ const RankSettingsPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Rank Configuration</h1>
         <p className="text-slate-500 font-medium mt-1">Define organizational hierarchy levels and structure.</p>
       </div>
+        <button
+          onClick={() => setIsRankLabelsModalOpen(true)} // Open the new modal
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300 self-start" // self-start aligns to top
+        >
+          {/* Use Settings or another appropriate icon, ensure it's imported */}
+          <Settings size={16} /> Configure Ranks
+        </button>
       <GlobalRanks ranks={ranks} setRanks={setRanks} grades={grades} />
+
+      {isRankLabelsModalOpen && (
+        <RankLabelsModal
+          initialRanks={ranks} // Pass current ranks
+          onSave={(updatedRanks) => setRanks(updatedRanks)} // Update main state
+          onClose={() => setIsRankLabelsModalOpen(false)} // Close modal
+        />
+      )}
     </div>
   );
 };
