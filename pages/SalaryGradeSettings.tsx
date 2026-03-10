@@ -20,43 +20,226 @@ import Modal from '../components/Modal';
 // Mock Data
 const INITIAL_GRADES: SalaryGrade[] = [
     {
-        id: 'sg-1',
-        code: 'SG-10',
-        name: 'Entry Level',
+        id: 'sg-01',
+        code: 'SG-01',
+        name: 'Entry Level I',
         type: 'RANGE',
-        minSalary: 25000,
-        maxSalary: 35000,
+        minSalary: 15000,
+        maxSalary: 21000,
         currency: 'PHP',
         steps: [
-            { id: 's1', name: 'Step 1', amount: 25000 },
-            { id: 's2', name: 'Step 2', amount: 27500 },
-            { id: 's3', name: 'Step 3', amount: 30000 },
-            { id: 's4', name: 'Step 4', amount: 32500 },
-            { id: 's5', name: 'Step 5', amount: 35000 },
+            { id: 's1', name: 'Step 1', amount: 15000 },
+            { id: 's2', name: 'Step 2', amount: 16500 },
+            { id: 's3', name: 'Step 3', amount: 18000 },
+            { id: 's4', name: 'Step 4', amount: 19500 },
+            { id: 's5', name: 'Step 5', amount: 21000 },
         ]
     },
     {
-        id: 'sg-2',
-        code: 'SG-11',
-        name: 'Junior Associate',
-        type: 'ALIGNED',
-        minSalary: 38000,
-        maxSalary: 38000,
+        id: 'sg-02',
+        code: 'SG-02',
+        name: 'Entry Level II',
+        type: 'RANGE',
+        minSalary: 21000,
+        maxSalary: 26000,
         currency: 'PHP',
-        steps: []
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 21000 },
+            { id: 's2', name: 'Step 2', amount: 22500 },
+            { id: 's3', name: 'Step 3', amount: 24000 },
+            { id: 's4', name: 'Step 4', amount: 26000 },
+        ]
     },
     {
-        id: 'sg-3',
-        code: 'SG-12',
+        id: 'sg-03',
+        code: 'SG-03',
+        name: 'Junior Associate',
+        type: 'RANGE',
+        minSalary: 26000,
+        maxSalary: 33000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 26000 },
+            { id: 's2', name: 'Step 2', amount: 28000 },
+            { id: 's3', name: 'Step 3', amount: 30000 },
+            { id: 's4', name: 'Step 4', amount: 33000 },
+        ]
+    },
+    {
+        id: 'sg-04',
+        code: 'SG-04',
+        name: 'Associate',
+        type: 'RANGE',
+        minSalary: 33000,
+        maxSalary: 42000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 33000 },
+            { id: 's2', name: 'Step 2', amount: 36000 },
+            { id: 's3', name: 'Step 3', amount: 39000 },
+            { id: 's4', name: 'Step 4', amount: 42000 },
+        ]
+    },
+    {
+        id: 'sg-05',
+        code: 'SG-05',
         name: 'Senior Associate',
         type: 'RANGE',
-        minSalary: 45000,
-        maxSalary: 65000,
+        minSalary: 42000,
+        maxSalary: 57000,
         currency: 'PHP',
         steps: [
-            { id: 's1', name: 'Step 1', amount: 45000 },
-            { id: 's2', name: 'Step 2', amount: 50000 },
+            { id: 's1', name: 'Step 1', amount: 42000 },
+            { id: 's2', name: 'Step 2', amount: 46000 },
+            { id: 's3', name: 'Step 3', amount: 50000 },
+            { id: 's4', name: 'Step 4', amount: 54000 },
+            { id: 's5', name: 'Step 5', amount: 57000 },
         ]
+    },
+    {
+        id: 'sg-06',
+        code: 'SG-06',
+        name: 'Specialist I',
+        type: 'RANGE',
+        minSalary: 57000,
+        maxSalary: 72000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 57000 },
+            { id: 's2', name: 'Step 2', amount: 62000 },
+            { id: 's3', name: 'Step 3', amount: 67000 },
+            { id: 's4', name: 'Step 4', amount: 72000 },
+        ]
+    },
+    {
+        id: 'sg-07',
+        code: 'SG-07',
+        name: 'Specialist II',
+        type: 'RANGE',
+        minSalary: 72000,
+        maxSalary: 95000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 72000 },
+            { id: 's2', name: 'Step 2', amount: 80000 },
+            { id: 's3', name: 'Step 3', amount: 88000 },
+            { id: 's4', name: 'Step 4', amount: 95000 },
+        ]
+    },
+    {
+        id: 'sg-08',
+        code: 'SG-08',
+        name: 'Senior Specialist',
+        type: 'RANGE',
+        minSalary: 95000,
+        maxSalary: 120000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 95000 },
+            { id: 's2', name: 'Step 2', amount: 105000 },
+            { id: 's3', name: 'Step 3', amount: 112000 },
+            { id: 's4', name: 'Step 4', amount: 120000 },
+        ]
+    },
+    {
+        id: 'sg-09',
+        code: 'SG-09',
+        name: 'Lead / Principal',
+        type: 'RANGE',
+        minSalary: 120000,
+        maxSalary: 155000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 120000 },
+            { id: 's2', name: 'Step 2', amount: 132000 },
+            { id: 's3', name: 'Step 3', amount: 143000 },
+            { id: 's4', name: 'Step 4', amount: 155000 },
+        ]
+    },
+    {
+        id: 'sg-10',
+        code: 'SG-10',
+        name: 'Manager I',
+        type: 'RANGE',
+        minSalary: 155000,
+        maxSalary: 195000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 155000 },
+            { id: 's2', name: 'Step 2', amount: 168000 },
+            { id: 's3', name: 'Step 3', amount: 181000 },
+            { id: 's4', name: 'Step 4', amount: 195000 },
+        ]
+    },
+    {
+        id: 'sg-11',
+        code: 'SG-11',
+        name: 'Manager II / Sr Manager',
+        type: 'RANGE',
+        minSalary: 195000,
+        maxSalary: 240000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 195000 },
+            { id: 's2', name: 'Step 2', amount: 210000 },
+            { id: 's3', name: 'Step 3', amount: 225000 },
+            { id: 's4', name: 'Step 4', amount: 240000 },
+        ]
+    },
+    {
+        id: 'sg-12',
+        code: 'SG-12',
+        name: 'Director',
+        type: 'RANGE',
+        minSalary: 240000,
+        maxSalary: 300000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 240000 },
+            { id: 's2', name: 'Step 2', amount: 260000 },
+            { id: 's3', name: 'Step 3', amount: 280000 },
+            { id: 's4', name: 'Step 4', amount: 300000 },
+        ]
+    },
+    {
+        id: 'sg-13',
+        code: 'SG-13',
+        name: 'Senior Director',
+        type: 'RANGE',
+        minSalary: 300000,
+        maxSalary: 380000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 300000 },
+            { id: 's2', name: 'Step 2', amount: 330000 },
+            { id: 's3', name: 'Step 3', amount: 355000 },
+            { id: 's4', name: 'Step 4', amount: 380000 },
+        ]
+    },
+    {
+        id: 'sg-14',
+        code: 'SG-14',
+        name: 'Vice President',
+        type: 'RANGE',
+        minSalary: 380000,
+        maxSalary: 490000,
+        currency: 'PHP',
+        steps: [
+            { id: 's1', name: 'Step 1', amount: 380000 },
+            { id: 's2', name: 'Step 2', amount: 415000 },
+            { id: 's3', name: 'Step 3', amount: 452000 },
+            { id: 's4', name: 'Step 4', amount: 490000 },
+        ]
+    },
+    {
+        id: 'sg-15',
+        code: 'SG-15',
+        name: 'C-Level / Executive',
+        type: 'ALIGNED',
+        minSalary: 490000,
+        maxSalary: 750000,
+        currency: 'PHP',
+        steps: []
     },
 ];
 

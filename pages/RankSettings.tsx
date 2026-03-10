@@ -33,91 +33,21 @@ const MOCK_SALARY_GRADES: SalaryGrade[] = [
 ];
 
 const MOCK_RANKS: Rank[] = [
-  { id: 'rank-1', name: 'Support Staff', level: 1, salaryGradeId: 'sg-1', color: 'bg-slate-500' },
-  { id: 'rank-2', name: 'Entry Level', level: 2, salaryGradeId: 'sg-4', color: 'bg-blue-400' },
-  {
-    id: 'rank-3',
-    name: 'Associate',
-    level: 3,
-    color: 'bg-blue-600',
-    subRanks: [
-      { id: 'sr-3-1', name: 'Associate I', salaryGradeId: 'sg-4' },
-      { id: 'sr-3-2', name: 'Associate II', salaryGradeId: 'sg-5' }
-    ]
-  },
-  {
-    id: 'rank-4',
-    name: 'Professional',
-    level: 4,
-    color: 'bg-emerald-500',
-    subRanks: [
-      { id: 'sr-4-1', name: 'Intermediate I', salaryGradeId: 'sg-6' },
-      { id: 'sr-4-2', name: 'Intermediate II', salaryGradeId: 'sg-7' }
-    ]
-  },
-  {
-    id: 'rank-5',
-    name: 'Senior Professional',
-    level: 5,
-    color: 'bg-emerald-700',
-    subRanks: [
-      { id: 'sr-5-1', name: 'Senior I', salaryGradeId: 'sg-8' },
-      { id: 'sr-5-2', name: 'Senior II', salaryGradeId: 'sg-9' }
-    ]
-  },
-  {
-    id: 'rank-6',
-    name: 'Supervisory / Lead',
-    level: 6,
-    color: 'bg-amber-500',
-    subRanks: [
-      { id: 'sr-6-1', name: 'Team Lead', salaryGradeId: 'sg-9' },
-      { id: 'sr-6-2', name: 'Principal Specialist', salaryGradeId: 'sg-10' },
-      { id: 'sr-6-3', name: 'Supervisor', salaryGradeId: 'sg-9' }
-    ]
-  },
-  {
-    id: 'rank-7',
-    name: 'Management',
-    level: 7,
-    color: 'bg-orange-600',
-    subRanks: [
-      { id: 'sr-7-1', name: 'Manager', salaryGradeId: 'sg-11' },
-      { id: 'sr-7-2', name: 'Assistant Manager', salaryGradeId: 'sg-10' }
-    ]
-  },
-  {
-    id: 'rank-8',
-    name: 'Senior Management',
-    level: 8,
-    color: 'bg-rose-600',
-    subRanks: [
-      { id: 'sr-8-1', name: 'Senior Manager', salaryGradeId: 'sg-12' },
-      { id: 'sr-8-2', name: 'Department Head', salaryGradeId: 'sg-13' }
-    ]
-  },
-  {
-    id: 'rank-9',
-    name: 'Director Level',
-    level: 9,
-    color: 'bg-indigo-600',
-    subRanks: [
-      { id: 'sr-9-1', name: 'Director', salaryGradeId: 'sg-13' },
-      { id: 'sr-9-2', name: 'Senior Director', salaryGradeId: 'sg-14' },
-      { id: 'sr-9-3', name: 'Associate Director', salaryGradeId: 'sg-12' }
-    ]
-  },
-  {
-    id: 'rank-10',
-    name: 'Executive Leadership',
-    level: 10,
-    color: 'bg-purple-700',
-    subRanks: [
-      { id: 'sr-10-1', name: 'Vice President (VP)', salaryGradeId: 'sg-14' },
-      { id: 'sr-10-2', name: 'Senior Vice President (SVP)', salaryGradeId: 'sg-15' },
-      { id: 'sr-10-3', name: 'C-Suite (CXO)', salaryGradeId: 'sg-15' }
-    ]
-  }
+  { id: 'rank-01', name: 'Entry Level I',           level: 1,  salaryGradeId: 'sg-01', color: 'bg-slate-400' },
+  { id: 'rank-02', name: 'Entry Level II',          level: 2,  salaryGradeId: 'sg-02', color: 'bg-slate-500' },
+  { id: 'rank-03', name: 'Junior Associate',        level: 3,  salaryGradeId: 'sg-03', color: 'bg-blue-400' },
+  { id: 'rank-04', name: 'Associate',               level: 4,  salaryGradeId: 'sg-04', color: 'bg-blue-500' },
+  { id: 'rank-05', name: 'Senior Associate',        level: 5,  salaryGradeId: 'sg-05', color: 'bg-blue-600' },
+  { id: 'rank-06', name: 'Specialist I',            level: 6,  salaryGradeId: 'sg-06', color: 'bg-cyan-600' },
+  { id: 'rank-07', name: 'Specialist II',           level: 7,  salaryGradeId: 'sg-07', color: 'bg-emerald-500' },
+  { id: 'rank-08', name: 'Senior Specialist',       level: 8,  salaryGradeId: 'sg-08', color: 'bg-emerald-700' },
+  { id: 'rank-09', name: 'Lead / Principal',        level: 9,  salaryGradeId: 'sg-09', color: 'bg-amber-500' },
+  { id: 'rank-10', name: 'Manager I',               level: 10, salaryGradeId: 'sg-10', color: 'bg-orange-500' },
+  { id: 'rank-11', name: 'Manager II / Sr Manager', level: 11, salaryGradeId: 'sg-11', color: 'bg-orange-600' },
+  { id: 'rank-12', name: 'Director',                level: 12, salaryGradeId: 'sg-12', color: 'bg-rose-500' },
+  { id: 'rank-13', name: 'Senior Director',         level: 13, salaryGradeId: 'sg-13', color: 'bg-rose-700' },
+  { id: 'rank-14', name: 'Vice President',          level: 14, salaryGradeId: 'sg-14', color: 'bg-indigo-600' },
+  { id: 'rank-15', name: 'C-Level / Executive',     level: 15, salaryGradeId: 'sg-15', color: 'bg-purple-700' },
 ];
 
 const RankSettingsPage: React.FC = () => {
