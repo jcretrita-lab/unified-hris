@@ -29,7 +29,166 @@ interface NotificationItem {
 
 // --- Mock Data ---
 const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  // New notifications based on Notification Settings (placed at top for visibility)
+  // Leave-related notifications
+  {
+    id: 'leave-1',
+    title: 'Leave Request Approved',
+    message: 'Your sick leave request for January 15-16, 2026 has been approved by your manager.',
+    timestamp: 'Just now',
+    type: 'Success',
+    isRead: false,
+    link: '/my-profile/leave'
+  },
+  {
+    id: 'leave-2',
+    title: 'Leave Request Rejected',
+    message: 'Your vacation leave request for February 10-14, 2026 has been rejected. Reason: Conflict with project deadline.',
+    timestamp: '1 hour ago',
+    type: 'Error',
+    isRead: false,
+    link: '/my-profile/leave'
+  },
+  {
+    id: 'leave-3',
+    title: 'Leave Balance Low Warning',
+    message: 'Your sick leave balance is running low. You have 2.5 days remaining for the year.',
+    timestamp: '2 hours ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/my-profile/leave-balances'
+  },
+  {
+    id: 'ta-1',
+    title: 'Leave Request Pending Approval',
+    message: 'Sarah Chen - Emergency Leave (Jan 12). Requires your immediate approval.',
+    timestamp: '3 hours ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/monitor/approvals'
+  },
+  // Attendance alerts
+  {
+    id: 'att-1',
+    title: 'Overtime Request Approved',
+    message: 'Your overtime request for January 8, 2026 (4 hours) has been approved.',
+    timestamp: '4 hours ago',
+    type: 'Success',
+    isRead: false,
+    link: '/my-profile/attendance'
+  },
+  {
+    id: 'att-2',
+    title: 'Missed Clock-Out',
+    message: 'You forgot to clock out on January 9, 2026. Please submit a time adjustment request.',
+    timestamp: '5 hours ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/my-profile/attendance'
+  },
+  {
+    id: 'att-3',
+    title: 'Biometric Device Offline',
+    message: 'The biometric attendance device in Building A is currently offline. Manual logging in effect.',
+    timestamp: 'Yesterday',
+    type: 'Warning',
+    isRead: true,
+    link: '/monitor/attendance'
+  },
+  // Payroll notifications
+  {
+    id: 'pay-1',
+    title: 'Payslip Available',
+    message: 'Your payslip for the period January 1-15, 2026 is now available for review.',
+    timestamp: 'Yesterday',
+    type: 'Info',
+    isRead: true,
+    link: '/my-profile/payroll'
+  },
+  {
+    id: 'pay-2',
+    title: 'Tax Certificate Ready',
+    message: 'Your BIR Form 2316 (Certificate of Compensation Payment) for Year 2025 is ready for download.',
+    timestamp: '2 days ago',
+    type: 'Info',
+    isRead: false,
+    link: '/my-profile/payroll'
+  },
+  {
+    id: 'pay-3',
+    title: 'Deduction Adjustment',
+    message: 'Your monthly SSS contribution has been adjusted per the new 2026 contribution table.',
+    timestamp: '3 days ago',
+    type: 'Info',
+    isRead: true,
+    link: '/my-profile/payroll'
+  },
+  // Employee profile updates
+  {
+    id: 'profile-1',
+    title: 'Profile Update Request',
+    message: 'James Rodriguez has requested an update to their emergency contact information.',
+    timestamp: '6 hours ago',
+    type: 'Info',
+    isRead: false,
+    link: '/manage/employee'
+  },
+  {
+    id: 'profile-2',
+    title: 'Document Expiring Soon',
+    message: 'Your NBI clearance expires on February 28, 2026. Please renew to maintain active employment status.',
+    timestamp: '1 day ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/my-profile/documents'
+  },
+  // HR task reminders
+  {
+    id: 'hr-task-1',
+    title: 'Performance Review Due',
+    message: 'Performance evaluation for Marcus Villanueva is due in 5 days.',
+    timestamp: '8 hours ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/manage/employees'
+  },
+  {
+    id: 'hr-task-2',
+    title: 'Contract Renewal Reminder',
+    message: '3 employee contracts are expiring within the next 30 days. Review required.',
+    timestamp: '1 day ago',
+    type: 'Warning',
+    isRead: false,
+    link: '/manage/employees'
+  },
+  {
+    id: 'hr-task-3',
+    title: 'New Employee Onboarding',
+    message: 'Emily Watson - New hire starting January 20, 2026. Onboarding tasks pending assignment.',
+    timestamp: '2 days ago',
+    type: 'Info',
+    isRead: false,
+    link: '/manage/employees'
+  },
+  // System alerts related to HR processes
+  {
+    id: 'sys-2',
+    title: 'System Maintenance Scheduled',
+    message: 'HRIS will undergo scheduled maintenance on January 15, 2026 (Sunday) from 2:00 AM to 6:00 AM.',
+    timestamp: '3 days ago',
+    type: 'Info',
+    isRead: true,
+    link: '/settings/system'
+  },
+  {
+    id: 'sys-3',
+    title: 'Data Backup Complete',
+    message: 'Weekly system backup completed successfully. All employee data secured.',
+    timestamp: '4 days ago',
+    type: 'Success',
+    isRead: true,
+    link: '/settings/system'
+  },
+  // Legacy notifications for backward compatibility
   {
     id: 'n13',
     title: 'Bank Details Required',
@@ -74,15 +233,6 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     type: 'Success',
     isRead: false,
     link: '/manage/employee'
-  },
-  {
-    id: 'ta-1',
-    title: 'Leave Request Received',
-    message: 'Michael Bay - Vacation Leave (Aug 28-30). Awaiting your approval.',
-    timestamp: '3 hours ago',
-    type: 'Warning',
-    isRead: false,
-    link: '/monitor/approvals'
   },
   {
     id: 'pay-4',
