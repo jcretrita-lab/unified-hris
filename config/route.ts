@@ -22,7 +22,13 @@ export const SEGMENT_LABELS: Record<string, string> = {
   batch: 'Batch Processing',
   'pay-schedule': 'Pay Schedule',
   'pay-structure': 'Pay Structure',
-  new: 'New Employee',
+  onboarding: 'Onboard Employee',
+  offboarding: 'Offboard Employee',
+  'year-end-prep': 'Year-End Preparation',
+  'year-end': 'Year-End',
+  '13th': '13th Month Pay',
+  tax: 'Tax Annualization',
+  gov: 'Govt Contributions',
 
   // /monitor/* — namespace prefix itself is hidden (see HIDDEN_SEGMENTS)
   'audit-logs': 'Audit Logs',
@@ -49,6 +55,7 @@ export const SEGMENT_LABELS: Record<string, string> = {
   'employee-fields': 'Employee Fields',
   adjustments: 'Adjustments',
   audit: 'Audit Logs',
+  'employee-schedule': 'Employee Schedule',
 };
 
 /**

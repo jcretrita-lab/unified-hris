@@ -27,6 +27,7 @@ import {
   BellRing,
   Building2,
   Sliders,
+  CalendarRange,
   Menu,
   X
 } from 'lucide-react';
@@ -91,19 +92,24 @@ const SEARCHABLE_PATHS: string[] = [
   '/dashboard',
   // Manage
   '/manage/employee',
-  '/manage/employee/new',
+  '/manage/employee/onboarding',
+  '/manage/employee/offboarding',
   '/manage/schedule',
   '/manage/leave-balances',
   '/manage/payroll',
   '/manage/payroll/batch',
   '/manage/pay-schedule',
   '/manage/pay-structure',
+  '/manage/year-end/13th',
+  '/manage/year-end/tax',
+  '/manage/year-end/gov',
   // Monitor
   '/monitor/attendance',
   '/monitor/audit-logs',
   '/monitor/approvals',
   '/monitor/reports',
   '/monitor/notifications',
+  '/monitor/overtime',
   // Settings
   '/settings/overview',
   '/settings/employee-fields',
@@ -121,6 +127,7 @@ const SEARCHABLE_PATHS: string[] = [
   '/settings/roles',
   '/settings/notifications',
   '/settings/audit',
+  '/settings/employee-schedule',
 ];
 
 const SEARCH_ITEMS: SearchItem[] = SEARCHABLE_PATHS.map(pathToSearchItem);
@@ -129,7 +136,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  
+
   // Search State
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchInput, setSearchInput] = useState('');
@@ -138,7 +145,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
+
   const isSettingsPath = location.pathname.startsWith('/settings');
   const isStandalonePage = location.pathname === '/login' || location.pathname === '/new-organization';
   const employeeBasePath = user?.employeeId ? `/manage/employee/${user.employeeId}` : '/my-profile';
@@ -159,125 +166,128 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   // --- Dynamic Navigation Logic ---
-  
+
   // 1. Superadmin (Everything)
   const superAdminNav = [
     { section: 'Home', items: [{ icon: <LayoutDashboard size={19} />, label: 'Dashboard', path: '/dashboard' }] },
-    { 
-      section: 'Manage', 
+    {
+      section: 'Manage',
       items: [
         { icon: <Users size={19} />, label: 'Employee', path: '/manage/employee' },
         { icon: <Calendar size={19} />, label: 'Schedule', path: '/manage/schedule' },
         { icon: <Wallet size={19} />, label: 'Payroll', path: '/manage/payroll' },
         { icon: <FileCheck size={19} />, label: 'Pay Schedule', path: '/manage/pay-schedule' },
         { icon: <LayoutGrid size={19} />, label: 'Pay Structure', path: '/manage/pay-structure' },
-      ] 
+        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end/13th' },
+      ]
     },
-    { 
-      section: 'Monitor', 
+    {
+      section: 'Monitor',
       items: [
         { icon: <Clock size={19} />, label: 'Attendance', path: '/monitor/attendance' },
         { icon: <ShieldCheck size={19} />, label: 'Audit Logs', path: '/monitor/audit-logs' },
         { icon: <FileCheck size={19} />, label: 'Approvals', path: '/monitor/approvals' },
         { icon: <FileBarChart size={19} />, label: 'Reports', path: '/monitor/reports' },
         { icon: <Bell size={19} />, label: 'Notifications', path: '/monitor/notifications' },
-      ] 
+      ]
     },
   ];
 
   // 2. HR Admin (Everything except deep system settings usually, but similar to admin in Manage/Monitor)
   const hrAdminNav = [
     { section: 'Home', items: [{ icon: <LayoutDashboard size={19} />, label: 'Dashboard', path: '/dashboard' }] },
-    { 
-      section: 'Manage', 
+    {
+      section: 'Manage',
       items: [
         { icon: <Users size={19} />, label: 'Employee', path: '/manage/employee' },
         { icon: <Calendar size={19} />, label: 'Schedule', path: '/manage/schedule' },
         { icon: <Wallet size={19} />, label: 'Payroll', path: '/manage/payroll' },
         { icon: <LayoutGrid size={19} />, label: 'Pay Structure', path: '/manage/pay-structure' },
-      ] 
+        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end/13th' },
+      ]
     },
-    { 
-      section: 'Monitor', 
+    {
+      section: 'Monitor',
       items: [
         { icon: <Clock size={19} />, label: 'Attendance', path: '/monitor/attendance' },
         { icon: <FileCheck size={19} />, label: 'Approvals', path: '/monitor/approvals' },
         { icon: <FileBarChart size={19} />, label: 'Reports', path: '/monitor/reports' },
         { icon: <Bell size={19} />, label: 'Notifications', path: '/monitor/notifications' },
-      ] 
+      ]
     },
   ];
 
   // 3. HR Payroll Personnel (Payroll Focused)
   const payrollNav = [
     { section: 'Home', items: [{ icon: <LayoutDashboard size={19} />, label: 'Dashboard', path: '/dashboard' }] },
-    { 
-      section: 'Manage', 
+    {
+      section: 'Manage',
       items: [
         { icon: <Wallet size={19} />, label: 'Payroll', path: '/manage/payroll' },
         { icon: <FileCheck size={19} />, label: 'Pay Schedule', path: '/manage/pay-schedule' },
         { icon: <LayoutGrid size={19} />, label: 'Pay Structure', path: '/manage/pay-structure' },
-      ] 
+        { icon: <CalendarRange size={19} />, label: 'Year End Preparation', path: '/manage/year-end/13th' },
+      ]
     },
-    { 
-      section: 'Monitor', 
+    {
+      section: 'Monitor',
       items: [
         { icon: <Clock size={19} />, label: 'Attendance', path: '/monitor/attendance' }, // Need attendance to compute pay
         { icon: <FileBarChart size={19} />, label: 'Reports', path: '/monitor/reports' },
         { icon: <Bell size={19} />, label: 'Notifications', path: '/monitor/notifications' },
-      ] 
+      ]
     },
   ];
 
   // 4. HR Attendance Personnel (Time Focused)
   const attendanceNav = [
     { section: 'Home', items: [{ icon: <LayoutDashboard size={19} />, label: 'Dashboard', path: '/dashboard' }] },
-    { 
-      section: 'Manage', 
+    {
+      section: 'Manage',
       items: [
         { icon: <Calendar size={19} />, label: 'Schedule', path: '/manage/schedule' },
-      ] 
+      ]
     },
-    { 
-      section: 'Monitor', 
+    {
+      section: 'Monitor',
       items: [
         { icon: <Clock size={19} />, label: 'Attendance', path: '/monitor/attendance' },
         { icon: <FileCheck size={19} />, label: 'Approvals', path: '/monitor/approvals' }, // Approve OT/Leaves
         { icon: <FileBarChart size={19} />, label: 'Reports', path: '/monitor/reports' },
         { icon: <Bell size={19} />, label: 'Notifications', path: '/monitor/notifications' },
-      ] 
+      ]
     },
   ];
 
   // 5. Approver (Task Focused)
   const approverNav = [
     { section: 'Home', items: [{ icon: <LayoutDashboard size={19} />, label: 'Dashboard', path: '/dashboard' }] },
-    { 
-      section: 'Monitor', 
+    {
+      section: 'Monitor',
       items: [
         { icon: <FileCheck size={19} />, label: 'Pending Approvals', path: '/monitor/approvals' },
         { icon: <Clock size={19} />, label: 'Team Attendance', path: '/monitor/attendance' },
         { icon: <Bell size={19} />, label: 'Notifications', path: '/monitor/notifications' },
-      ] 
+      ]
     },
   ];
 
   // 6. HR Recruiter (People Focused)
   const recruiterNav = [
     { section: 'Home', items: [{ icon: <LayoutDashboard size={19} />, label: 'Dashboard', path: '/dashboard' }] },
-    { 
-      section: 'Manage', 
+    {
+      section: 'Manage',
       items: [
         { icon: <Users size={19} />, label: 'Employee Directory', path: '/manage/employee' },
         { icon: <Calendar size={19} />, label: 'Schedule', path: '/manage/schedule' },
-      ] 
+      ]
     },
-    { 
-        section: 'Monitor', 
-        items: [
-          { icon: <Bell size={19} />, label: 'Notifications', path: '/monitor/notifications' },
-        ] 
-      },
+    {
+      section: 'Monitor',
+      items: [
+        { icon: <Bell size={19} />, label: 'Notifications', path: '/monitor/notifications' },
+      ]
+    },
   ];
 
   // 7. Employee (Self Service)
@@ -302,7 +312,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   // --- Settings Navigation Variants ---
-  
+
   const superAdminSettings = [
     {
       section: 'Personnel Information',
@@ -355,119 +365,119 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       ]
     },
     {
-        section: 'Timekeeping',
-        items: [
-          { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
-          { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
-          { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
-          { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
-        ]
-      },
-      {
-        section: 'Pay Structure',
-        items: [
-          { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
-          { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
-          { icon: <Sliders size={19} />, label: 'Adjustments', path: '/settings/adjustments' },
-        ]
-      },
-      {
-        section: 'Organization',
-        items: [
-          { icon: <Building2 size={19} />, label: 'Structure', path: '/settings/structure' },
-          { icon: <BookOpen size={19} />, label: 'Policies & Rules', path: '/settings/policies' },
-          { icon: <ShieldAlert size={19} />, label: 'Approvals', path: '/settings/approvals' },
-        ]
-      },
-      {
-        section: 'System',
-        items: [
-          { icon: <UserCog size={19} />, label: 'User Management', path: '/settings/users' },
-          { icon: <BellRing size={19} />, label: 'Notifications', path: '/settings/notifications' },
-        ]
-      },
+      section: 'Timekeeping',
+      items: [
+        { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
+        { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
+        { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
+        { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
+      ]
+    },
+    {
+      section: 'Pay Structure',
+      items: [
+        { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
+        { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
+        { icon: <Sliders size={19} />, label: 'Adjustments', path: '/settings/adjustments' },
+      ]
+    },
+    {
+      section: 'Organization',
+      items: [
+        { icon: <Building2 size={19} />, label: 'Structure', path: '/settings/structure' },
+        { icon: <BookOpen size={19} />, label: 'Policies & Rules', path: '/settings/policies' },
+        { icon: <ShieldAlert size={19} />, label: 'Approvals', path: '/settings/approvals' },
+      ]
+    },
+    {
+      section: 'System',
+      items: [
+        { icon: <UserCog size={19} />, label: 'User Management', path: '/settings/users' },
+        { icon: <BellRing size={19} />, label: 'Notifications', path: '/settings/notifications' },
+      ]
+    },
   ];
 
   const payrollSettings = [
-    { 
-        section: 'Pay Structure', 
-        items: [
-          { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
-          { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
-          { icon: <Sliders size={19} />, label: 'Adjustments', path: '/settings/adjustments' },
-        ] 
+    {
+      section: 'Pay Structure',
+      items: [
+        { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
+        { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
+        { icon: <Sliders size={19} />, label: 'Adjustments', path: '/settings/adjustments' },
+      ]
     },
   ];
 
   const attendanceSettings = [
     {
-        section: 'Timekeeping',
-        items: [
-          { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
-          { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
-          { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
-          { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
-        ]
+      section: 'Timekeeping',
+      items: [
+        { icon: <Clock size={19} />, label: 'Shift', path: '/settings/shift' },
+        { icon: <Calendar size={19} />, label: 'Employee Schedule', path: '/settings/employee-schedule' },
+        { icon: <Calendar size={19} />, label: 'Leave', path: '/settings/leave' },
+        { icon: <Calendar size={19} />, label: 'Holiday', path: '/settings/holiday' },
+      ]
     },
   ];
 
   const recruiterSettings = [
-    { 
-        section: 'Organization', 
-        items: [
-          { icon: <Building2 size={19} />, label: 'Structure', path: '/settings/structure' },
-        ] 
+    {
+      section: 'Organization',
+      items: [
+        { icon: <Building2 size={19} />, label: 'Structure', path: '/settings/structure' },
+      ]
     },
-    { 
-        section: 'Pay Structure', 
-        items: [
-          { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
-          { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
-        ] 
+    {
+      section: 'Pay Structure',
+      items: [
+        { icon: <FileCheck size={19} />, label: 'Rank', path: '/settings/ranks' },
+        { icon: <LayoutGrid size={19} />, label: 'Salary Grade', path: '/settings/salary-grade' },
+      ]
     },
   ];
 
   // Determine active nav set
   let activeNavSet = superAdminNav; // Default fallback
-  
+
   if (isSettingsPath) {
-      switch (user?.role) {
-          case 'Superadmin': activeNavSet = superAdminSettings; break;
-          case 'HR Admin': activeNavSet = hrAdminSettings; break;
-          case 'HR Payroll Personnel': activeNavSet = payrollSettings; break;
-          case 'HR Attendance Personnel': activeNavSet = attendanceSettings; break;
-          case 'HR Recruiter': activeNavSet = recruiterSettings; break;
-          case 'Approver': activeNavSet = []; break; // No settings for Approver
-          case 'Employee': activeNavSet = []; break; // No settings for Employee
-          default: activeNavSet = superAdminSettings;
-      }
+    switch (user?.role) {
+      case 'Superadmin': activeNavSet = superAdminSettings; break;
+      case 'HR Admin': activeNavSet = hrAdminSettings; break;
+      case 'HR Payroll Personnel': activeNavSet = payrollSettings; break;
+      case 'HR Attendance Personnel': activeNavSet = attendanceSettings; break;
+      case 'HR Recruiter': activeNavSet = recruiterSettings; break;
+      case 'Approver': activeNavSet = []; break; // No settings for Approver
+      case 'Employee': activeNavSet = []; break; // No settings for Employee
+      default: activeNavSet = superAdminSettings;
+    }
   } else {
-      switch (user?.role) {
-          case 'Superadmin': activeNavSet = superAdminNav; break;
-          case 'HR Admin': activeNavSet = hrAdminNav; break;
-          case 'HR Payroll Personnel': activeNavSet = payrollNav; break;
-          case 'HR Attendance Personnel': activeNavSet = attendanceNav; break;
-          case 'Approver': activeNavSet = approverNav; break;
-          case 'HR Recruiter': activeNavSet = recruiterNav; break;
-          case 'Employee': activeNavSet = employeeNav; break;
-          default: activeNavSet = employeeNav;
-      }
+    switch (user?.role) {
+      case 'Superadmin': activeNavSet = superAdminNav; break;
+      case 'HR Admin': activeNavSet = hrAdminNav; break;
+      case 'HR Payroll Personnel': activeNavSet = payrollNav; break;
+      case 'HR Attendance Personnel': activeNavSet = attendanceNav; break;
+      case 'Approver': activeNavSet = approverNav; break;
+      case 'HR Recruiter': activeNavSet = recruiterNav; break;
+      case 'Employee': activeNavSet = employeeNav; break;
+      default: activeNavSet = employeeNav;
+    }
   }
 
   const handleLogout = () => {
-      logout();
-      navigate('/login');
+    logout();
+    navigate('/login');
   };
 
-  const filteredSearchItems = SEARCH_ITEMS.filter(item => 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredSearchItems = SEARCH_ITEMS.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Dynamic Sidebar */}
       <aside className={`border-r border-slate-200 flex flex-col fixed h-full z-20 overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} ${isSettingsPath ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
-        
+
         {/* Brand/Header Section */}
         <div className={`flex items-center gap-3 ${isSidebarOpen ? 'px-6 py-6' : 'py-6 justify-center'}`}>
           <div className={`${isSettingsPath ? 'bg-indigo-500' : 'bg-indigo-600'} p-2 rounded-xl shadow-lg shrink-0`}>
@@ -523,11 +533,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                           : 'justify-center w-10 h-10 mx-auto',
                         (isEmployeeProfileItem ? isEmployeeProfileActive : isActive)
                           ? (isSettingsPath
-                              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                              : 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50')
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                            : 'bg-indigo-50 text-indigo-600 shadow-sm border border-indigo-100/50')
                           : (isSettingsPath
-                              ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'),
+                            ? 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'),
                       ].join(' ')}
                     >
                       <span className={isItemActiveNow ? (isSettingsPath ? 'text-white' : 'text-indigo-600') : 'text-slate-400'}>
@@ -540,9 +550,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             </div>
           )) : (
-             <div className="p-4 text-center text-slate-500 text-xs italic">
-                {isSidebarOpen ? 'No settings available for this role.' : ''}
-             </div>
+            <div className="p-4 text-center text-slate-500 text-xs italic">
+              {isSidebarOpen ? 'No settings available for this role.' : ''}
+            </div>
           )}
         </nav>
 
@@ -550,14 +560,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {user?.role !== 'Employee' && !isSettingsPath && (
           <div className={`border-t border-slate-100 mt-auto ${isSidebarOpen ? 'p-4' : 'p-3 flex justify-center'}`}>
             {user?.role !== 'Approver' && (
-                <button
-                  onClick={() => navigate('/settings/overview')}
-                  className={`flex items-center gap-3 rounded-xl transition-all text-slate-600 hover:bg-slate-100 hover:shadow-sm ${isSidebarOpen ? 'w-full px-3 py-2.5 text-sm font-bold' : 'p-2.5 justify-center w-10 h-10'}`}
-                  title={isSidebarOpen ? '' : 'System Settings'}
-                >
-                  <Settings size={19} className="text-slate-400 shrink-0" />
-                  {isSidebarOpen && 'System Settings'}
-                </button>
+              <button
+                onClick={() => navigate('/settings/overview')}
+                className={`flex items-center gap-3 rounded-xl transition-all text-slate-600 hover:bg-slate-100 hover:shadow-sm ${isSidebarOpen ? 'w-full px-3 py-2.5 text-sm font-bold' : 'p-2.5 justify-center w-10 h-10'}`}
+                title={isSidebarOpen ? '' : 'System Settings'}
+              >
+                <Settings size={19} className="text-slate-400 shrink-0" />
+                {isSidebarOpen && 'System Settings'}
+              </button>
             )}
           </div>
         )}
@@ -578,16 +588,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </button>
 
             {isSettingsPath && (
-               <div className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-200">
+              <div className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest border border-slate-200">
                 System Mode
               </div>
             )}
             {/* Global Search / Command Palette */}
             <div className="relative flex-1 max-w-lg hidden md:block" ref={searchRef}>
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search pages" 
+              <input
+                type="text"
+                placeholder="Search pages"
                 className="w-full bg-slate-50 border-none rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -595,42 +605,42 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               />
               <AnimatePresence>
                 {isSearchFocused && searchQuery && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        className="absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 max-h-80 overflow-y-auto"
-                    >
-                        {filteredSearchItems.length > 0 ? (
-                            <div className="py-2">
-                                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Search Results</div>
-                                {filteredSearchItems.map(item => (
-                                    <button 
-                                        key={item.id}
-                                        onClick={() => { navigate(item.path); setIsSearchFocused(false); setSearchInput(''); }}
-                                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between group transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${item.type === 'Page' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
-                                                {item.type}
-                                            </span>
-                                            <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{item.title}</span>
-                                        </div>
-                                        <ArrowLeft size={14} className="text-slate-300 opacity-0 group-hover:opacity-100 rotate-180 transition-all" />
-                                    </button>
-                                ))}
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    className="absolute top-full left-0 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 max-h-80 overflow-y-auto"
+                  >
+                    {filteredSearchItems.length > 0 ? (
+                      <div className="py-2">
+                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Search Results</div>
+                        {filteredSearchItems.map(item => (
+                          <button
+                            key={item.id}
+                            onClick={() => { navigate(item.path); setIsSearchFocused(false); setSearchInput(''); }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between group transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className={`text-xs px-2 py-0.5 rounded font-bold uppercase ${item.type === 'Page' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-600'}`}>
+                                {item.type}
+                              </span>
+                              <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{item.title}</span>
                             </div>
-                        ) : (
-                            <div className="p-4 text-center text-sm text-slate-400">No results found.</div>
-                        )}
-                    </motion.div>
+                            <ArrowLeft size={14} className="text-slate-300 opacity-0 group-hover:opacity-100 rotate-180 transition-all" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-sm text-slate-400">No results found.</div>
+                    )}
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-5 ml-auto">
-            <button 
+            <button
               onClick={() => navigate('/monitor/notifications')}
               className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
             >
@@ -638,7 +648,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
             <div className="w-px h-6 bg-slate-200"></div>
-            
+
             {/* User Profile Dropdown */}
             <div className="relative group">
               <button className="flex items-center gap-3 pl-2 py-1.5 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors text-left outline-none">
@@ -654,16 +664,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
               {/* Dropdown Menu */}
               <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-100 rounded-xl shadow-xl p-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
-                  <div className="px-3 py-2 border-b border-slate-50 mb-1">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Account</p>
-                  </div>
-                  <button 
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                  >
-                      <LogOut size={16} />
-                      Log Out
-                  </button>
+                <div className="px-3 py-2 border-b border-slate-50 mb-1">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Account</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                >
+                  <LogOut size={16} />
+                  Log Out
+                </button>
               </div>
             </div>
           </div>

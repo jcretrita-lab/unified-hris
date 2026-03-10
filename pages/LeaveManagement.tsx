@@ -27,6 +27,7 @@ interface LeaveType {
   color: string;
   resetDate: string; // Automatic refresh date (MM-DD)
   resetFrequency: 'Yearly' | 'Monthly' | 'Daily' | 'Never';
+  isPaid: boolean;
 }
 
 const MOCK_LEAVES: LeaveType[] = [
@@ -40,7 +41,8 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Aug 8, 2025 23:56',
     color: 'bg-emerald-500',
     resetDate: '01-01',
-    resetFrequency: 'Yearly'
+    resetFrequency: 'Yearly',
+    isPaid: true
   },
   {
     id: '2',
@@ -51,6 +53,19 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModifiedBy: 'Juan Dela Cruz',
     lastModified: 'Aug 8, 2025 12:05',
     color: 'bg-rose-500',
+    resetDate: '01-01',
+    resetFrequency: 'Yearly',
+    isPaid: true
+  },
+  {
+    id: '2b',
+    name: 'Emergency Leave',
+    maxDays: 5,
+    minDays: 1,
+    perEmployee: 5,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-orange-500',
     resetDate: '01-01',
     resetFrequency: 'Yearly'
   },
@@ -64,7 +79,8 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Jan 10, 2025 09:00',
     color: 'bg-purple-500',
     resetDate: '01-01',
-    resetFrequency: 'Yearly'
+    resetFrequency: 'Yearly',
+    isPaid: true
   },
   {
     id: '4',
@@ -76,6 +92,7 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Jan 10, 2025 09:00',
     color: 'bg-blue-500',
     resetDate: '01-01',
+    isPaid: true,
     resetFrequency: 'Yearly'
   },
   {
@@ -88,6 +105,7 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Jan 10, 2025 09:00',
     color: 'bg-amber-500',
     resetDate: '01-01',
+    isPaid: true,
     resetFrequency: 'Yearly'
   },
   {
@@ -100,7 +118,20 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Jan 10, 2025 09:00',
     color: 'bg-rose-500',
     resetDate: '01-01',
+    isPaid: true,
     resetFrequency: 'Never'
+  },
+  {
+    id: '9',
+    name: 'VAWC Leave',
+    maxDays: 10,
+    minDays: 1,
+    perEmployee: 10,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Jan 10, 2025 09:00',
+    color: 'bg-purple-500',
+    resetDate: '01-01',
+    resetFrequency: 'Yearly'
   },
   {
     id: '7',
@@ -112,6 +143,7 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Jan 10, 2025 09:00',
     color: 'bg-slate-500',
     resetDate: '01-01',
+    isPaid: true,
     resetFrequency: 'Yearly'
   },
   {
@@ -124,6 +156,7 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Jan 10, 2025 09:00',
     color: 'bg-slate-500',
     resetDate: '01-01',
+    isPaid: true,
     resetFrequency: 'Yearly'
   }
 ];
@@ -171,7 +204,8 @@ const LeaveManagement: React.FC = () => {
     perEmployee: 0,
     color: 'bg-blue-500',
     resetDate: '01-01',
-    resetFrequency: 'Yearly'
+    resetFrequency: 'Yearly',
+    isPaid: true
   });
 
   const handleOpenModal = (leave?: LeaveType) => {
@@ -187,7 +221,8 @@ const LeaveManagement: React.FC = () => {
         perEmployee: 5,
         color: 'bg-blue-500',
         resetDate: '01-01', // Default Jan 1
-        resetFrequency: 'Yearly'
+        resetFrequency: 'Yearly',
+        isPaid: true
       });
     }
     setIsModalOpen(true);
@@ -206,7 +241,8 @@ const LeaveManagement: React.FC = () => {
       lastModified: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' }),
       color: formData.color || 'bg-slate-500',
       resetDate: formData.resetDate || '01-01',
-      resetFrequency: formData.resetFrequency || 'Yearly'
+      resetFrequency: formData.resetFrequency || 'Yearly',
+      isPaid: !!formData.isPaid
     };
 
     if (editingId) {
@@ -287,6 +323,7 @@ const LeaveManagement: React.FC = () => {
             <thead className="bg-slate-50/40">
               <tr>
                 <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Leave Name</th>
+                <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Payment</th>
                 <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Max Days / Year</th>
                 <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Min. Increment</th>
                 <th className="px-8 py-5 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Default Allocation</th>
@@ -304,6 +341,11 @@ const LeaveManagement: React.FC = () => {
                       <div className={`w-3 h-3 rounded-full ${leave.color} shadow-sm`}></div>
                       <span className="text-sm font-bold text-slate-900">{leave.name}</span>
                     </div>
+                  </td>
+                  <td className="px-8 py-5 whitespace-nowrap">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${leave.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                      {leave.isPaid ? 'With Pay' : 'Without Pay'}
+                    </span>
                   </td>
                   <td className="px-8 py-5 whitespace-nowrap">
                     <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
@@ -371,15 +413,34 @@ const LeaveManagement: React.FC = () => {
           </div>
 
           <div className="space-y-5">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Leave Name</label>
-              <input
-                className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
-                placeholder="e.g. Vacation Leave"
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                autoFocus
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-1">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Leave Name</label>
+                <input
+                  className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 text-sm font-bold text-slate-900 transition-all"
+                  placeholder="e.g. Vacation Leave"
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  autoFocus
+                />
+              </div>
+              <div className="col-span-1">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Category</label>
+                <div className="flex bg-slate-100 p-1 rounded-xl h-[46px]">
+                  <button
+                    onClick={() => setFormData({ ...formData, isPaid: true })}
+                    className={`flex-1 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${formData.isPaid ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    With Pay
+                  </button>
+                  <button
+                    onClick={() => setFormData({ ...formData, isPaid: false })}
+                    className={`flex-1 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${!formData.isPaid ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    Without Pay
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

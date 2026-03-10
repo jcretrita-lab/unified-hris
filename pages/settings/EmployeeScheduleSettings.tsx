@@ -166,6 +166,12 @@ const EmployeeScheduleSettings: React.FC = () => {
     const [filterDepartment, setFilterDepartment] = useState<string>('');
     const [filterSection, setFilterSection] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [scheduleView, setScheduleView] = useState<'Day' | 'Week' | 'Month'>('Month');
+    const [startDayOffset, setStartDayOffset] = useState(0);
+
+    React.useEffect(() => {
+        setStartDayOffset(0);
+    }, [scheduleView, viewDate]);
 
     // Range selection state
     const [rangeStart, setRangeStart] = useState<{ empId: string; date: string } | null>(null);
@@ -177,11 +183,13 @@ const EmployeeScheduleSettings: React.FC = () => {
 
     const handleSelectMonth = (selectedMonth: number) => {
         setViewDate(new Date(selectedYear, selectedMonth, 1));
+        setStartDayOffset(0);
     };
 
     const handleYearChange = (newYear: number) => {
         setSelectedYear(newYear);
         setViewDate(new Date(newYear, month, 1));
+        setStartDayOffset(0);
     };
 
     // Build date strings for the month
@@ -192,6 +200,12 @@ const EmployeeScheduleSettings: React.FC = () => {
         });
     }, [year, month, daysInMonth]);
 
+    const visibleDates = useMemo(() => {
+        if (scheduleView === 'Day') return dates.slice(startDayOffset, startDayOffset + 1);
+        if (scheduleView === 'Week') return dates.slice(startDayOffset, startDayOffset + 7);
+        return dates;
+    }, [dates, scheduleView, startDayOffset]);
+
     // Get week of month (W1-W4)
     const getWeekOfMonth = (dateStr: string) => {
         const parts = dateStr.split('-');
@@ -200,6 +214,7 @@ const EmployeeScheduleSettings: React.FC = () => {
     };
 
     const dayAbbreviations = ['SU', 'M', 'T', 'W', 'TH', 'F', 'SA'];
+    const fullDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     // Available departments based on division filter
     const availableDepartments = useMemo(() => {
@@ -393,6 +408,19 @@ const EmployeeScheduleSettings: React.FC = () => {
                             {availableSections.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                     )}
+
+                    <div className="relative border border-slate-200 rounded-xl hover:border-indigo-200 transition-all bg-slate-50 group focus-within:border-indigo-500">
+                        <select
+                            value={scheduleView}
+                            onChange={(e) => setScheduleView(e.target.value as any)}
+                            className="appearance-none flex flex-1 items-center gap-2 px-3 py-2 pr-8 bg-transparent text-xs font-bold text-slate-700 outline-none cursor-pointer group-hover:text-indigo-600"
+                        >
+                            <option value="Day">Day View</option>
+                            <option value="Week">Week View</option>
+                            <option value="Month">Month View</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-indigo-600" size={14} />
+                    </div>
                 </div>
             </div>
 
@@ -425,17 +453,45 @@ const EmployeeScheduleSettings: React.FC = () => {
                             <button
                                 key={i}
                                 onClick={() => handleSelectMonth(i)}
-                                className={`py-1.5 px-1 rounded-lg text-xs font-semibold border transition-all ${
-                                    isSelected
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow shadow-indigo-100'
-                                        : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
-                                }`}
+                                className={`py-1.5 px-1 rounded-lg text-xs font-semibold border transition-all ${isSelected
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow shadow-indigo-100'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50'
+                                    }`}
                             >
                                 {name.slice(0, 3)}
                             </button>
                         );
                     })}
                 </div>
+
+                {scheduleView === 'Week' && (
+                    <div className="flex flex-wrap gap-2 pt-6 mt-6 border-t border-slate-100">
+                        {Array.from({ length: Math.ceil(daysInMonth / 7) }).map((_, i) => {
+                            const offset = i * 7;
+                            const isSelected = startDayOffset === offset;
+                            return (
+                                <button key={i} onClick={() => setStartDayOffset(offset)} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow shadow-indigo-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50 hover:border-indigo-300'}`}>
+                                    Week {i + 1}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {scheduleView === 'Day' && (
+                    <div className="flex gap-2 overflow-x-auto pb-2 pt-6 mt-6 border-t border-slate-100 custom-scrollbar">
+                        {dates.map((d, i) => {
+                            const isSelected = startDayOffset === i;
+                            const dow = new Date(d + 'T00:00:00').getDay();
+                            return (
+                                <button key={i} onClick={() => setStartDayOffset(i)} className={`shrink-0 flex flex-col items-center justify-center w-12 h-14 rounded-lg border transition-all ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow shadow-indigo-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50 hover:border-indigo-300'}`}>
+                                    <span className="text-[9px] uppercase font-bold opacity-70">{dayAbbreviations[dow]}</span>
+                                    <span className="text-sm font-black">{i + 1}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {/* Legend */}
                 <div className="mt-6 pt-6 border-t border-slate-100 flex items-center gap-4 flex-wrap">
@@ -465,11 +521,11 @@ const EmployeeScheduleSettings: React.FC = () => {
                             <table className="min-w-full">
                                 <thead>
                                     <tr className="border-b border-slate-100">
-                                        <th className="sticky left-0 z-10 bg-white px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest min-w-[180px] border-r border-slate-100">
+                                        <th className={`sticky left-0 z-10 bg-white px-6 py-4 text-left font-bold text-slate-400 uppercase tracking-widest min-w-[220px] border-r border-slate-100 ${scheduleView === 'Day' ? 'text-xs' : 'text-[10px]'}`}>
                                             Employee
                                         </th>
-                                        {dates.map((dateStr, i) => {
-                                            const d = i + 1;
+                                        {visibleDates.map((dateStr, i) => {
+                                            const d = new Date(dateStr + 'T00:00:00').getDate();
                                             const dow = new Date(dateStr + 'T00:00:00').getDay();
                                             const isWeekend = dow === 0 || dow === 6;
                                             const isHoliday = !!HOLIDAYS[dateStr];
@@ -478,14 +534,16 @@ const EmployeeScheduleSettings: React.FC = () => {
                                             return (
                                                 <th
                                                     key={dateStr}
-                                                    className={`px-1 py-2 text-center min-w-[36px] ${isWeekend ? 'bg-slate-50' : ''} ${isHoliday ? 'bg-amber-50' : ''}`}
+                                                    className={`px-2 py-4 transition-all duration-300 ${isWeekend ? 'bg-slate-50' : ''} ${isHoliday ? 'bg-amber-50' : ''} ${scheduleView === 'Day' ? 'min-w-[400px]' : scheduleView === 'Week' ? 'min-w-[160px]' : 'min-w-[48px]'}`}
                                                 >
-                                                    {weekNum && (
-                                                        <div className="text-[8px] font-bold text-indigo-400 mb-0.5">{weekNum}</div>
-                                                    )}
-                                                    <div className="text-[10px] font-bold text-slate-500">{d}</div>
-                                                    <div className={`text-[8px] font-bold ${isWeekend ? 'text-slate-400' : 'text-slate-300'}`}>
-                                                        {dayAbbreviations[dow]}
+                                                    <div className="flex flex-col items-center justify-center space-y-1">
+                                                        {weekNum && (
+                                                            <div className={`font-bold text-indigo-400 ${scheduleView === 'Day' ? 'text-sm mb-1' : 'text-[9px]'}`}>{weekNum}</div>
+                                                        )}
+                                                        <div className={`font-bold text-slate-800 leading-none ${scheduleView === 'Day' ? 'text-5xl' : scheduleView === 'Week' ? 'text-2xl' : 'text-xs'}`}>{d}</div>
+                                                        <div className={`font-bold tracking-tight ${isWeekend ? 'text-slate-400' : 'text-slate-500'} ${scheduleView === 'Day' ? 'text-lg mt-2 uppercase' : scheduleView === 'Week' ? 'text-sm' : 'text-[9px]'}`}>
+                                                            {scheduleView === 'Month' ? dayAbbreviations[dow] : fullDayNames[dow]}
+                                                        </div>
                                                     </div>
                                                 </th>
                                             );
@@ -495,18 +553,18 @@ const EmployeeScheduleSettings: React.FC = () => {
                                 <tbody className="divide-y divide-slate-50">
                                     {deptEmployees.map(emp => (
                                         <tr key={emp.employeeId} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="sticky left-0 z-10 bg-white px-4 py-3 border-r border-slate-100">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">
+                                            <td className="sticky left-0 z-10 bg-white px-6 py-4 border-r border-slate-100 shadow-[2px_0_8px_-4px_rgba(0,0,0,0.1)]">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold border border-indigo-100 ${scheduleView === 'Day' ? 'w-12 h-12 text-sm' : 'w-10 h-10 text-xs'}`}>
                                                         {emp.name.split(' ').map(n => n[0]).join('')}
                                                     </div>
                                                     <div>
-                                                        <div className="text-xs font-bold text-slate-900">{emp.name}</div>
-                                                        <div className="text-[9px] text-slate-400">{emp.section}</div>
+                                                        <div className={`font-bold text-slate-900 ${scheduleView === 'Day' ? 'text-base' : 'text-sm'}`}>{emp.name}</div>
+                                                        <div className={`text-slate-500 font-medium ${scheduleView === 'Day' ? 'text-xs' : 'text-[10px]'}`}>{emp.section}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            {dates.map(dateStr => {
+                                            {visibleDates.map(dateStr => {
                                                 const status = emp.schedule[dateStr] || 'O';
                                                 const cfg = WORK_STATUS_CONFIG[status];
                                                 const dow = new Date(dateStr + 'T00:00:00').getDay();
@@ -517,18 +575,18 @@ const EmployeeScheduleSettings: React.FC = () => {
                                                 return (
                                                     <td
                                                         key={dateStr}
-                                                        className={`px-1 py-1.5 text-center ${isWeekend ? 'bg-slate-50/50' : ''}`}
+                                                        className={`px-2 py-2 text-center ${isWeekend ? 'bg-slate-50/50' : ''}`}
                                                     >
-                                                        <div className="flex flex-col items-center gap-0.5">
+                                                        <div className="flex flex-col items-center gap-1.5">
                                                             <button
                                                                 onClick={(e) => handleCellClick(emp.employeeId, dateStr, e)}
-                                                                className={`w-7 h-7 rounded flex items-center justify-center text-[9px] font-bold transition-all hover:scale-110 hover:shadow-sm ${cfg.bg} ${cfg.color} border ${cfg.border}`}
+                                                                className={`rounded-xl flex items-center justify-center font-bold transition-all hover:scale-105 hover:shadow-md ${cfg.bg} ${cfg.color} border-2 ${cfg.border} ${scheduleView === 'Day' ? 'w-64 h-20 text-lg mx-auto shadow-sm' : scheduleView === 'Week' ? 'w-32 h-12 text-sm mx-auto shadow-sm' : 'w-9 h-9 text-[10px] mx-auto'}`}
                                                                 title={`${emp.name} - ${dateStr}: ${cfg.label}${HOLIDAYS[dateStr] ? ` (${HOLIDAYS[dateStr]})` : ''}. Click to cycle, Shift+click for range select.`}
                                                             >
-                                                                {status}
+                                                                {scheduleView === 'Month' ? status : cfg.label}
                                                             </button>
                                                             {isHoliday && status !== 'H' && (
-                                                                <div className="w-7 h-4 rounded flex items-center justify-center text-[8px] font-bold bg-yellow-100 text-yellow-700 border border-yellow-300">
+                                                                <div className={`rounded-lg flex items-center justify-center font-bold bg-amber-50 text-amber-700 border border-amber-200 ${scheduleView === 'Day' ? 'w-64 h-10 text-sm mx-auto mt-2 shadow-sm' : scheduleView === 'Week' ? 'w-32 h-8 text-xs mx-auto mt-1 shadow-sm' : 'w-9 h-5 text-[9px] mx-auto'}`}>
                                                                     H
                                                                 </div>
                                                             )}
@@ -608,13 +666,12 @@ const EmployeeScheduleSettings: React.FC = () => {
                                                 prev.includes(i) ? prev.filter(m => m !== i) : [...prev, i]
                                             );
                                         }}
-                                        className={`p-3 rounded-xl text-xs font-bold border-2 transition-all ${
-                                            isCurrent
-                                                ? 'bg-indigo-50 border-indigo-200 text-indigo-600 cursor-not-allowed'
-                                                : isSelected
-                                                    ? 'bg-indigo-600 border-indigo-600 text-white'
-                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-200'
-                                        }`}
+                                        className={`p-3 rounded-xl text-xs font-bold border-2 transition-all ${isCurrent
+                                            ? 'bg-indigo-50 border-indigo-200 text-indigo-600 cursor-not-allowed'
+                                            : isSelected
+                                                ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-200'
+                                            }`}
                                     >
                                         {name}
                                         {isCurrent && <div className="text-[8px] mt-0.5">Current</div>}

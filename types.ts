@@ -49,6 +49,8 @@ export interface CutoffRange {
   startDay: number;
   endDay: number;
   payDay: number;
+  endDayNextMonth?: boolean;
+  payDayNextMonth?: boolean;
 }
 
 export interface MonthOverride {
@@ -61,7 +63,7 @@ export interface MonthOverride {
 export interface PaySchedule {
   id: string;
   name: string;
-  frequency: 'Weekly' | 'Semi-Monthly' | 'Monthly';
+  frequency: 'Weekly' | 'Semi-Monthly' | 'Monthly' | 'Daily';
   targetType: 'Global' | 'Department' | 'Position';
   targetId: string | null;
   firstCutoff?: number;
@@ -71,8 +73,12 @@ export interface PaySchedule {
   divisorId?: string;
   firstCutoffRange?: CutoffRange;
   secondCutoffRange?: CutoffRange;
+  extraCutoffs?: CutoffRange[]; // Added array for dynamically added cutoffs
   monthOverrides?: MonthOverride[];
   applyToAllMonths?: boolean;
+  dailyStartTime?: string;
+  dailyEndTime?: string;
+  dailyPayTime?: string;
 }
 
 export interface Divisor {
@@ -140,6 +146,8 @@ export interface PayComponent {
   isArchived?: boolean;
   includeIn13thMonth?: boolean; // Added field
   isSystem?: boolean; // Added to prevent deletion of critical components like Basic Pay
+  frequency?: 'Monthly' | 'Semi-Monthly' | 'Weekly' | 'Daily'; // Added field
+  distribution?: { period: string; amount: number }[]; // Added for period-specific splits
   currentVersion?: string;
   versions?: VersionHistory[];
 }

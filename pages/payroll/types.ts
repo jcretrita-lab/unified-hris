@@ -26,6 +26,15 @@ export interface YearEndSummary {
   taxWithheld: number;
   taxDue: number;
   thirteenthMonth: number;
+  assumedThirteenthMonth: number;
+  actualThirteenthMonth: number;
+  assumedStatus: 'Draft' | 'Finalized';
+  actualStatus: 'Draft' | 'Finalized';
+  // Tax Annualization Fields
+  assumedTax: number;
+  actualTax: number;
+  assumedTaxStatus: 'Draft' | 'Finalized';
+  actualTaxStatus: 'Draft' | 'Finalized';
   govContributions: {
     sss: number;
     philhealth: number;
@@ -34,13 +43,26 @@ export interface YearEndSummary {
   status: 'Balanced' | 'Refund Due' | 'Tax Payable';
 }
 
+export interface PeriodData {
+  basicPay: number;
+  absences: number;
+  lateUndertime: number;
+  leaves: number;
+  otherEarnings: number;
+  salaryDifferential?: number;
+  otherTaxable?: number;
+  earnedBasic: number;
+  sss?: number;
+  philhealth?: number;
+  pagibig?: number;
+}
+
 export interface MonthlyPayrollRecord {
-    month: string;
-    period: string;
-    basicPay: number;
-    absences: number;
-    earnedBasic: number;
-    status: 'Paid' | 'Projected';
+  month: string;
+  p1: PeriodData;
+  p2: PeriodData;
+  earnedBasic: number;
+  status: 'Paid' | 'Projected';
 }
 
 export interface LeaveConversionItem {

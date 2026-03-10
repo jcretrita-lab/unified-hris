@@ -56,6 +56,12 @@ interface Shift {
   compressedStartTime?: string;
   compressedEndTime?: string;
   compressedWorkdays?: string;
+  compressedDayOff?: string; // The specific day left out when compressed
+
+  lunchIncluded: boolean;
+  lunchBreakMinutes: number;
+  compressedLunchIncluded?: boolean;
+  compressedLunchBreakMinutes?: number;
 
   lastModifiedBy: string;
   lastModified: string;
@@ -75,6 +81,8 @@ const MOCK_SHIFTS: Shift[] = [
     endTime: '17:00',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], // your version
     workdays: 'Mon – Fri', // main version
+    lunchIncluded: true,
+    lunchBreakMinutes: 60,
     lastModifiedBy: 'Louis Panganiban',
     lastModified: 'Aug 8, 2025 23:56',
     isDefault: true,
@@ -100,6 +108,8 @@ const MOCK_SHIFTS: Shift[] = [
     endTime: '18:00',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     workdays: 'Mon – Fri',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
     lastModifiedBy: 'Juan Dela Cruz',
     lastModified: 'Aug 8, 2025 12:05',
     isDefault: false,
@@ -125,6 +135,8 @@ const MOCK_SHIFTS: Shift[] = [
     endTime: '18:00',
     workDays: ['Sat', 'Sun'],
     workdays: 'Sat – Sun',
+    lunchIncluded: true,
+    lunchBreakMinutes: 60,
     lastModifiedBy: 'System Admin',
     lastModified: 'Aug 1, 2025 09:00',
     isDefault: false,
@@ -139,6 +151,8 @@ const MOCK_SHIFTS: Shift[] = [
     endTime: '17:00',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     workdays: 'Mon – Fri',
+    lunchIncluded: true,
+    lunchBreakMinutes: 60,
     lastModifiedBy: 'System Admin',
     lastModified: 'Sep 15, 2025 10:00',
     isDefault: false,
@@ -157,6 +171,10 @@ const MOCK_SHIFTS: Shift[] = [
     compressedStartTime: '06:00',
     compressedEndTime: '18:00',
     compressedWorkdays: 'Mon – Thu',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
+    compressedLunchIncluded: false,
+    compressedLunchBreakMinutes: 60,
     lastModifiedBy: 'Louis Panganiban',
     lastModified: 'Jan 10, 2026 08:00',
     isDefault: false,
@@ -171,6 +189,8 @@ const MOCK_SHIFTS: Shift[] = [
     endTime: '06:00',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     workdays: 'Mon – Fri',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
     lastModifiedBy: 'System Admin',
     lastModified: 'Oct 5, 2025 09:00',
     isDefault: false,
@@ -185,6 +205,8 @@ const MOCK_SHIFTS: Shift[] = [
     endTime: '22:00',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     workdays: 'Mon – Fri',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
     lastModifiedBy: 'System Admin',
     lastModified: 'Oct 5, 2025 09:15',
     isDefault: false,
@@ -199,6 +221,8 @@ const MOCK_SHIFTS: Shift[] = [
     endTime: '14:00',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     workdays: 'Mon – Fri',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
     lastModifiedBy: 'System Admin',
     lastModified: 'Oct 5, 2025 09:30',
     isDefault: false,
@@ -217,6 +241,10 @@ const MOCK_SHIFTS: Shift[] = [
     compressedStartTime: '07:00',
     compressedEndTime: '19:00',
     compressedWorkdays: 'Mon – Thu',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
+    compressedLunchIncluded: false,
+    compressedLunchBreakMinutes: 60,
     lastModifiedBy: 'Juan Dela Cruz',
     lastModified: 'Feb 1, 2026 10:00',
     isDefault: false,
@@ -248,6 +276,10 @@ const MOCK_SHIFTS: Shift[] = [
     compressedStartTime: '08:00',
     compressedEndTime: '18:00',
     compressedWorkdays: 'Mon – Fri',
+    lunchIncluded: true,
+    lunchBreakMinutes: 60,
+    compressedLunchIncluded: true,
+    compressedLunchBreakMinutes: 60,
     lastModifiedBy: 'Sarah Wilson',
     lastModified: 'Feb 3, 2026 14:30',
     isDefault: false,
@@ -257,21 +289,42 @@ const MOCK_SHIFTS: Shift[] = [
     id: '11',
     name: 'Diwa Employees',
     isCompressible: true,
-    // Non-compressed (9-hour workday, Mon–Fri)
+    // Non-compressed (9-hour workday, Mon–Sat)
     workHours: 9,
     startTime: '08:00',
     endTime: '17:00',
-    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    workdays: 'Mon – Fri',
-    // Compressed (10-hour workday, Mon–Fri)
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    workdays: 'Mon – Sat',
+    // Compressed (10-hour workday, Mon–Fri; Saturday is the day left out)
     compressedWorkHours: 10,
     compressedStartTime: '08:00',
     compressedEndTime: '18:00',
     compressedWorkdays: 'Mon – Fri',
+    compressedDayOff: 'Sat',
+    lunchIncluded: true,
+    lunchBreakMinutes: 60,
+    compressedLunchIncluded: true,
+    compressedLunchBreakMinutes: 60,
     lastModifiedBy: 'HR Admin',
     lastModified: 'Mar 4, 2026 10:15',
     isDefault: false,
     assignedEmployees: 42
+  },
+  {
+    id: '12',
+    name: 'Admin Flex Shift',
+    isCompressible: false,
+    workHours: 8.5,
+    startTime: '08:00',
+    endTime: '17:30',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    workdays: 'Mon – Fri',
+    lunchIncluded: true,
+    lunchBreakMinutes: 30,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Mar 5, 2026 09:00',
+    isDefault: false,
+    assignedEmployees: 9
   }
 ];
 
@@ -314,6 +367,11 @@ const ShiftManagement: React.FC = () => {
     compressedEndTime: '18:00',
     compressedWorkdays: 'Mon – Thu',
 
+    lunchIncluded: true,
+    lunchBreakMinutes: 60,
+    compressedLunchIncluded: false,
+    compressedLunchBreakMinutes: 60,
+
     isDefault: false,
     subShifts: []
   });
@@ -337,6 +395,11 @@ const ShiftManagement: React.FC = () => {
         compressedStartTime: '06:00',
         compressedEndTime: '18:00',
         compressedWorkdays: 'Mon – Thu',
+        compressedDayOff: '',
+        lunchIncluded: true,
+        lunchBreakMinutes: 60,
+        compressedLunchIncluded: false,
+        compressedLunchBreakMinutes: 60,
         isDefault: false,
         subShifts: []
       });
@@ -350,12 +413,13 @@ const ShiftManagement: React.FC = () => {
     setIsAssignModalOpen(true);
   };
 
-  const calcHours = (start: string, end: string) => {
+  const calcNetHours = (start: string, end: string, lunchIncluded: boolean, lunchMinutes: number): number => {
     const s = parseInt(start.split(':')[0]) * 60 + parseInt(start.split(':')[1]);
     const e = parseInt(end.split(':')[0]) * 60 + parseInt(end.split(':')[1]);
     let mins = e - s;
     if (mins < 0) mins += 24 * 60;
-    return Math.round(mins / 60);
+    if (lunchIncluded) mins = Math.max(0, mins - lunchMinutes);
+    return parseFloat((mins / 60).toFixed(1));
   };
 
   const handleSave = () => {
@@ -367,10 +431,18 @@ const ShiftManagement: React.FC = () => {
       isCompressible: formData.isCompressible || false,
 
       // hours
-      workHours: calcHours(formData.startTime!, formData.endTime!),
+      workHours: calcNetHours(
+        formData.startTime!,
+        formData.endTime!,
+        formData.lunchIncluded ?? true,
+        formData.lunchBreakMinutes ?? 60
+      ),
 
       startTime: formData.startTime!,
       endTime: formData.endTime!,
+
+      lunchIncluded: formData.lunchIncluded ?? true,
+      lunchBreakMinutes: formData.lunchBreakMinutes ?? 60,
 
       // ARRAY version
       workDays: formData.workDays || [],
@@ -380,13 +452,18 @@ const ShiftManagement: React.FC = () => {
 
       // compressed schedule
       ...(formData.isCompressible && {
-        compressedWorkHours: calcHours(
+        compressedWorkHours: calcNetHours(
           formData.compressedStartTime!,
-          formData.compressedEndTime!
+          formData.compressedEndTime!,
+          formData.compressedLunchIncluded ?? false,
+          formData.compressedLunchBreakMinutes ?? 60
         ),
         compressedStartTime: formData.compressedStartTime,
         compressedEndTime: formData.compressedEndTime,
-        compressedWorkdays: formData.compressedWorkdays || 'Mon – Thu'
+        compressedWorkdays: formData.compressedWorkdays || 'Mon – Thu',
+        compressedLunchIncluded: formData.compressedLunchIncluded ?? false,
+        compressedLunchBreakMinutes: formData.compressedLunchBreakMinutes ?? 60,
+        ...(formData.compressedDayOff && { compressedDayOff: formData.compressedDayOff }),
       }),
 
       lastModifiedBy: 'Current User',
@@ -624,37 +701,93 @@ const ShiftManagement: React.FC = () => {
                       {shift.isCompressible ? (
                         <>
                           <div>
-                            <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider block mb-1">
-                              Compressed · {shift.compressedWorkdays} · {shift.compressedWorkHours}h
-                            </span>
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">
+                                Compressed · {calcNetHours(shift.compressedStartTime!, shift.compressedEndTime!, shift.compressedLunchIncluded ?? false, shift.compressedLunchBreakMinutes ?? 60)}h/day
+                              </span>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${(shift.compressedLunchIncluded ?? false) ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-500 border-amber-100'}`}>
+                                {(shift.compressedLunchIncluded ?? false) ? `–${shift.compressedLunchBreakMinutes ?? 60}min lunch` : 'no lunch deducted'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                              {shift.workDays.map(day => {
+                                const isOff = day === shift.compressedDayOff;
+                                return (
+                                  <span key={day} title={isOff ? `${day} — day off (compressed)` : day} className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${isOff ? 'bg-rose-50 text-rose-400 border-rose-200 line-through decoration-rose-300' : 'bg-amber-100 text-amber-700 border-amber-200'}`}>
+                                    {day}
+                                  </span>
+                                );
+                              })}
+                            </div>
                             <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 w-fit">
                               <span className="text-xs font-mono font-bold text-amber-700">
                                 {formatTime(shift.compressedStartTime!)} – {formatTime(shift.compressedEndTime!)}
                               </span>
                             </div>
+                            <span className="text-[9px] text-amber-500 font-medium mt-1 block">
+                              Weekly: {(calcNetHours(shift.compressedStartTime!, shift.compressedEndTime!, shift.compressedLunchIncluded ?? false, shift.compressedLunchBreakMinutes ?? 60) * shift.workDays.filter(d => d !== shift.compressedDayOff).length).toFixed(1)}h
+                            </span>
+                            {shift.compressedDayOff && (
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase">Day Off:</span>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-500 border border-rose-100">
+                                  {shift.compressedDayOff}
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           <div>
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                              Non-Compressed · {shift.workdays} · {shift.workHours}h
-                            </span>
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                Non-Compressed · {calcNetHours(shift.startTime, shift.endTime, shift.lunchIncluded, shift.lunchBreakMinutes)}h/day
+                              </span>
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${shift.lunchIncluded ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                                {shift.lunchIncluded ? `–${shift.lunchBreakMinutes}min lunch` : 'no lunch deducted'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                              {shift.workDays.map(day => (
+                                <span key={day} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                  {day}
+                                </span>
+                              ))}
+                            </div>
                             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
                               <span className="text-xs font-mono font-bold text-slate-700">
                                 {formatTime(shift.startTime)} – {formatTime(shift.endTime)}
                               </span>
                             </div>
+                            <span className="text-[9px] text-slate-400 font-medium mt-1 block">
+                              Weekly: {(calcNetHours(shift.startTime, shift.endTime, shift.lunchIncluded, shift.lunchBreakMinutes) * (shift.workDays?.length || 5)).toFixed(1)}h
+                            </span>
                           </div>
                         </>
                       ) : (
                         <div>
-                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                            {shift.workdays} · {shift.workHours}h
-                          </span>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                              {calcNetHours(shift.startTime, shift.endTime, shift.lunchIncluded, shift.lunchBreakMinutes)}h/day
+                            </span>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${shift.lunchIncluded ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                              {shift.lunchIncluded ? `–${shift.lunchBreakMinutes}min lunch` : 'no lunch deducted'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 mb-1.5 flex-wrap">
+                            {shift.workDays.map(day => (
+                              <span key={day} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                {day}
+                              </span>
+                            ))}
+                          </div>
                           <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
                             <span className="text-xs font-mono font-bold text-slate-700">
                               {formatTime(shift.startTime)} – {formatTime(shift.endTime)}
                             </span>
                           </div>
+                          <span className="text-[9px] text-slate-400 font-medium mt-1 block">
+                            Weekly: {(calcNetHours(shift.startTime, shift.endTime, shift.lunchIncluded, shift.lunchBreakMinutes) * (shift.workDays?.length || 5)).toFixed(1)}h
+                          </span>
                         </div>
                       )}
 
@@ -849,6 +982,68 @@ const ShiftManagement: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Lunch Break Toggle */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Lunch Break
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, lunchIncluded: !formData.lunchIncluded })}
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                    formData.lunchIncluded
+                      ? 'bg-emerald-50 border-emerald-300'
+                      : 'bg-white border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-left">
+                    <span className="text-sm font-bold text-slate-800 block">
+                      {formData.lunchIncluded ? 'Lunch Included in Shift Time' : 'Lunch Excluded from Shift Time'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                      {formData.lunchIncluded
+                        ? 'Lunch break is counted within the shift window and deducted from work hours.'
+                        : 'Shift time already reflects pure working hours — no deduction applied.'}
+                    </span>
+                  </div>
+                  <div className={`relative w-10 h-6 rounded-full transition-all shrink-0 ml-4 ${formData.lunchIncluded ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${formData.lunchIncluded ? 'left-5' : 'left-1'}`} />
+                  </div>
+                </button>
+                {formData.lunchIncluded && (
+                  <div className="mt-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                      Break Duration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="120"
+                      className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-bold text-slate-900"
+                      value={formData.lunchBreakMinutes ?? 60}
+                      onChange={(e) => setFormData({ ...formData, lunchBreakMinutes: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Live Total Hours Preview */}
+              {formData.startTime && formData.endTime && (
+                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest block">Total Working Hours</span>
+                    <span className="text-[10px] text-indigo-400 font-medium">
+                      {formData.lunchIncluded ? `Gross – ${formData.lunchBreakMinutes ?? 60}min lunch` : 'No lunch deducted'}
+                      {(formData.workDays?.length ?? 0) > 0 && ` · ${(calcNetHours(formData.startTime, formData.endTime, formData.lunchIncluded ?? true, formData.lunchBreakMinutes ?? 60) * (formData.workDays?.length || 5)).toFixed(1)}h/week`}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-extrabold text-indigo-700">
+                    {calcNetHours(formData.startTime, formData.endTime, formData.lunchIncluded ?? true, formData.lunchBreakMinutes ?? 60)}h
+                    <span className="text-sm font-bold text-indigo-400">/day</span>
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Compressed Schedule */}
@@ -901,6 +1096,76 @@ const ShiftManagement: React.FC = () => {
                         }
                       />
                     </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">
+                        Compressed Day Off
+                      </label>
+                      <select
+                        className="w-full border border-amber-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-sm font-bold text-slate-900"
+                        value={formData.compressedDayOff || ''}
+                        onChange={(e) => setFormData({ ...formData, compressedDayOff: e.target.value })}
+                      >
+                        <option value="">-- None / Auto --</option>
+                        {(formData.workDays || []).map(day => (
+                          <option key={day} value={day}>{day}</option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-amber-600 mt-1">The day left out (rest day) when compressed schedule is active.</p>
+                    </div>
+
+                    {/* Compressed Lunch Toggle */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-2">
+                        Lunch Break
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, compressedLunchIncluded: !formData.compressedLunchIncluded })}
+                        className={`w-full flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                          formData.compressedLunchIncluded
+                            ? 'bg-emerald-50 border-emerald-300'
+                            : 'bg-amber-50/60 border-amber-200 hover:border-amber-300'
+                        }`}
+                      >
+                        <span className="text-sm font-bold text-slate-800">
+                          {formData.compressedLunchIncluded ? 'Lunch Included in Compressed Time' : 'Lunch Excluded from Compressed Time'}
+                        </span>
+                        <div className={`relative w-10 h-6 rounded-full transition-all shrink-0 ml-4 ${formData.compressedLunchIncluded ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${formData.compressedLunchIncluded ? 'left-5' : 'left-1'}`} />
+                        </div>
+                      </button>
+                      {formData.compressedLunchIncluded && (
+                        <div className="mt-2">
+                          <label className="block text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-1">
+                            Break Duration (minutes)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="120"
+                            className="w-full border border-amber-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-sm font-bold text-slate-900"
+                            value={formData.compressedLunchBreakMinutes ?? 60}
+                            onChange={(e) => setFormData({ ...formData, compressedLunchBreakMinutes: parseInt(e.target.value) || 0 })}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live Compressed Hours Preview */}
+                    {formData.compressedStartTime && formData.compressedEndTime && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest block">Compressed Working Hours</span>
+                          <span className="text-[10px] text-amber-500 font-medium">
+                            {formData.compressedLunchIncluded ? `Gross – ${formData.compressedLunchBreakMinutes ?? 60}min lunch` : 'No lunch deducted'}
+                          </span>
+                        </div>
+                        <span className="text-2xl font-extrabold text-amber-700">
+                          {calcNetHours(formData.compressedStartTime, formData.compressedEndTime, formData.compressedLunchIncluded ?? false, formData.compressedLunchBreakMinutes ?? 60)}h
+                          <span className="text-sm font-bold text-amber-400">/day</span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

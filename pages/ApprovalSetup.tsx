@@ -1,13 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
-  ChevronLeft, 
-  ChevronRight, 
-  ArrowLeft, 
-  Save, 
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeft,
+  Save,
   FileCheck,
   Users,
   Briefcase,
@@ -32,7 +32,7 @@ import { motion } from 'framer-motion';
 import Modal from '../components/Modal';
 
 // --- MOCK DATA ---
-interface Approver {
+export interface Approver {
   id: string;
   orderLabel: string;
   name: string;
@@ -54,7 +54,7 @@ interface Approver {
   secondaryRole?: string;
 }
 
-interface ApprovalSetup {
+export interface ApprovalSetup {
   id: string;
   name: string;
   connectedEmployees: number;
@@ -71,7 +71,7 @@ interface ApprovalSetup {
   approvers: Approver[];
 }
 
-const MOCK_SETUPS: ApprovalSetup[] = [
+export const MOCK_SETUPS: ApprovalSetup[] = [
   {
     id: '1',
     name: 'IT Leave Request',
@@ -86,24 +86,24 @@ const MOCK_SETUPS: ApprovalSetup[] = [
     startDate: '2025-01-01',
     endDate: '2025-12-31',
     approvers: [
-      { 
-        id: 'a1', 
-        orderLabel: 'Approver 1', 
-        name: 'Sarah Geronimo', 
-        role: 'Team Lead', 
-        avatar: 'SG', 
-        department: 'IT Department', 
-        lastModifiedBy: 'Louis Panganiban', 
-        lastModified: 'Aug 8, 2025' 
+      {
+        id: 'a1',
+        orderLabel: 'Approver 1',
+        name: 'Sarah Geronimo',
+        role: 'Team Lead',
+        avatar: 'SG',
+        department: 'IT Department',
+        lastModifiedBy: 'Louis Panganiban',
+        lastModified: 'Aug 8, 2025'
       },
-      { 
-        id: 'a2', 
-        orderLabel: 'Verifier 1', 
-        name: 'Alex Thompson', 
-        role: 'HR Manager', 
-        avatar: 'AT', 
-        department: 'HR Department', 
-        lastModifiedBy: 'Juan Dela Cruz', 
+      {
+        id: 'a2',
+        orderLabel: 'Verifier 1',
+        name: 'Alex Thompson',
+        role: 'HR Manager',
+        avatar: 'AT',
+        department: 'HR Department',
+        lastModifiedBy: 'Juan Dela Cruz',
         lastModified: 'Aug 8, 2025',
         // Mock Delegation
         delegateId: 'emp-5',
@@ -151,6 +151,31 @@ const MOCK_SETUPS: ApprovalSetup[] = [
     startDate: '2026-01-01',
     approvers: []
   },
+  {
+    id: '5',
+    name: 'Shift Change Request',
+    connectedEmployees: 32,
+    dateAdded: 'Mar 4, 2026',
+    lastModifiedBy: 'Louis Panganiban',
+    lastModified: 'Mar 4, 2026 10:00',
+    feature: 'Shift Change Request',
+    autoRejectDays: 3,
+    department: 'Operations',
+    unitType: 'Division',
+    startDate: '2026-03-01',
+    approvers: [
+      {
+        id: 'a3',
+        orderLabel: 'Approver 1',
+        name: 'Sarah Wilson',
+        role: 'HR Manager',
+        avatar: 'SW',
+        department: 'HR Department',
+        lastModifiedBy: 'Louis Panganiban',
+        lastModified: 'Mar 4, 2026'
+      }
+    ]
+  }
 ];
 
 const INITIAL_ASSIGNED_EMPLOYEES = [
@@ -183,7 +208,7 @@ const ApprovalSetupPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'editor'>('list');
   const [activeSetup, setActiveSetup] = useState<ApprovalSetup | null>(null);
   const [activeTab, setActiveTab] = useState<'General Settings' | 'Manage Employees'>('General Settings');
-  
+
   // State for Assigned Employees
   const [assignedEmployees, setAssignedEmployees] = useState(INITIAL_ASSIGNED_EMPLOYEES);
 
@@ -191,28 +216,28 @@ const ApprovalSetupPage: React.FC = () => {
   const [editorName, setEditorName] = useState('');
   const [editorFeature, setEditorFeature] = useState('');
   const [editorAutoReject, setEditorAutoReject] = useState(0);
-  
+
   // Unit / Org State
   const [editorUnitType, setEditorUnitType] = useState('Department');
   const [editorUnitTarget, setEditorUnitTarget] = useState('');
 
   const [editorStartDate, setEditorStartDate] = useState('');
   const [editorEndDate, setEditorEndDate] = useState('');
-  
+
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modal State
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'approver' | 'assignee' | 'delegate' | 'co-approver'>('assignee');
   const [activeApproverId, setActiveApproverId] = useState<string | null>(null); // For delegate/co-approver logic
-  
+
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [employeeDept, setEmployeeDept] = useState('');
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   const MotionDiv = motion.div as any;
 
   const handleEdit = (setup: ApprovalSetup) => {
-    setActiveSetup({ ...setup }); 
+    setActiveSetup({ ...setup });
     setEditorName(setup.name);
     setEditorFeature(setup.feature);
     setEditorAutoReject(setup.autoRejectDays || 0);
@@ -220,7 +245,7 @@ const ApprovalSetupPage: React.FC = () => {
     setEditorUnitTarget(setup.department || '');
     setEditorStartDate(setup.startDate || '');
     setEditorEndDate(setup.endDate || '');
-    
+
     setAssignedEmployees(INITIAL_ASSIGNED_EMPLOYEES);
     setViewMode('editor');
     setActiveTab('General Settings');
@@ -254,7 +279,7 @@ const ApprovalSetupPage: React.FC = () => {
   // --- Department Auto-fill Logic ---
   const handleUnitTargetChange = (target: string) => {
     setEditorUnitTarget(target);
-    
+
     // Simulate Inheritance Logic
     if (target && activeSetup) {
       // Create mock inherited approvers based on the selected department
@@ -280,7 +305,7 @@ const ApprovalSetupPage: React.FC = () => {
           lastModified: 'Auto-filled'
         }
       ];
-      
+
       // Auto-fill (Overwrite current for demo purposes)
       setActiveSetup({
         ...activeSetup,
@@ -293,11 +318,11 @@ const ApprovalSetupPage: React.FC = () => {
   const handleRemoveDelegate = (approverId: string) => {
     if (!activeSetup) return;
     const updatedApprovers = activeSetup.approvers.map(a => {
-        if (a.id === approverId) {
-            const { delegateId, delegateName, delegateAvatar, delegateStartDate, delegateEndDate, ...rest } = a;
-            return rest;
-        }
-        return a;
+      if (a.id === approverId) {
+        const { delegateId, delegateName, delegateAvatar, delegateStartDate, delegateEndDate, ...rest } = a;
+        return rest;
+      }
+      return a;
     });
     setActiveSetup({ ...activeSetup, approvers: updatedApprovers });
   };
@@ -305,11 +330,11 @@ const ApprovalSetupPage: React.FC = () => {
   const handleRemoveCoApprover = (approverId: string) => {
     if (!activeSetup) return;
     const updatedApprovers = activeSetup.approvers.map(a => {
-        if (a.id === approverId) {
-            const { secondaryId, secondaryName, secondaryAvatar, secondaryRole, ...rest } = a;
-            return rest;
-        }
-        return a;
+      if (a.id === approverId) {
+        const { secondaryId, secondaryName, secondaryAvatar, secondaryRole, ...rest } = a;
+        return rest;
+      }
+      return a;
     });
     setActiveSetup({ ...activeSetup, approvers: updatedApprovers });
   };
@@ -317,21 +342,21 @@ const ApprovalSetupPage: React.FC = () => {
   // --- Modal Logic ---
   const filteredEmployeesForModal = useMemo(() => {
     return ALL_EMPLOYEES.filter(emp => {
-      const matchesSearch = emp.name.toLowerCase().includes(employeeSearch.toLowerCase()) || 
-                            emp.role.toLowerCase().includes(employeeSearch.toLowerCase());
+      const matchesSearch = emp.name.toLowerCase().includes(employeeSearch.toLowerCase()) ||
+        emp.role.toLowerCase().includes(employeeSearch.toLowerCase());
       const matchesDept = employeeDept ? emp.department === employeeDept : true;
-      
+
       // Filter out logic
       let isAlreadyAdded = false;
       if (modalMode === 'assignee') {
         isAlreadyAdded = assignedEmployees.some(ae => ae.id === emp.id);
       } else if (modalMode === 'delegate' && activeApproverId) {
-         const currentApprover = activeSetup?.approvers.find(a => a.id === activeApproverId);
-         if (currentApprover && currentApprover.name === emp.name) isAlreadyAdded = true; 
+        const currentApprover = activeSetup?.approvers.find(a => a.id === activeApproverId);
+        if (currentApprover && currentApprover.name === emp.name) isAlreadyAdded = true;
       } else if (modalMode === 'co-approver' && activeApproverId) {
-         const currentApprover = activeSetup?.approvers.find(a => a.id === activeApproverId);
-         if (currentApprover && currentApprover.name === emp.name) isAlreadyAdded = true; 
-         // Also verify they aren't already the co-approver (if editing)
+        const currentApprover = activeSetup?.approvers.find(a => a.id === activeApproverId);
+        if (currentApprover && currentApprover.name === emp.name) isAlreadyAdded = true;
+        // Also verify they aren't already the co-approver (if editing)
       }
 
       return matchesSearch && matchesDept && !isAlreadyAdded;
@@ -341,11 +366,11 @@ const ApprovalSetupPage: React.FC = () => {
   const toggleEmployeeSelection = (id: string) => {
     // For delegate and co-approver, only allow single selection
     if (modalMode === 'delegate' || modalMode === 'co-approver') {
-        const newSet = new Set<string>();
-        if (selectedEmployeeIds.has(id)) newSet.delete(id);
-        else newSet.add(id);
-        setSelectedEmployeeIds(newSet);
-        return;
+      const newSet = new Set<string>();
+      if (selectedEmployeeIds.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      setSelectedEmployeeIds(newSet);
+      return;
     }
 
     const newSet = new Set(selectedEmployeeIds);
@@ -360,7 +385,7 @@ const ApprovalSetupPage: React.FC = () => {
     setEmployeeDept('');
     setSelectedEmployeeIds(new Set());
     if ((mode === 'delegate' || mode === 'co-approver') && approverId) {
-        setActiveApproverId(approverId);
+      setActiveApproverId(approverId);
     }
     setIsEmployeeModalOpen(true);
   };
@@ -373,7 +398,7 @@ const ApprovalSetupPage: React.FC = () => {
     } else if (modalMode === 'approver' && activeSetup) {
       const newApprovers = selectedEmps.map((emp, index) => ({
         id: Math.random().toString(36).substr(2, 9),
-        orderLabel: `Approver`, 
+        orderLabel: `Approver`,
         name: emp.name,
         department: emp.department,
         role: emp.role,
@@ -386,38 +411,38 @@ const ApprovalSetupPage: React.FC = () => {
         approvers: [...activeSetup.approvers, ...newApprovers]
       });
     } else if (modalMode === 'delegate' && activeSetup && activeApproverId && selectedEmps.length > 0) {
-        const delegate = selectedEmps[0];
-        const updatedApprovers = activeSetup.approvers.map(a => {
-            if (a.id === activeApproverId) {
-                return {
-                    ...a,
-                    delegateId: delegate.id,
-                    delegateName: delegate.name,
-                    delegateAvatar: delegate.avatar,
-                    delegateStartDate: new Date().toISOString().split('T')[0],
-                    delegateEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-                };
-            }
-            return a;
-        });
-        setActiveSetup({ ...activeSetup, approvers: updatedApprovers });
-        setActiveApproverId(null);
+      const delegate = selectedEmps[0];
+      const updatedApprovers = activeSetup.approvers.map(a => {
+        if (a.id === activeApproverId) {
+          return {
+            ...a,
+            delegateId: delegate.id,
+            delegateName: delegate.name,
+            delegateAvatar: delegate.avatar,
+            delegateStartDate: new Date().toISOString().split('T')[0],
+            delegateEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          };
+        }
+        return a;
+      });
+      setActiveSetup({ ...activeSetup, approvers: updatedApprovers });
+      setActiveApproverId(null);
     } else if (modalMode === 'co-approver' && activeSetup && activeApproverId && selectedEmps.length > 0) {
-        const secondary = selectedEmps[0];
-        const updatedApprovers = activeSetup.approvers.map(a => {
-            if (a.id === activeApproverId) {
-                return {
-                    ...a,
-                    secondaryId: secondary.id,
-                    secondaryName: secondary.name,
-                    secondaryRole: secondary.role,
-                    secondaryAvatar: secondary.avatar
-                };
-            }
-            return a;
-        });
-        setActiveSetup({ ...activeSetup, approvers: updatedApprovers });
-        setActiveApproverId(null);
+      const secondary = selectedEmps[0];
+      const updatedApprovers = activeSetup.approvers.map(a => {
+        if (a.id === activeApproverId) {
+          return {
+            ...a,
+            secondaryId: secondary.id,
+            secondaryName: secondary.name,
+            secondaryRole: secondary.role,
+            secondaryAvatar: secondary.avatar
+          };
+        }
+        return a;
+      });
+      setActiveSetup({ ...activeSetup, approvers: updatedApprovers });
+      setActiveApproverId(null);
     }
 
     setIsEmployeeModalOpen(false);
@@ -437,7 +462,7 @@ const ApprovalSetupPage: React.FC = () => {
               </h1>
               <p className="text-slate-500 font-medium mt-1">Design approval workflows and reviewer sequences.</p>
             </div>
-            <button 
+            <button
               onClick={handleCreate}
               className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
             >
@@ -450,19 +475,19 @@ const ApprovalSetupPage: React.FC = () => {
           <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
             {/* Toolbar */}
             <div className="p-5 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white">
-                <div className="relative max-w-sm w-full">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input 
-                      type="text" 
-                      placeholder="Search workflows..." 
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none text-slate-700" 
-                    />
-                </div>
-                <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
-                        <Filter size={14} /> Filter
-                    </button>
-                </div>
+              <div className="relative max-w-sm w-full">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search workflows..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none text-slate-700"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                  <Filter size={14} /> Filter
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -489,45 +514,45 @@ const ApprovalSetupPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {MOCK_SETUPS.map((setup) => (
-                    <tr 
+                    <tr
                       key={setup.id}
                       onClick={() => handleEdit(setup)}
                       className="hover:bg-slate-50/60 transition-colors group cursor-pointer"
                     >
                       <td className="px-8 py-5 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-100 transition-colors">
-                                <FileCheck size={18} />
-                            </div>
-                            <span className="text-sm font-bold text-slate-900">{setup.name || 'Untitled Setup'}</span>
+                          <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-100 transition-colors">
+                            <FileCheck size={18} />
+                          </div>
+                          <span className="text-sm font-bold text-slate-900">{setup.name || 'Untitled Setup'}</span>
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                            <Users size={14} className="text-slate-400" />
-                            <span className="text-xs font-bold text-slate-600">
+                          <Users size={14} className="text-slate-400" />
+                          <span className="text-xs font-bold text-slate-600">
                             {setup.connectedEmployees} Employees
-                            </span>
+                          </span>
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
                         <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                            {setup.feature}
+                          {setup.feature}
                         </span>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
                         {setup.startDate ? (
-                            <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1 w-fit">
-                                <CalendarDays size={10} /> {setup.startDate} {setup.endDate ? `to ${setup.endDate}` : '(On-going)'}
-                            </span>
+                          <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1 w-fit">
+                            <CalendarDays size={10} /> {setup.startDate} {setup.endDate ? `to ${setup.endDate}` : '(On-going)'}
+                          </span>
                         ) : (
-                            <span className="text-[10px] text-slate-400 font-medium italic">No schedule</span>
+                          <span className="text-[10px] text-slate-400 font-medium italic">No schedule</span>
                         )}
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap">
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-slate-700">{setup.lastModifiedBy}</span>
-                            <span className="text-[10px] text-slate-400 font-medium">{setup.lastModified}</span>
+                          <span className="text-xs font-bold text-slate-700">{setup.lastModifiedBy}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">{setup.lastModified}</span>
                         </div>
                       </td>
                       <td className="px-8 py-5 whitespace-nowrap text-right">
@@ -548,40 +573,39 @@ const ApprovalSetupPage: React.FC = () => {
         <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           {/* Editor Header */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-             <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setViewMode('list')}
-                  className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
-                >
-                  <ArrowLeft size={18} />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{activeSetup.name || 'New Setup'}</h1>
-                    <p className="text-xs text-slate-500 font-medium">Configuration mode</p>
-                </div>
-             </div>
-             
-             <div className="flex items-center gap-3">
-                 {/* Tabs in Header */}
-                 <div className="flex bg-slate-100 p-1 rounded-xl">
-                    {['General Settings', 'Manage Employees'].map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab as any)}
-                        className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
-                        activeTab === tab 
-                            ? 'bg-white text-slate-900 shadow-sm' 
-                            : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                    >
-                        {tab}
-                    </button>
-                    ))}
-                </div>
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">
-                    <Save size={16} /> Save Changes
-                </button>
-             </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setViewMode('list')}
+                className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{activeSetup.name || 'New Setup'}</h1>
+                <p className="text-xs text-slate-500 font-medium">Configuration mode</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Tabs in Header */}
+              <div className="flex bg-slate-100 p-1 rounded-xl">
+                {['General Settings', 'Manage Employees'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab as any)}
+                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === tab
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                <Save size={16} /> Save Changes
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[600px]">
@@ -591,8 +615,8 @@ const ApprovalSetupPage: React.FC = () => {
                 <div className="max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Approval Setup Name</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={editorName}
                       onChange={(e) => setEditorName(e.target.value)}
                       disabled={MOCK_SETUPS.some(s => s.id === activeSetup.id)}
@@ -603,7 +627,7 @@ const ApprovalSetupPage: React.FC = () => {
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">System Feature</label>
                     <div className="relative">
-                      <select 
+                      <select
                         value={editorFeature}
                         onChange={(e) => setEditorFeature(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none cursor-pointer"
@@ -611,270 +635,265 @@ const ApprovalSetupPage: React.FC = () => {
                         <option value="Leave Management">Leave Management</option>
                         <option value="Time & Attendance">Time & Attendance</option>
                         <option value="Payroll Dispute">Payroll Dispute</option>
+                        <option value="PAF Request">PAF Request</option>
                         <option value="Official Business">Official Business</option>
+                        <option value="Shift Change Request">Shift Change Request</option>
                       </select>
                       <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-slate-400 pointer-events-none" size={16} />
                     </div>
                   </div>
-                  
+
                   {/* Dynamic Unit Scope Selection */}
                   <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                            Unit Type <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 rounded ml-2 normal-case">Hierarchy Level</span>
-                        </label>
-                        <div className="relative">
-                          <select 
-                            value={editorUnitType}
-                            onChange={(e) => {
-                                setEditorUnitType(e.target.value);
-                                setEditorUnitTarget(''); // Reset target on type change
-                            }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none cursor-pointer"
-                          >
-                            {Object.keys(MOCK_ORG_DATA).map(type => (
-                                <option key={type} value={type}>{type}</option>
-                            ))}
-                          </select>
-                          <Layers className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-                        </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                        Unit Type <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 rounded ml-2 normal-case">Hierarchy Level</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={editorUnitType}
+                          onChange={(e) => {
+                            setEditorUnitType(e.target.value);
+                            setEditorUnitTarget(''); // Reset target on type change
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none cursor-pointer"
+                        >
+                          {Object.keys(MOCK_ORG_DATA).map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                        <Layers className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                       </div>
+                    </div>
 
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
-                            Unit Scope <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 rounded ml-2 normal-case">Auto-fills Approvers</span>
-                        </label>
-                        <div className="relative">
-                          <select 
-                            value={editorUnitTarget}
-                            onChange={(e) => handleUnitTargetChange(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none cursor-pointer"
-                          >
-                            <option value="">-- No {editorUnitType} Inherited --</option>
-                            {MOCK_ORG_DATA[editorUnitType]?.map(u => <option key={u} value={u}>{u}</option>)}
-                          </select>
-                          <Building2 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-                        </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                        Unit Scope <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 rounded ml-2 normal-case">Auto-fills Approvers</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={editorUnitTarget}
+                          onChange={(e) => handleUnitTargetChange(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none cursor-pointer"
+                        >
+                          <option value="">-- No {editorUnitType} Inherited --</option>
+                          {MOCK_ORG_DATA[editorUnitType]?.map(u => <option key={u} value={u}>{u}</option>)}
+                        </select>
+                        <Building2 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                       </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Effectivity Start</label>
-                        <div className="relative">
-                            <input 
-                                type="date"
-                                value={editorStartDate}
-                                onChange={(e) => setEditorStartDate(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 outline-none"
-                            />
-                        </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Effectivity Start</label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={editorStartDate}
+                          onChange={(e) => setEditorStartDate(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 outline-none"
+                        />
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">End Date (Optional)</label>
-                        <div className="relative">
-                            <input 
-                                type="date"
-                                value={editorEndDate}
-                                onChange={(e) => setEditorEndDate(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 outline-none"
-                            />
-                        </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">End Date (Optional)</label>
+                      <div className="relative">
+                        <input
+                          type="date"
+                          value={editorEndDate}
+                          onChange={(e) => setEditorEndDate(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-100 outline-none"
+                        />
                       </div>
+                    </div>
                   </div>
                 </div>
 
                 <div className="w-full h-px bg-slate-100"></div>
 
                 {/* Auto Rejection Policy Box */}
-                <div className="flex flex-col sm:flex-row items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-indigo-200 transition-colors">
-                    <div className="flex items-start gap-4">
-                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-                            <Clock size={20} />
-                        </div>
-                        <div>
-                            <h4 className="text-sm font-bold text-slate-900">Auto-Rejection Policy</h4>
-                            <p className="text-xs text-slate-500 mt-1 max-w-md leading-relaxed">
-                                Automatically reject pending requests if no action is taken by approvers within the specified timeframe. Set to 0 to disable.
-                            </p>
-                        </div>
+                <div className="flex flex-col sm:flex-row items-center justify-between p-5 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl opacity-70">
+                      <Clock size={20} />
                     </div>
-                    <div className="flex items-center gap-3 mt-4 sm:mt-0">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Reject after</span>
-                        <div className="relative">
-                            <input 
-                                type="number" 
-                                min="0"
-                                max="365"
-                                className="w-20 pl-4 pr-8 py-2 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all bg-white"
-                                value={editorAutoReject}
-                                onChange={(e) => setEditorAutoReject(Number(e.target.value))}
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">Days</span>
-                        </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">Auto-Rejection Policy</h4>
+                      <p className="text-xs text-slate-500 mt-1 max-w-md leading-relaxed">
+                        Automatically reject pending requests if no action is taken by approvers within the specified timeframe. <i>Configured in Company Policies - Rules & Policies.</i>
+                      </p>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-4 sm:mt-0 opacity-70">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Reject after</span>
+                    <div className="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900">{editorAutoReject}</span>
+                      <span className="text-[10px] font-bold text-slate-400">Days</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Approvers Table */}
                 <div className="space-y-4">
-                    <div className="flex justify-between items-end">
-                        <h3 className="text-lg font-bold text-slate-900">Approver Sequence</h3>
-                        <p className="text-xs text-slate-500 font-medium">Define who needs to approve requests in this workflow.</p>
-                    </div>
-                    
-                    <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+                  <div className="flex justify-between items-end">
+                    <h3 className="text-lg font-bold text-slate-900">Approver Sequence</h3>
+                    <p className="text-xs text-slate-500 font-medium">Define who needs to approve requests in this workflow.</p>
+                  </div>
+
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
                     <table className="w-full text-sm">
-                        <thead className="bg-slate-50/50 border-b border-slate-200">
+                      <thead className="bg-slate-50/50 border-b border-slate-200">
                         <tr>
-                            <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest w-10"></th>
-                            <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">Step</th>
-                            <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">Approver(s) & Delegation</th>
-                            <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">Department</th>
-                            <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">Last Modified</th>
-                            <th className="px-6 py-4 text-right"></th>
+                          <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest w-10"></th>
+                          <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">Step</th>
+                          <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">Approver(s) & Delegation</th>
+                          <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">Department</th>
+                          <th className="px-6 py-4 text-left font-bold text-slate-400 uppercase text-[10px] tracking-widest">Last Modified</th>
+                          <th className="px-6 py-4 text-right"></th>
                         </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
                         {activeSetup.approvers.length > 0 ? activeSetup.approvers.map((approver, index) => (
-                            <tr key={approver.id} className="bg-white hover:bg-slate-50 transition-colors group">
+                          <tr key={approver.id} className="bg-white hover:bg-slate-50 transition-colors group">
                             <td className="px-4 py-4 text-center">
-                                <GripVertical size={16} className="text-slate-300 cursor-grab hover:text-slate-500 mx-auto" />
+                              <GripVertical size={16} className="text-slate-300 cursor-grab hover:text-slate-500 mx-auto" />
                             </td>
                             <td className="px-6 py-4 align-top">
-                                <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border border-slate-200">
-                                    Step {index + 1}
-                                </span>
+                              <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border border-slate-200">
+                                Step {index + 1}
+                              </span>
                             </td>
                             <td className="px-6 py-4">
-                                <div className="flex flex-col gap-4">
-                                    {/* Main Approver */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-200 shadow-sm">
-                                            {approver.avatar}
+                              <div className="flex flex-col gap-4">
+                                {/* Main Approver */}
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-200 shadow-sm">
+                                    {approver.avatar}
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-slate-900">{approver.name}</div>
+                                    <div className="text-[10px] text-slate-500 font-medium">{approver.role}</div>
+                                  </div>
+                                </div>
+
+                                {/* Secondary Approver (Dual) */}
+                                {approver.secondaryId && (
+                                  <div className="flex items-center gap-3 pl-2 relative">
+                                    <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 bg-white px-1 z-10">AND</div>
+                                    <div className="absolute left-[19px] -top-6 bottom-1/2 w-[2px] bg-slate-200"></div>
+
+                                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-600 border border-emerald-200 shadow-sm ml-1">
+                                      {approver.secondaryAvatar}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex justify-between items-center">
+                                        <div>
+                                          <div className="font-bold text-slate-900">{approver.secondaryName}</div>
+                                          <div className="text-[10px] text-slate-500 font-medium">{approver.secondaryRole}</div>
+                                        </div>
+                                        <button onClick={() => handleRemoveCoApprover(approver.id)} className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-md opacity-0 group-hover:opacity-100"><X size={12} /></button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Delegate Section */}
+                                {approver.delegateId && (
+                                  <div className="flex items-start gap-3 pl-2 relative">
+                                    {/* Connector Branch */}
+                                    <div className="absolute left-[19px] -top-5 bottom-1/2 w-[2px] bg-slate-200 rounded-bl-full"></div>
+                                    <div className="absolute left-[19px] top-1/2 w-4 h-[2px] bg-slate-200"></div>
+
+                                    <div className="flex-1 ml-4 bg-slate-50 border border-slate-200 rounded-xl p-3 hover:border-indigo-300 hover:shadow-md transition-all group/delegate">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[9px] font-bold uppercase bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 flex items-center gap-1">
+                                            <UserCog size={10} /> Representative
+                                          </span>
+                                        </div>
+                                        <button onClick={() => handleRemoveDelegate(approver.id)} className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-md hover:bg-rose-50 opacity-0 group-hover/delegate:opacity-100"><X size={12} /></button>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200 shadow-sm">
+                                          {approver.delegateAvatar}
                                         </div>
                                         <div>
-                                            <div className="font-bold text-slate-900">{approver.name}</div>
-                                            <div className="text-[10px] text-slate-500 font-medium">{approver.role}</div>
+                                          <div className="font-bold text-xs text-slate-800">{approver.delegateName}</div>
+                                          <div className="text-[10px] text-slate-500">Acting on behalf</div>
                                         </div>
+                                      </div>
                                     </div>
-
-                                    {/* Secondary Approver (Dual) */}
-                                    {approver.secondaryId && (
-                                        <div className="flex items-center gap-3 pl-2 relative">
-                                            <div className="absolute left-[-10px] top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 bg-white px-1 z-10">AND</div>
-                                            <div className="absolute left-[19px] -top-6 bottom-1/2 w-[2px] bg-slate-200"></div>
-                                            
-                                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-600 border border-emerald-200 shadow-sm ml-1">
-                                                {approver.secondaryAvatar}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex justify-between items-center">
-                                                    <div>
-                                                        <div className="font-bold text-slate-900">{approver.secondaryName}</div>
-                                                        <div className="text-[10px] text-slate-500 font-medium">{approver.secondaryRole}</div>
-                                                    </div>
-                                                    <button onClick={() => handleRemoveCoApprover(approver.id)} className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-md opacity-0 group-hover:opacity-100"><X size={12}/></button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Delegate Section */}
-                                    {approver.delegateId && (
-                                        <div className="flex items-start gap-3 pl-2 relative">
-                                            {/* Connector Branch */}
-                                            <div className="absolute left-[19px] -top-5 bottom-1/2 w-[2px] bg-slate-200 rounded-bl-full"></div>
-                                            <div className="absolute left-[19px] top-1/2 w-4 h-[2px] bg-slate-200"></div>
-                                            
-                                            <div className="flex-1 ml-4 bg-slate-50 border border-slate-200 rounded-xl p-3 hover:border-indigo-300 hover:shadow-md transition-all group/delegate">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[9px] font-bold uppercase bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 flex items-center gap-1">
-                                                            <UserCog size={10} /> Representative
-                                                        </span>
-                                                    </div>
-                                                    <button onClick={() => handleRemoveDelegate(approver.id)} className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-md hover:bg-rose-50 opacity-0 group-hover/delegate:opacity-100"><X size={12}/></button>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200 shadow-sm">
-                                                        {approver.delegateAvatar}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-bold text-xs text-slate-800">{approver.delegateName}</div>
-                                                        <div className="text-[10px] text-slate-500">Acting on behalf</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                             <td className="px-6 py-4 align-top">
-                                <div className="flex items-center gap-2 text-slate-600 font-medium">
-                                    <Briefcase size={14} className="text-slate-400" />
-                                    {approver.department}
-                                </div>
+                              <div className="flex items-center gap-2 text-slate-600 font-medium">
+                                <Briefcase size={14} className="text-slate-400" />
+                                {approver.department}
+                              </div>
                             </td>
                             <td className="px-6 py-4 align-top">
-                                <div className="flex flex-col">
-                                    <span className="text-xs font-bold text-slate-700">{approver.lastModifiedBy}</span>
-                                    <span className="text-[10px] text-slate-400">{approver.lastModified}</span>
-                                </div>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-700">{approver.lastModifiedBy}</span>
+                                <span className="text-[10px] text-slate-400">{approver.lastModified}</span>
+                              </div>
                             </td>
                             <td className="px-6 py-4 text-right align-top">
-                                <div className="flex flex-col gap-2 items-end opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button 
-                                      onClick={() => handleDeleteApprover(approver.id)}
-                                      className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                                      title="Remove Approver"
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
-                                    {!approver.delegateId && (
-                                        <button 
-                                            onClick={() => openModal('delegate', approver.id)}
-                                            className="p-2 text-slate-300 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-                                            title="Assign Representative"
-                                        >
-                                            <UserCog size={16} />
-                                        </button>
-                                    )}
-                                    {!approver.secondaryId && (
-                                        <button 
-                                            onClick={() => openModal('co-approver', approver.id)}
-                                            className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                            title="Add Co-Approver"
-                                        >
-                                            <Users size={16} />
-                                        </button>
-                                    )}
-                                </div>
+                              <div className="flex flex-col gap-2 items-end opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleDeleteApprover(approver.id)}
+                                  className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                  title="Remove Approver"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                                {!approver.delegateId && (
+                                  <button
+                                    onClick={() => openModal('delegate', approver.id)}
+                                    className="p-2 text-slate-300 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                                    title="Assign Representative"
+                                  >
+                                    <UserCog size={16} />
+                                  </button>
+                                )}
+                                {!approver.secondaryId && (
+                                  <button
+                                    onClick={() => openModal('co-approver', approver.id)}
+                                    className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                    title="Add Co-Approver"
+                                  >
+                                    <Users size={16} />
+                                  </button>
+                                )}
+                              </div>
                             </td>
-                            </tr>
+                          </tr>
                         )) : (
-                            <tr>
+                          <tr>
                             <td colSpan={6} className="px-6 py-12 text-center text-slate-400 italic bg-slate-50/20">
-                                <FileCheck size={32} className="mx-auto mb-2 opacity-20" />
-                                No approvers configured yet.
+                              <FileCheck size={32} className="mx-auto mb-2 opacity-20" />
+                              No approvers configured yet.
                             </td>
-                            </tr>
+                          </tr>
                         )}
-                        </tbody>
+                      </tbody>
                     </table>
-                    
+
                     {/* Add Button Area */}
                     <div className="p-3 bg-slate-50 border-t border-slate-200">
-                        <button 
-                          onClick={() => openModal('approver')}
-                          className="w-full border-2 border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all group"
-                        >
-                            <div className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center group-hover:border-indigo-400 transition-colors">
-                                <Plus size={16} />
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-wider">Add Approver Step</span>
-                        </button>
+                      <button
+                        onClick={() => openModal('approver')}
+                        className="w-full border-2 border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center group-hover:border-indigo-400 transition-colors">
+                          <Plus size={16} />
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider">Add Approver Step</span>
+                      </button>
                     </div>
-                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -884,10 +903,10 @@ const ApprovalSetupPage: React.FC = () => {
                 <div className="flex justify-between items-center bg-slate-50 border border-slate-200 p-4 rounded-2xl">
                   <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input 
-                      type="text" 
-                      placeholder="Filter assigned employees..." 
-                      className="w-full pl-11 pr-4 py-2.5 bg-white border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 transition-all outline-none" 
+                    <input
+                      type="text"
+                      placeholder="Filter assigned employees..."
+                      className="w-full pl-11 pr-4 py-2.5 bg-white border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -896,7 +915,7 @@ const ApprovalSetupPage: React.FC = () => {
                     <div className="text-xs font-bold text-slate-500 uppercase tracking-wide bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
                       {assignedEmployees.length} Active Members
                     </div>
-                    <button 
+                    <button
                       onClick={() => openModal('assignee')}
                       className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-md"
                     >
@@ -906,48 +925,48 @@ const ApprovalSetupPage: React.FC = () => {
                 </div>
 
                 {assignedEmployees.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {assignedEmployees.filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase())).map(emp => (
-                            <div key={emp.id} className="group relative bg-white border border-slate-200 rounded-2xl p-5 hover:border-indigo-300 hover:shadow-md transition-all">
-                                <button 
-                                  onClick={() => handleDeleteAssignee(emp.id)}
-                                  className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all"
-                                >
-                                    <X size={14} />
-                                </button>
-                                <div className="flex flex-col items-center text-center">
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 mb-3 flex items-center justify-center text-slate-500 text-sm font-bold shadow-inner">
-                                        {emp.avatar}
-                                    </div>
-                                    <h4 className="font-bold text-slate-900">{emp.name}</h4>
-                                    <p className="text-xs text-slate-500 font-medium mb-2">{emp.role}</p>
-                                    <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-500 font-bold uppercase tracking-wide border border-slate-200">{emp.department}</span>
-                                </div>
-                            </div>
-                        ))}
-                        {/* Add New Card */}
-                        <button 
-                          onClick={() => openModal('assignee')}
-                          className="border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center p-6 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/10 transition-all min-h-[200px] gap-3"
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {assignedEmployees.filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase())).map(emp => (
+                      <div key={emp.id} className="group relative bg-white border border-slate-200 rounded-2xl p-5 hover:border-indigo-300 hover:shadow-md transition-all">
+                        <button
+                          onClick={() => handleDeleteAssignee(emp.id)}
+                          className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all"
                         >
-                            <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center">
-                                <Plus size={24} />
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-wider">Assign Employee</span>
+                          <X size={14} />
                         </button>
-                    </div>
+                        <div className="flex flex-col items-center text-center">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 mb-3 flex items-center justify-center text-slate-500 text-sm font-bold shadow-inner">
+                            {emp.avatar}
+                          </div>
+                          <h4 className="font-bold text-slate-900">{emp.name}</h4>
+                          <p className="text-xs text-slate-500 font-medium mb-2">{emp.role}</p>
+                          <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-500 font-bold uppercase tracking-wide border border-slate-200">{emp.department}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Add New Card */}
+                    <button
+                      onClick={() => openModal('assignee')}
+                      className="border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center p-6 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/10 transition-all min-h-[200px] gap-3"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center">
+                        <Plus size={24} />
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider">Assign Employee</span>
+                    </button>
+                  </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-64 text-center">
-                        <Users size={48} className="text-slate-200 mb-4" />
-                        <h3 className="text-lg font-bold text-slate-700">No employees assigned</h3>
-                        <p className="text-slate-400 text-sm max-w-xs">Start by adding employees to this approval group.</p>
-                        <button 
-                          onClick={() => openModal('assignee')}
-                          className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all"
-                        >
-                          Add Employee
-                        </button>
-                    </div>
+                  <div className="flex flex-col items-center justify-center h-64 text-center">
+                    <Users size={48} className="text-slate-200 mb-4" />
+                    <h3 className="text-lg font-bold text-slate-700">No employees assigned</h3>
+                    <p className="text-slate-400 text-sm max-w-xs">Start by adding employees to this approval group.</p>
+                    <button
+                      onClick={() => openModal('assignee')}
+                      className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all"
+                    >
+                      Add Employee
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -969,13 +988,13 @@ const ApprovalSetupPage: React.FC = () => {
                   {modalMode === 'approver' ? 'Add Approver Step' : modalMode === 'delegate' ? 'Assign Representative' : modalMode === 'co-approver' ? 'Add Co-Approver' : 'Assign Employee'}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  {modalMode === 'approver' 
+                  {modalMode === 'approver'
                     ? 'Select an employee to add as a new step in the approval sequence.'
                     : modalMode === 'delegate'
-                    ? 'Select a designated survivor for this approver.' 
-                    : modalMode === 'co-approver'
-                    ? 'Select a second person to approve alongside the primary approver.'
-                    : `Select employees to assign to ${activeSetup?.name || 'this setup'}.`
+                      ? 'Select a designated survivor for this approver.'
+                      : modalMode === 'co-approver'
+                        ? 'Select a second person to approve alongside the primary approver.'
+                        : `Select employees to assign to ${activeSetup?.name || 'this setup'}.`
                   }
                 </p>
               </div>
@@ -988,31 +1007,31 @@ const ApprovalSetupPage: React.FC = () => {
           <div className="flex flex-1 overflow-hidden">
             {/* Sidebar Filters */}
             <div className="w-64 border-r border-slate-100 bg-slate-50/50 p-5 flex flex-col gap-6">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Filters</label>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 mb-1.5 block">Department</label>
-                      <select 
-                        className="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 transition-all cursor-pointer"
-                        value={employeeDept}
-                        onChange={(e) => setEmployeeDept(e.target.value)}
-                      >
-                        <option value="">All Departments</option>
-                        {DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-                      </select>
-                    </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Filters</label>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 mb-1.5 block">Department</label>
+                    <select
+                      className="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                      value={employeeDept}
+                      onChange={(e) => setEmployeeDept(e.target.value)}
+                    >
+                      <option value="">All Departments</option>
+                      {DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                    </select>
                   </div>
                 </div>
+              </div>
             </div>
 
             {/* Main List Content */}
             <div className="flex-1 flex flex-col">
               <div className="p-4 border-b border-slate-100">
                 <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="Search by name or role..." 
+                  <input
+                    type="text"
+                    placeholder="Search by name or role..."
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
                     value={employeeSearch}
                     onChange={(e) => setEmployeeSearch(e.target.value)}
@@ -1028,18 +1047,18 @@ const ApprovalSetupPage: React.FC = () => {
                     {filteredEmployeesForModal.map(emp => {
                       const isSelected = selectedEmployeeIds.has(emp.id);
                       return (
-                        <div 
+                        <div
                           key={emp.id}
                           onClick={() => toggleEmployeeSelection(emp.id)}
                           className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all relative overflow-hidden ${isSelected ? 'bg-indigo-50 border-indigo-200 shadow-sm' : 'bg-white border-slate-200 hover:border-indigo-200 hover:shadow-sm'}`}
                         >
                           {isSelected && <div className="absolute top-0 right-0 w-8 h-8 bg-indigo-600 -mr-4 -mt-4 rotate-45 transform"></div>}
                           {isSelected && <Check size={10} className="absolute top-1 right-1 text-white" />}
-                          
+
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${isSelected ? 'bg-white text-indigo-600 border-2 border-indigo-100' : 'bg-slate-100 text-slate-500'}`}>
                             {emp.avatar}
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <h4 className={`text-sm font-bold truncate ${isSelected ? 'text-indigo-900' : 'text-slate-900'}`}>{emp.name}</h4>
                             <p className="text-xs text-slate-500 truncate">{emp.role}</p>
@@ -1063,13 +1082,13 @@ const ApprovalSetupPage: React.FC = () => {
 
           {/* Footer */}
           <div className="p-5 border-t border-slate-100 flex justify-end items-center bg-white gap-3">
-            <button 
+            <button
               onClick={() => setIsEmployeeModalOpen(false)}
               className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-all"
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={handleModalConfirm}
               className="px-8 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 shadow-lg shadow-slate-200 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
               disabled={selectedEmployeeIds.size === 0}

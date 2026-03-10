@@ -379,7 +379,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
                         <option value="">Select Default Grade...</option>
                         {grades.map((g) => (
                           <option key={g.id} value={g.id}>
-                            {g.code} ({g.name}) - ₱{(g.amount ?? 0).toLocaleString()}
+                            {g.code} ({g.name}) - ₱{(g.amount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </option>
                         ))}
                       </select>

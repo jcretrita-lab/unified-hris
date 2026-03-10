@@ -1,0 +1,681 @@
+
+import React, { useState, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+    ArrowLeft,
+    ArrowRight,
+    ShieldCheck,
+    Building2,
+    Wallet,
+    Calendar,
+    Calculator,
+    Download,
+    TrendingDown,
+    Info,
+    CheckCircle2,
+    Filter,
+    Edit2,
+    Save,
+    RotateCcw,
+    Plus,
+    Sliders,
+    X as CloseIcon
+} from 'lucide-react';
+import { MOCK_ADJUSTMENT_TYPES } from './settings/AdjustmentSetup';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MOCK_YEAR_END_DATA, generate13thMonthHistory } from './payroll/mockData';
+import Modal from '../components/Modal';
+
+const ChevronRight = ({ size, className }: { size: number, className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6" /></svg>
+);
+
+const YearEndBatchTaxPage: React.FC = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const stage = new URLSearchParams(location.search).get('stage') || 'assumed'; // 'assumed' or 'actual'
+    const [employees] = useState(MOCK_YEAR_END_DATA);
+    const [activeId, setActiveId] = useState<string>(employees[0]?.id || '');
+    const [processedIds, setProcessedIds] = useState<Set<string>>(new Set());
+    const [overrides, setOverrides] = useState<Record<string, number>>({});
+    const [isEditingLedger, setIsEditingLedger] = useState(false);
+    const [ledgerStates, setLedgerStates] = useState<Record<string, any[]>>({});
+    const [customRows, setCustomRows] = useState<Record<string, { label: string, key: string, isDeduction: boolean }[]>>({});
+
+    // Modal State for Adding Adjustments
+    const [isAdjModalOpen, setIsAdjModalOpen] = useState(false);
+    const [adjCategory, setAdjCategory] = useState<'Earnings' | 'Deductions'>('Earnings');
+    const [selectedAdjId, setSelectedAdjId] = useState('');
+
+    const activeEmployee = employees.find(e => e.id === activeId);
+
+    // Get the current history for the active employee, prioritize overrides
+    const monthlyHistory = useMemo(() => {
+        if (!activeEmployee) return [];
+        const base = ledgerStates[activeId] || generate13thMonthHistory(activeEmployee.ytdGross, activeId, stage === 'assumed');
+
+        // Enrich with taxableIncome if not present or needs refresh
+        return base.map(m => {
+            const p1 = { ...m.p1 };
+            const p2 = { ...m.p2 };
+            const employeeCustomRows = customRows[activeId] || [];
+
+            const calcTaxable = (p: any) =>
+                (p.basicPay || 0) +
+                (p.otherTaxable || 0) +
+                (p.otherEarnings || 0) +
+                (p.restDayOt || 0) +
+                (p.nd2 || 0) +
+                (p.bonus || 0) +
+                (p.salaryDifferential || 0) +
+                employeeCustomRows.filter(r => !r.isDeduction).reduce((sum, r) => sum + (p[r.key] || 0), 0) -
+                (p.sss || 0) -
+                (p.philhealth || 0) -
+                (p.pagibig || 0) -
+                employeeCustomRows.filter(r => r.isDeduction && r.key !== 'tax').reduce((sum, r) => sum + (p[r.key] || 0), 0);
+
+            const p1Taxable = calcTaxable(p1);
+            const p2Taxable = calcTaxable(p2);
+
+            return {
+                ...m,
+                p1: { ...p1, taxableIncome: p1Taxable },
+                p2: { ...p2, taxableIncome: p2Taxable },
+                taxableIncome: p1Taxable + p2Taxable
+            };
+        });
+    }, [activeEmployee, activeId, ledgerStates, customRows]);
+
+    const [tempHistory, setTempHistory] = useState<any[]>([]);
+
+    // Initialize tempHistory when entering edit mode
+    const startEditing = () => {
+        setTempHistory(JSON.parse(JSON.stringify(monthlyHistory)));
+        setIsEditingLedger(true);
+    };
+
+    const handleCellChange = (monthIdx: number, period: 'p1' | 'p2', key: string, value: string) => {
+        const val = parseFloat(value) || 0;
+        const newHistory = [...tempHistory];
+        const monthData = { ...newHistory[monthIdx] };
+        monthData[period] = { ...monthData[period], [key]: val };
+
+        // Recalculate taxableIncome for that period
+        const p = monthData[period];
+        const employeeCustomRows = customRows[activeId] || [];
+
+        monthData[period].taxableIncome =
+            (p.basicPay || 0) +
+            (p.otherTaxable || 0) +
+            (p.otherEarnings || 0) +
+            (p.restDayOt || 0) +
+            (p.nd2 || 0) +
+            (p.bonus || 0) +
+            (p.salaryDifferential || 0) +
+            employeeCustomRows.filter(r => !r.isDeduction).reduce((sum, r) => sum + (p[r.key] || 0), 0) -
+            (p.sss || 0) -
+            (p.philhealth || 0) -
+            (p.pagibig || 0) -
+            employeeCustomRows.filter(r => r.isDeduction && r.key !== 'tax').reduce((sum, r) => sum + (p[r.key] || 0), 0);
+
+        // Monthly Taxable Income
+        monthData.taxableIncome = monthData.p1.taxableIncome + monthData.p2.taxableIncome;
+
+        newHistory[monthIdx] = monthData;
+        setTempHistory(newHistory);
+    };
+
+    const saveLedger = () => {
+        setLedgerStates(prev => ({ ...prev, [activeId]: tempHistory }));
+        setIsEditingLedger(false);
+    };
+
+    const cancelEditing = () => {
+        setIsEditingLedger(false);
+    };
+
+    const openAdjModal = (category: 'Earnings' | 'Deductions') => {
+        setAdjCategory(category);
+        setSelectedAdjId('');
+        setIsAdjModalOpen(true);
+    };
+
+    const confirmAddAdjustment = () => {
+        const adj = MOCK_ADJUSTMENT_TYPES.find(a => a.id === selectedAdjId);
+        if (!adj) return;
+
+        const label = adj.name;
+        const key = `custom_${adj.code.toLowerCase()}_${Date.now()}`;
+        const isDeduction = adj.category === 'Deduction';
+
+        setCustomRows(prev => ({
+            ...prev,
+            [activeId!]: [...(prev[activeId!] || []), { label, key, isDeduction }]
+        }));
+
+        // Initialize values in tempHistory if editing
+        if (isEditingLedger) {
+            const updatedTemp = tempHistory.map(month => ({
+                ...month,
+                p1: { ...month.p1, [key]: 0 },
+                p2: { ...month.p2, [key]: 0 }
+            }));
+            setTempHistory(updatedTemp);
+        }
+
+        setIsAdjModalOpen(false);
+    };
+
+    const formatCurrency = (amount: number) => {
+        const val = amount || 0;
+        return `₱${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    const handleComplete = (id: string) => {
+        setIsEditingLedger(false);
+        setProcessedIds(prev => new Set([...prev, id]));
+        const nextIndex = employees.findIndex(e => e.id === activeId) + 1;
+        if (nextIndex < employees.length) {
+            setActiveId(employees[nextIndex].id);
+        } else {
+            alert(`Batch Tax Annualization (${stage.toUpperCase()}) Completed!`);
+            navigate('/manage/year-end/tax');
+        }
+    };
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const rowGroups = [
+        {
+            name: 'Taxable Income Details',
+            rows: [
+                { label: 'Basic Salary', key: 'basicPay', color: 'text-slate-900', isDeduction: false },
+                { label: 'Overtime & Rest Day', key: 'otherEarnings', color: 'text-slate-600', isDeduction: false },
+                { label: 'Night Differential', key: 'nd2', color: 'text-slate-600', isDeduction: false },
+                { label: 'Bonuses & Incentives', key: 'bonus', color: 'text-emerald-600', isDeduction: false },
+                { label: 'Other Taxable Income', key: 'otherTaxable', color: 'text-slate-600', isDeduction: false },
+                { label: 'Salary Differential', key: 'salaryDifferential', color: 'text-indigo-600', isDeduction: false },
+                ...(customRows[activeId!]?.filter(r => !r.isDeduction) || [])
+            ]
+        },
+        {
+            name: 'Tax Payments & Deductions',
+            rows: [
+                { label: 'SSS (Employee Share)', key: 'sss', color: 'text-slate-500', isDeduction: true },
+                { label: 'PhilHealth (Employee Share)', key: 'philhealth', color: 'text-slate-500', isDeduction: true },
+                { label: 'Pag-IBIG (Employee Share)', key: 'pagibig', color: 'text-slate-500', isDeduction: true },
+                { label: 'Withholding Tax Paid', key: 'tax', color: 'text-rose-600', isDeduction: true, isTaxPayment: true },
+                ...(customRows[activeId!]?.filter(r => r.isDeduction) || [])
+            ]
+        }
+    ];
+
+    const formatVal = (v: any, isDeduction?: boolean) => {
+        if (!v || v === 0) return '-';
+        return `${isDeduction ? '-' : ''}${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    if (!activeEmployee) {
+        return (
+            <div className="fixed inset-0 bg-slate-50 flex items-center justify-center z-[110]">
+                <div className="text-center p-12 bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md">
+                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <Calculator size={32} className="text-slate-400" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Initializing Workspace...</h3>
+                    <p className="text-sm text-slate-500 font-medium mt-3 leading-relaxed">
+                        We're setting up the tax batch environment. If this takes longer than expected, the employee record might be missing.
+                    </p>
+                    <button
+                        onClick={() => navigate('/manage/year-end/tax')}
+                        className="mt-8 w-full py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                    >
+                        Return to Preparation
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const displayHistory = isEditingLedger ? tempHistory : monthlyHistory;
+    const totalTaxableIncome = displayHistory.reduce((acc, curr: any) => acc + (curr.taxableIncome || 0), 0);
+
+    // Simple mock tax calculation (20% above 250k annual taxable)
+    const annualTaxDue = Math.max(0, (totalTaxableIncome - 250000) * 0.20);
+    const totalTaxPaid = displayHistory.reduce((acc, curr: any) => acc + (curr.p1.tax || 0) + (curr.p2.tax || 0), 0);
+    const taxAdjustment = annualTaxDue - totalTaxPaid;
+
+    const currentTaxValue = taxAdjustment;
+
+    return (
+        <div className="fixed inset-0 bg-slate-100 z-[100] flex flex-col h-screen overflow-hidden text-slate-900">
+            {/* Top Bar Header */}
+            <div className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm shrink-0 z-30">
+                <div className="flex items-center gap-6">
+                    <button
+                        onClick={() => navigate('/manage/year-end/tax')}
+                        className="p-3 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-all border border-transparent hover:border-slate-200 group"
+                    >
+                        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                    </button>
+                    <div className="h-10 w-px bg-slate-200"></div>
+                    <div>
+                        <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                            Tax Annualization Adjustment Ledger
+                            <span className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100">
+                                {stage === 'assumed' ? 'Assumed (Dec)' : 'Actual (Jan)'}
+                            </span>
+                        </h2>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Workspace: Review YTD taxable income and verify final tax liability</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Progress</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <motion.div
+                                    className="h-full bg-indigo-600"
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${(processedIds.size / employees.length) * 100}%` }}
+                                />
+                            </div>
+                            <span className="text-xs font-black text-slate-700">{processedIds.size} / {employees.length}</span>
+                        </div>
+                    </div>
+                    <button onClick={() => navigate('/manage/year-end/tax')} className="bg-rose-50 text-rose-600 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] hover:bg-rose-600 hover:text-white transition-all border border-rose-100">Close & Save Draft</button>
+                </div>
+            </div>
+
+            <div className="flex flex-1 overflow-hidden">
+                {/* Left Sidebar - Employee Queue */}
+                <div className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0">
+                    <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Employee Queue</span>
+                        <Filter size={14} className="text-slate-300" />
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+                        {employees.map((emp) => {
+                            const isActive = activeId === emp.id;
+                            const isProcessed = processedIds.has(emp.id);
+                            return (
+                                <button
+                                    key={emp.id}
+                                    onClick={() => {
+                                        setActiveId(emp.id);
+                                        setIsEditingLedger(false);
+                                    }}
+                                    className={`flex items-center gap-4 p-4 rounded-2xl w-full text-left transition-all border-l-4 ${isActive
+                                        ? 'bg-slate-900 border-indigo-600 text-white shadow-xl scale-[1.02] active:scale-95'
+                                        : 'bg-white border-transparent hover:bg-slate-50 text-slate-700 hover:border-slate-100'
+                                        }`}
+                                >
+                                    <div className="relative">
+                                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-sm font-black border-2 ${isActive ? 'bg-white/20 border-white/40 text-white' : 'bg-slate-100 border-slate-200 text-slate-600'}`}>
+                                            {emp.avatar}
+                                        </div>
+                                        {isProcessed && (
+                                            <div className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white rounded-full p-0.5 border-2 border-white shadow-sm">
+                                                <CheckCircle2 size={12} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className={`text-sm font-black truncate ${isActive ? 'text-white' : 'text-slate-900'}`}>{emp.name}</div>
+                                        <div className="text-[10px] font-bold truncate opacity-60 uppercase tracking-widest text-slate-500">{emp.role}</div>
+                                    </div>
+                                    {isActive && <ChevronRight size={18} className="text-white opacity-40 ml-auto" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Main Content Workspace */}
+                <div className="flex-1 bg-slate-50 p-8 overflow-y-auto flex flex-col items-center">
+                    <div className="w-full max-w-[95%] animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
+
+                        {/* Simplified Accounting Header */}
+                        <div className="bg-white border border-slate-200 rounded-none shadow-sm flex flex-col md:flex-row items-stretch divide-x divide-slate-100">
+                            {/* Employee Identity */}
+                            <div className="p-6 flex items-center gap-6 flex-1 min-w-[400px]">
+                                <div className="w-20 h-20 rounded-[2rem] bg-slate-50 border border-slate-200 flex items-center justify-center text-3xl font-black text-slate-400">
+                                    {activeEmployee.avatar}
+                                </div>
+                                <div className="flex-1">
+                                    <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                                        {activeEmployee.name}
+                                        <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg font-mono tracking-tighter uppercase">{activeEmployee.id}</span>
+                                    </h1>
+                                    <div className="flex items-center gap-3 mt-1.5">
+                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Building2 size={12} /> {activeEmployee.department}</span>
+                                        <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
+                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><ShieldCheck size={12} /> Regular Full-time</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Payout Calculation Snapshot */}
+                            <div className="p-6 bg-slate-50 flex flex-col justify-center min-w-[300px] gap-1">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{taxAdjustment > 0 ? 'Tax Payable' : 'Tax Refund'}</span>
+                                <div className="flex items-baseline gap-2">
+                                    <span className={`text-3xl font-black tracking-tighter ${taxAdjustment > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                        {formatCurrency(Math.abs(taxAdjustment))}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="p-6 flex items-center gap-3">
+                                {!isEditingLedger ? (
+                                    <button
+                                        onClick={startEditing}
+                                        className="h-full px-8 bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 transition-all rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm"
+                                    >
+                                        <Edit2 size={14} /> Adjust Ledger
+                                    </button>
+                                ) : (
+                                    <div className="flex gap-2 h-full">
+                                        <button
+                                            onClick={cancelEditing}
+                                            className="px-6 bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-all rounded-xl text-[11px] font-black uppercase tracking-widest"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={saveLedger}
+                                            className="px-8 bg-indigo-600 text-white hover:bg-indigo-700 transition-all rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-indigo-100"
+                                        >
+                                            <Save size={14} /> Commit Changes
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Accounting Style Ledger Table */}
+                        <div className="bg-white border-2 border-slate-300 overflow-hidden mb-20 text-slate-900 font-sans shadow-2xl">
+                            <div className="p-8 border-b-4 border-slate-900 bg-white">
+                                <h3 className="text-2xl font-black uppercase tracking-tighter">2026 Payroll Ledger</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Reference ID: {activeEmployee.id} | Year-End Ledger Verification</p>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse min-w-[1800px]">
+                                    <thead className="bg-white">
+                                        <tr className="border-b-2 border-slate-900 bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)]">
+                                            <th rowSpan={2} className="px-6 py-4 text-[11px] font-black text-slate-900 uppercase tracking-widest sticky left-0 top-0 bg-white z-40 border-r-2 border-slate-200 min-w-[250px]">Description</th>
+                                            {months.map(m => (
+                                                <th key={m} colSpan={2} className="px-2 py-2 text-[11px] font-black text-slate-900 text-center bg-white">{m}</th>
+                                            ))}
+                                            <th rowSpan={2} className="px-8 py-4 text-[11px] font-black text-slate-900 uppercase tracking-widest text-right bg-slate-50 border-l border-slate-200 sticky right-0 z-30">Total</th>
+                                        </tr>
+                                        <tr className="border-b-[3px] border-slate-900 border-dashed bg-white">
+                                            {months.map(m => (
+                                                <React.Fragment key={`${m}-periods`}>
+                                                    <th className="px-2 py-2 text-[9px] font-black text-slate-400 text-center border-r border-slate-100 bg-white">1st</th>
+                                                    <th className="px-2 py-2 text-[9px] font-black text-slate-400 text-center border-r-2 border-slate-200 bg-white">2nd</th>
+                                                </React.Fragment>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {rowGroups.map((group, gIdx) => (
+                                            <React.Fragment key={gIdx}>
+                                                {/* Group Header Row */}
+                                                <tr className="bg-slate-50 group hover:bg-slate-100 transition-colors">
+                                                    <td className="px-8 py-3 text-[12px] font-black text-slate-900 uppercase tracking-[0.2em] border-y border-slate-200 sticky left-0 z-10 bg-slate-50 shadow-sm flex items-center justify-between group">
+                                                        <span>{group.name}</span>
+                                                    </td>
+                                                    <td colSpan={25} className="bg-slate-50/50 border-y border-slate-200"></td>
+                                                </tr>
+                                                {group.rows.map((row, rIdx) => {
+                                                    let rowTotal = 0;
+                                                    displayHistory.forEach((m: any) => {
+                                                        rowTotal += (m.p1[row.key] || 0) + (m.p2[row.key] || 0);
+                                                    });
+
+                                                    return (
+                                                        <tr key={rIdx} className="group hover:bg-slate-50 transition-colors">
+                                                            <td className="px-8 py-3 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-r-2 border-slate-200">
+                                                                <span className="text-[11px] font-bold text-slate-800 tracking-tight">{row.label}</span>
+                                                            </td>
+                                                            {displayHistory.map((m: any, mIdx) => (
+                                                                <React.Fragment key={`${mIdx}-${rIdx}`}>
+                                                                    <td className={`px-2 py-3 text-right font-mono text-[11px] border-r border-slate-50 ${isEditingLedger ? 'bg-indigo-50/20' : ''}`}>
+                                                                        {isEditingLedger ? (
+                                                                            <input
+                                                                                type="number"
+                                                                                value={m.p1[row.key] || 0}
+                                                                                onChange={(e) => handleCellChange(mIdx, 'p1', row.key, e.target.value)}
+                                                                                className="w-full bg-white border border-slate-200 focus:border-indigo-600 outline-none px-1 text-right rounded-none"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className={m.p1[row.key] === 0 ? 'text-slate-300' : (row as any).color || 'text-slate-900'}>{formatVal(m.p1[row.key] || 0, row.isDeduction)}</span>
+                                                                        )}
+                                                                    </td>
+                                                                    <td className={`px-2 py-3 text-right font-mono text-[11px] border-r-2 border-slate-200 ${isEditingLedger ? 'bg-indigo-50/20' : ''}`}>
+                                                                        {isEditingLedger ? (
+                                                                            <input
+                                                                                type="number"
+                                                                                value={m.p2[row.key] || 0}
+                                                                                onChange={(e) => handleCellChange(mIdx, 'p2', row.key, e.target.value)}
+                                                                                className="w-full bg-white border border-slate-200 focus:border-indigo-600 outline-none px-1 text-right rounded-none"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className={m.p2[row.key] === 0 ? 'text-slate-300' : (row as any).color || 'text-slate-900'}>{formatVal(m.p2[row.key] || 0, row.isDeduction)}</span>
+                                                                        )}
+                                                                    </td>
+                                                                </React.Fragment>
+                                                            ))}
+                                                            <td className="px-8 py-3 text-right font-mono text-[11px] font-black text-slate-900 bg-slate-50 border-l border-slate-200">
+                                                                {formatVal(rowTotal, row.isDeduction)}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                                {isEditingLedger && (
+                                                    <tr className="hover:bg-slate-50 transition-colors">
+                                                        <td colSpan={26} className="p-0 border-y border-slate-100">
+                                                            <button
+                                                                onClick={() => openAdjModal(group.name as 'Earnings' | 'Deductions')}
+                                                                className="w-full py-4 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all sticky left-0 z-10"
+                                                            >
+                                                                <Plus size={14} /> Add {group.name === 'Earnings' ? 'Earning' : 'Deduction'} Adjustment
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                                {/* Group Total Row */}
+                                                <tr className="bg-slate-200 border-t-2 border-slate-900">
+                                                    <td className="px-8 py-4 sticky left-0 bg-slate-200 z-10 border-r-2 border-slate-300 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
+                                                        <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{group.name} Total</span>
+                                                    </td>
+                                                    {displayHistory.map((m: any, mIdx) => {
+                                                        const p1Sum = group.rows.reduce((acc, r) => acc + (r.isDeduction ? -(m.p1[r.key] || 0) : (m.p1[r.key] || 0)), 0);
+                                                        const p2Sum = group.rows.reduce((acc, r) => acc + (r.isDeduction ? -(m.p2[r.key] || 0) : (m.p2[r.key] || 0)), 0);
+                                                        return (
+                                                            <React.Fragment key={`${mIdx}-group-sum`}>
+                                                                <td className="px-2 py-4 text-right font-mono text-[11px] font-black text-slate-900 border-r border-slate-300">{formatVal(p1Sum)}</td>
+                                                                <td className="px-2 py-4 text-right font-mono text-[11px] font-black text-slate-900 border-r-2 border-slate-400">{formatVal(p2Sum)}</td>
+                                                            </React.Fragment>
+                                                        );
+                                                    })}
+                                                    <td className="px-8 py-4 text-right font-mono text-[12px] font-black text-white bg-slate-900 border-l border-slate-900">
+                                                        {formatVal(displayHistory.reduce((acc, m: any) => acc + group.rows.reduce((rAcc, r) => rAcc + (r.isDeduction ? -(m.p1[r.key] || 0) - (m.p2[r.key] || 0) : (m.p1[r.key] || 0) + (m.p2[r.key] || 0)), 0), 0))}
+                                                    </td>
+                                                </tr>
+                                            </React.Fragment>
+                                        ))}
+
+                                        {/* Summarized Separator */}
+                                        <tr className="border-t-4 border-slate-900">
+                                            <td className="px-6 py-8 sticky left-0 bg-slate-900 text-white z-10 border-r-2 border-slate-800">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[12px] font-black uppercase tracking-[0.2em] leading-none mb-1">Total Taxable Income</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">YTD Performance</span>
+                                                </div>
+                                            </td>
+                                            {displayHistory.map((m: any, mIdx) => (
+                                                <React.Fragment key={`${mIdx}-total-row`}>
+                                                    <td className="px-2 py-6 text-right font-mono text-[11px] font-black text-slate-900 bg-slate-50 border-r border-slate-200">
+                                                        {formatVal(m.p1.taxableIncome)}
+                                                    </td>
+                                                    <td className="px-2 py-6 text-right font-mono text-[11px] font-black text-slate-900 bg-slate-50 border-r-2 border-slate-300">
+                                                        {formatVal(m.p2.taxableIncome)}
+                                                    </td>
+                                                </React.Fragment>
+                                            ))}
+                                            <td className="px-8 py-6 text-right font-mono text-[16px] font-black text-indigo-700 bg-slate-100 border-l-2 border-indigo-700">
+                                                {formatCurrency(totalTaxableIncome)}
+                                            </td>
+                                        </tr>
+                                        {/* Final Tax Reconciliation Row */}
+                                        <tr className="bg-indigo-50/50">
+                                            <td className="px-6 py-4 sticky left-0 bg-indigo-900 text-white z-10 border-r-2 border-indigo-800">
+                                                <div className="flex justify-between items-center pr-4">
+                                                    <span className="text-[11px] font-black uppercase tracking-widest">Actual Tax Due (Annual)</span>
+                                                </div>
+                                            </td>
+                                            <td colSpan={24} className="px-2 py-4 text-right pr-10"></td>
+                                            <td className="px-8 py-4 text-right font-mono text-[16px] font-black text-slate-900 bg-indigo-100/50 border-l-2 border-indigo-700">
+                                                {formatCurrency(annualTaxDue)}
+                                            </td>
+                                        </tr>
+                                        <tr className="bg-rose-50/50">
+                                            <td className="px-6 py-4 sticky left-0 bg-rose-900 text-white z-10 border-r-2 border-rose-800">
+                                                <div className="flex justify-between items-center pr-4">
+                                                    <span className="text-[11px] font-black uppercase tracking-widest">Total Tax Withheld</span>
+                                                </div>
+                                            </td>
+                                            <td colSpan={24} className="px-2 py-4 text-right pr-10"></td>
+                                            <td className="px-8 py-4 text-right font-mono text-[16px] font-black text-rose-700 bg-rose-100/50 border-l-2 border-rose-700">
+                                                {formatCurrency(totalTaxPaid)}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Info Banner */}
+                            <div className="bg-slate-50 p-6 flex items-center gap-4 border-t border-slate-200">
+                                <Info className="text-slate-400 shrink-0" size={18} />
+                                <div className="flex-1">
+                                    <p className="text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
+                                        Tax Annualization Rule: Year-end recalculation of tax due vs total tax withheld. Follows the Revised BIR Withholding Tax Table.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 border border-slate-200">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">BIR 1604-C/2316 COMPLIANT</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Global Actions Bar */}
+            <div className="h-24 bg-white border-t border-slate-200 px-10 flex items-center justify-between shrink-0 shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.05)] z-40">
+                <div className="flex items-center gap-4">
+                    <div className="flex -space-x-3">
+                        {employees.slice(0, 5).map((e, i) => (
+                            <div key={i} className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-black text-slate-500 shadow-sm relative z-[5-i]">
+                                {e.avatar}
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-xs font-bold text-slate-400 ml-2">Reviewing list for <span className="text-slate-900">Tax Annualization 2026 ({stage.toUpperCase()})</span></p>
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => {
+                            setIsEditingLedger(false);
+                            const currentIndex = employees.findIndex(e => e.id === activeId);
+                            if (currentIndex < employees.length - 1) setActiveId(employees[currentIndex + 1].id);
+                        }}
+                        className="px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2"
+                    >
+                        Skip
+                    </button>
+                    <button
+                        onClick={() => handleComplete(activeId)}
+                        className="flex items-center gap-3 px-12 py-3 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 group shadow-sm"
+                    >
+                        Process Next Employee
+                        <ArrowRight size={16} className="group-hover:translate-x-1 whitespace-nowrap" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Adjustment Selection Modal */}
+            <Modal isOpen={isAdjModalOpen} onClose={() => setIsAdjModalOpen(false)} className="max-w-md">
+                <div className="p-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 className="text-xl font-black uppercase tracking-tighter text-slate-900">Add {adjCategory}</h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select from predefined adjustment types</p>
+                        </div>
+                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                            <Sliders size={20} />
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Adjustment Type</label>
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                {MOCK_ADJUSTMENT_TYPES
+                                    .filter(a => (adjCategory === 'Earnings' ? a.category === 'Earning' : a.category === 'Deduction'))
+                                    .map(adj => (
+                                        <button
+                                            key={adj.id}
+                                            onClick={() => setSelectedAdjId(adj.id)}
+                                            className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between group
+                                                ${selectedAdjId === adj.id
+                                                    ? 'border-indigo-600 bg-indigo-50/50 shadow-md'
+                                                    : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                                        >
+                                            <div>
+                                                <div className="text-[11px] font-black uppercase tracking-wider text-slate-900">{adj.name}</div>
+                                                <div className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{adj.code}</div>
+                                            </div>
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
+                                                ${selectedAdjId === adj.id ? 'border-indigo-600 bg-indigo-600' : 'border-slate-200'}`}>
+                                                {selectedAdjId === adj.id && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                                            </div>
+                                        </button>
+                                    ))
+                                }
+                                {MOCK_ADJUSTMENT_TYPES.filter(a => (adjCategory === 'Earnings' ? a.category === 'Earning' : a.category === 'Deduction')).length === 0 && (
+                                    <div className="text-center py-10 text-slate-400 text-[10px] font-bold uppercase tracking-widest bg-white border border-dashed border-slate-200 rounded-xl">
+                                        No adjustment types configured
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                onClick={() => setIsAdjModalOpen(false)}
+                                className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmAddAdjustment}
+                                disabled={!selectedAdjId}
+                                className="flex-1 py-4 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all disabled:opacity-50 active:scale-95"
+                            >
+                                Add Adjustment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
+        </div>
+    );
+};
+
+export default YearEndBatchTaxPage;
