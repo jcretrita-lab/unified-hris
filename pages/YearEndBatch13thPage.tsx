@@ -35,99 +35,14 @@ const YearEndBatch13thPage: React.FC = () => {
     const [activeId, setActiveId] = useState<string>(employees[0]?.id || '');
     const [processedIds, setProcessedIds] = useState<Set<string>>(new Set());
     const [overrides, setOverrides] = useState<Record<string, number>>({});
-    const [isEditingLedger, setIsEditingLedger] = useState(false);
-    const [ledgerStates, setLedgerStates] = useState<Record<string, any[]>>({});
-    const [customRows, setCustomRows] = useState<Record<string, { label: string, key: string, isDeduction: boolean }[]>>({});
-
-    // Modal State for Adding Adjustments
-    const [isAdjModalOpen, setIsAdjModalOpen] = useState(false);
-    const [adjCategory, setAdjCategory] = useState<'Earnings' | 'Deductions'>('Earnings');
-    const [selectedAdjId, setSelectedAdjId] = useState('');
 
     const activeEmployee = employees.find(e => e.id === activeId);
 
-    // Get the current history for the active employee, prioritize overrides
+    // Get the current history for the active employee
     const monthlyHistory = useMemo(() => {
         if (!activeEmployee) return [];
-        return ledgerStates[activeId] || generate13thMonthHistory(activeEmployee.ytdGross, activeEmployee.id, stage === 'assumed');
-    }, [activeEmployee, activeId, ledgerStates, stage]);
-
-    const [tempHistory, setTempHistory] = useState<any[]>([]);
-
-    // Initialize tempHistory when entering edit mode
-    const startEditing = () => {
-        setTempHistory(JSON.parse(JSON.stringify(monthlyHistory)));
-        setIsEditingLedger(true);
-    };
-
-    const handleCellChange = (monthIdx: number, period: 'p1' | 'p2', key: string, value: string) => {
-        const val = parseFloat(value) || 0;
-        const newHistory = [...tempHistory];
-        const monthData = { ...newHistory[monthIdx] };
-        monthData[period] = { ...monthData[period], [key]: val };
-
-        // Recalculate earnedBasic for that period
-        const p = monthData[period];
-        // Rules: Basic Pay + Salary Differential + Other Taxable + Paid Leaves + Custom Earnings - Unpaid Absences - Lates - Custom Deductions
-        const employeeCustomRows = customRows[activeId] || [];
-
-        monthData[period].earnedBasic =
-            (p.basicPay || 0) +
-            (p.salaryDifferential || 0) +
-            (p.otherTaxable || 0) +
-            (p.leaves || 0) +
-            employeeCustomRows.filter(r => !r.isDeduction).reduce((sum, r) => sum + (p[r.key] || 0), 0) -
-            (p.absences || 0) -
-            (p.lateUndertime || 0) -
-            employeeCustomRows.filter(r => r.isDeduction).reduce((sum, r) => sum + (p[r.key] || 0), 0);
-
-        // Group total for the whole month
-        monthData.earnedBasic = monthData.p1.earnedBasic + monthData.p2.earnedBasic;
-
-        newHistory[monthIdx] = monthData;
-        setTempHistory(newHistory);
-    };
-
-    const saveLedger = () => {
-        setLedgerStates(prev => ({ ...prev, [activeId]: tempHistory }));
-        setIsEditingLedger(false);
-    };
-
-    const cancelEditing = () => {
-        setIsEditingLedger(false);
-    };
-
-    const openAdjModal = (category: 'Earnings' | 'Deductions') => {
-        setAdjCategory(category);
-        setSelectedAdjId('');
-        setIsAdjModalOpen(true);
-    };
-
-    const confirmAddAdjustment = () => {
-        const adj = MOCK_ADJUSTMENT_TYPES.find(a => a.id === selectedAdjId);
-        if (!adj) return;
-
-        const label = adj.name;
-        const key = `custom_${adj.code.toLowerCase()}_${Date.now()}`;
-        const isDeduction = adj.category === 'Deduction';
-
-        setCustomRows(prev => ({
-            ...prev,
-            [activeId!]: [...(prev[activeId!] || []), { label, key, isDeduction }]
-        }));
-
-        // Initialize values in tempHistory if editing
-        if (isEditingLedger) {
-            const updatedTemp = tempHistory.map(month => ({
-                ...month,
-                p1: { ...month.p1, [key]: 0 },
-                p2: { ...month.p2, [key]: 0 }
-            }));
-            setTempHistory(updatedTemp);
-        }
-
-        setIsAdjModalOpen(false);
-    };
+        return generate13thMonthHistory(activeEmployee.ytdGross, activeEmployee.id, stage === 'assumed');
+    }, [activeEmployee, activeId, stage]);
 
     const formatCurrency = (amount: number) => {
         const val = amount || 0;
@@ -135,7 +50,6 @@ const YearEndBatch13thPage: React.FC = () => {
     };
 
     const handleComplete = (id: string) => {
-        setIsEditingLedger(false);
         setProcessedIds(prev => new Set([...prev, id]));
         const nextIndex = employees.findIndex(e => e.id === activeId) + 1;
         if (nextIndex < employees.length) {
@@ -197,7 +111,6 @@ const YearEndBatch13thPage: React.FC = () => {
                 { label: 'Other Taxable', key: 'otherTaxable', color: 'text-slate-600', isDeduction: false },
                 { label: 'Absences (LWOP)', key: 'absences', color: 'text-rose-600', isDeduction: true },
                 { label: 'Late / Undertime', key: 'lateUndertime', color: 'text-rose-600', isDeduction: true },
-                ...(customRows[activeId!]?.filter(r => !r.isDeduction) || [])
             ]
         },
         {
@@ -207,7 +120,6 @@ const YearEndBatch13thPage: React.FC = () => {
                 { label: 'PhilHealth', key: 'philhealth', color: 'text-slate-500', isDeduction: true },
                 { label: 'Pag-IBIG Contribution', key: 'pagibig', color: 'text-slate-500', isDeduction: true },
                 { label: 'Withholding Tax', key: 'tax', color: 'text-rose-400', isDeduction: true },
-                ...(customRows[activeId!]?.filter(r => r.isDeduction) || [])
             ]
         }
     ];
@@ -239,8 +151,7 @@ const YearEndBatch13thPage: React.FC = () => {
         );
     }
 
-    const displayHistory = isEditingLedger ? tempHistory : monthlyHistory;
-    const totalEarnedBasic = displayHistory.reduce((acc, curr: any) => acc + curr.earnedBasic, 0);
+    const totalEarnedBasic = monthlyHistory.reduce((acc: number, curr: any) => acc + curr.earnedBasic, 0);
     const calculated13th = totalEarnedBasic / 12;
 
     const current13thVal = overrides[activeId] !== undefined ? overrides[activeId] : calculated13th;
@@ -302,7 +213,6 @@ const YearEndBatch13thPage: React.FC = () => {
                                     key={emp.id}
                                     onClick={() => {
                                         setActiveId(emp.id);
-                                        setIsEditingLedger(false);
                                     }}
                                     className={`flex items-center gap-4 p-4 rounded-2xl w-full text-left transition-all border-l-4 ${isActive
                                         ? 'bg-slate-900 border-indigo-600 text-white shadow-xl scale-[1.02] active:scale-95'
@@ -373,29 +283,9 @@ const YearEndBatch13thPage: React.FC = () => {
 
                             {/* Action Buttons */}
                             <div className="p-6 flex items-center gap-3">
-                                {!isEditingLedger ? (
-                                    <button
-                                        onClick={startEditing}
-                                        className="h-full px-8 bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 transition-all rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm"
-                                    >
-                                        <Edit2 size={14} /> Adjust Ledger
-                                    </button>
-                                ) : (
-                                    <div className="flex gap-2 h-full">
-                                        <button
-                                            onClick={cancelEditing}
-                                            className="px-6 bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-all rounded-xl text-[11px] font-black uppercase tracking-widest"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={saveLedger}
-                                            className="px-8 bg-indigo-600 text-white hover:bg-indigo-700 transition-all rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-indigo-100"
-                                        >
-                                            <Save size={14} /> Commit Changes
-                                        </button>
-                                    </div>
-                                )}
+                                <div className="h-full px-8 bg-slate-50 border border-slate-200 text-slate-400 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm cursor-not-allowed">
+                                    <ShieldCheck size={14} /> Records Verified
+                                </div>
                             </div>
                         </div>
 
@@ -437,7 +327,7 @@ const YearEndBatch13thPage: React.FC = () => {
                                                 </tr>
                                                 {group.rows.map((row, rIdx) => {
                                                     let rowTotal = 0;
-                                                    displayHistory.forEach((m: any) => {
+                                                    monthlyHistory.forEach((m: any) => {
                                                         rowTotal += (m.p1[row.key] || 0) + (m.p2[row.key] || 0);
                                                     });
 
@@ -446,31 +336,13 @@ const YearEndBatch13thPage: React.FC = () => {
                                                             <td className="px-8 py-3 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-r-2 border-slate-200">
                                                                 <span className="text-[11px] font-bold text-slate-800 tracking-tight">{row.label}</span>
                                                             </td>
-                                                            {displayHistory.map((m: any, mIdx) => (
+                                                            {monthlyHistory.map((m: any, mIdx: number) => (
                                                                 <React.Fragment key={`${mIdx}-${rIdx}`}>
-                                                                    <td className={`px-2 py-3 text-right font-mono text-[11px] border-r border-slate-50 ${isEditingLedger && mIdx >= firstEditableMonth ? 'bg-indigo-50/20' : ''} ${isEditingLedger && mIdx < firstEditableMonth ? 'bg-slate-100/60' : ''}`}>
-                                                                        {isEditingLedger && mIdx >= firstEditableMonth ? (
-                                                                            <input
-                                                                                type="number"
-                                                                                value={m.p1[row.key] || 0}
-                                                                                onChange={(e) => handleCellChange(mIdx, 'p1', row.key, e.target.value)}
-                                                                                className="w-full bg-white border border-slate-200 focus:border-indigo-600 outline-none px-1 text-right rounded-none"
-                                                                            />
-                                                                        ) : (
-                                                                            <span className={m.p1[row.key] === 0 ? 'text-slate-300' : (row as any).color || 'text-slate-900'}>{formatVal(m.p1[row.key] || 0, row.isDeduction)}</span>
-                                                                        )}
+                                                                    <td className="px-2 py-3 text-right font-mono text-[11px] border-r border-slate-50">
+                                                                        <span className={m.p1[row.key] === 0 ? 'text-slate-300' : (row as any).color || 'text-slate-900'}>{formatVal(m.p1[row.key] || 0, row.isDeduction)}</span>
                                                                     </td>
-                                                                    <td className={`px-2 py-3 text-right font-mono text-[11px] border-r-2 border-slate-200 ${isEditingLedger && mIdx >= firstEditableMonth ? 'bg-indigo-50/20' : ''} ${isEditingLedger && mIdx < firstEditableMonth ? 'bg-slate-100/60' : ''}`}>
-                                                                        {isEditingLedger && mIdx >= firstEditableMonth ? (
-                                                                            <input
-                                                                                type="number"
-                                                                                value={m.p2[row.key] || 0}
-                                                                                onChange={(e) => handleCellChange(mIdx, 'p2', row.key, e.target.value)}
-                                                                                className="w-full bg-white border border-slate-200 focus:border-indigo-600 outline-none px-1 text-right rounded-none"
-                                                                            />
-                                                                        ) : (
-                                                                            <span className={m.p2[row.key] === 0 ? 'text-slate-300' : (row as any).color || 'text-slate-900'}>{formatVal(m.p2[row.key] || 0, row.isDeduction)}</span>
-                                                                        )}
+                                                                    <td className="px-2 py-3 text-right font-mono text-[11px] border-r-2 border-slate-200">
+                                                                        <span className={m.p2[row.key] === 0 ? 'text-slate-300' : (row as any).color || 'text-slate-900'}>{formatVal(m.p2[row.key] || 0, row.isDeduction)}</span>
                                                                     </td>
                                                                 </React.Fragment>
                                                             ))}
@@ -480,26 +352,14 @@ const YearEndBatch13thPage: React.FC = () => {
                                                         </tr>
                                                     );
                                                 })}
-                                                {isEditingLedger && (
-                                                    <tr className="hover:bg-slate-50 transition-colors">
-                                                        <td colSpan={26} className="p-0 border-y border-slate-100">
-                                                            <button
-                                                                onClick={() => openAdjModal(group.name as 'Earnings' | 'Deductions')}
-                                                                className="w-full py-4 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-all sticky left-0 z-10"
-                                                            >
-                                                                <Plus size={14} /> Add {group.name === 'Earnings' ? 'Earning' : 'Deduction'} Adjustment
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                )}
                                                 {/* Group Total Row */}
                                                 <tr className="bg-slate-200 border-t-2 border-slate-900">
                                                     <td className="px-8 py-4 sticky left-0 bg-slate-200 z-10 border-r-2 border-slate-300 shadow-[2px_0_5px_rgba(0,0,0,0.05)]">
                                                         <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{group.name} Total</span>
                                                     </td>
-                                                    {displayHistory.map((m: any, mIdx) => {
-                                                        const p1Sum = group.rows.reduce((acc, r) => acc + (r.isDeduction ? -(m.p1[r.key] || 0) : (m.p1[r.key] || 0)), 0);
-                                                        const p2Sum = group.rows.reduce((acc, r) => acc + (r.isDeduction ? -(m.p2[r.key] || 0) : (m.p2[r.key] || 0)), 0);
+                                                    {monthlyHistory.map((m: any, mIdx: number) => {
+                                                        const p1Sum = group.rows.reduce((acc: number, r) => acc + (r.isDeduction ? -(m.p1[r.key] || 0) : (m.p1[r.key] || 0)), 0);
+                                                        const p2Sum = group.rows.reduce((acc: number, r) => acc + (r.isDeduction ? -(m.p2[r.key] || 0) : (m.p2[r.key] || 0)), 0);
                                                         return (
                                                             <React.Fragment key={`${mIdx}-group-sum`}>
                                                                 <td className="px-2 py-4 text-right font-mono text-[11px] font-black text-slate-900 border-r border-slate-300">{formatVal(p1Sum)}</td>
@@ -508,7 +368,7 @@ const YearEndBatch13thPage: React.FC = () => {
                                                         );
                                                     })}
                                                     <td className="px-8 py-4 text-right font-mono text-[12px] font-black text-white bg-slate-900 border-l border-slate-900">
-                                                        {formatVal(displayHistory.reduce((acc, m: any) => acc + group.rows.reduce((rAcc, r) => rAcc + (r.isDeduction ? -(m.p1[r.key] || 0) - (m.p2[r.key] || 0) : (m.p1[r.key] || 0) + (m.p2[r.key] || 0)), 0), 0))}
+                                                        {formatVal(monthlyHistory.reduce((acc: number, m: any) => acc + group.rows.reduce((rAcc: number, r) => rAcc + (r.isDeduction ? -(m.p1[r.key] || 0) - (m.p2[r.key] || 0) : (m.p1[r.key] || 0) + (m.p2[r.key] || 0)), 0), 0))}
                                                     </td>
                                                 </tr>
                                             </React.Fragment>
@@ -522,7 +382,7 @@ const YearEndBatch13thPage: React.FC = () => {
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Net Computable Earnings</span>
                                                 </div>
                                             </td>
-                                            {displayHistory.map((m: any, mIdx) => (
+                                            {monthlyHistory.map((m: any, mIdx: number) => (
                                                 <React.Fragment key={`${mIdx}-total-row`}>
                                                     <td className="px-2 py-6 text-right font-mono text-[11px] font-black text-slate-900 bg-slate-50 border-r border-slate-200">
                                                         {formatVal(m.p1.earnedBasic)}
@@ -573,7 +433,6 @@ const YearEndBatch13thPage: React.FC = () => {
                 <div className="flex gap-3">
                     <button
                         onClick={() => {
-                            setIsEditingLedger(false);
                             const currentIndex = employees.findIndex(e => e.id === activeId);
                             if (currentIndex < employees.length - 1) setActiveId(employees[currentIndex + 1].id);
                         }}
@@ -591,71 +450,6 @@ const YearEndBatch13thPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Adjustment Selection Modal */}
-            <Modal isOpen={isAdjModalOpen} onClose={() => setIsAdjModalOpen(false)} className="max-w-md">
-                <div className="p-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 className="text-xl font-black uppercase tracking-tighter text-slate-900">Add {adjCategory}</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select from predefined adjustment types</p>
-                        </div>
-                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
-                            <Sliders size={20} />
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Adjustment Type</label>
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                {MOCK_ADJUSTMENT_TYPES
-                                    .filter(a => (adjCategory === 'Earnings' ? a.category === 'Earning' : a.category === 'Deduction'))
-                                    .map(adj => (
-                                        <button
-                                            key={adj.id}
-                                            onClick={() => setSelectedAdjId(adj.id)}
-                                            className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between group
-                                                ${selectedAdjId === adj.id
-                                                    ? 'border-indigo-600 bg-indigo-50/50 shadow-md'
-                                                    : 'border-slate-100 bg-white hover:border-slate-200'}`}
-                                        >
-                                            <div>
-                                                <div className="text-[11px] font-black uppercase tracking-wider text-slate-900">{adj.name}</div>
-                                                <div className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{adj.code}</div>
-                                            </div>
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all
-                                                ${selectedAdjId === adj.id ? 'border-indigo-600 bg-indigo-600' : 'border-slate-200'}`}>
-                                                {selectedAdjId === adj.id && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                                            </div>
-                                        </button>
-                                    ))
-                                }
-                                {MOCK_ADJUSTMENT_TYPES.filter(a => (adjCategory === 'Earnings' ? a.category === 'Earning' : a.category === 'Deduction')).length === 0 && (
-                                    <div className="text-center py-10 text-slate-400 text-[10px] font-bold uppercase tracking-widest bg-white border border-dashed border-slate-200 rounded-xl">
-                                        No adjustment types configured
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 pt-2">
-                            <button
-                                onClick={() => setIsAdjModalOpen(false)}
-                                className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmAddAdjustment}
-                                disabled={!selectedAdjId}
-                                className="flex-1 py-4 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all disabled:opacity-50 active:scale-95"
-                            >
-                                Add Adjustment
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </Modal>
         </div>
     );
 };

@@ -120,15 +120,17 @@ interface PolicyState {
 
     serviceChargeDistribution: number;
     thirteenthMonthBasis: 'Basic Pay' | 'Total Earnings';
-    thirteenthMonthScheduleId: string | null;
-    thirteenthMonthAssumedMonth: number | null;
-    thirteenthMonthAssumedCutoff: number | null;
-    thirteenthMonthActualMonth: number | null;
-    thirteenthMonthActualCutoff: number | null;
-    // Disbursement config
-    thirteenthMonthDisbursementMode: 'Full' | 'Partial';
-    thirteenthMonthPartialCount: number;
-    thirteenthMonthPartialPayDates: (string | null)[];
+    thirteenthMonthFrequency: 'Annual' | 'Semi-annual' | 'Quarterly';
+    thirteenthMonthConfigs: Record<'Annual' | 'Semi-annual' | 'Quarterly', {
+        scheduleId: string | null;
+        assumedMonth: number | null;
+        assumedCutoff: number | null;
+        actualMonth: number | null;
+        actualCutoff: number | null;
+        disbursementMode: 'Full' | 'Partial';
+        partialCount: number;
+        partialPayDates: (string | null)[];
+    }[]>;
     serviceIncentiveLeave: number;
 
     // De Minimis (Tax Exempt Ceilings)
@@ -209,14 +211,33 @@ const INITIAL_STATE: PolicyState = {
 
     serviceChargeDistribution: 100,
     thirteenthMonthBasis: 'Basic Pay',
-    thirteenthMonthScheduleId: 'ps-001',
-    thirteenthMonthAssumedMonth: null,
-    thirteenthMonthAssumedCutoff: null,
-    thirteenthMonthActualMonth: null,
-    thirteenthMonthActualCutoff: null,
-    thirteenthMonthDisbursementMode: 'Full',
-    thirteenthMonthPartialCount: 2,
-    thirteenthMonthPartialPayDates: [null, null],
+    thirteenthMonthFrequency: 'Annual',
+    thirteenthMonthConfigs: {
+        'Annual': [{
+            scheduleId: 'ps-001',
+            assumedMonth: null,
+            assumedCutoff: null,
+            actualMonth: null,
+            actualCutoff: null,
+            disbursementMode: 'Full',
+            partialCount: 1,
+            partialPayDates: [null],
+        }],
+        'Semi-annual': [
+            {
+                scheduleId: 'ps-001', assumedMonth: null, assumedCutoff: null, actualMonth: null, actualCutoff: null,
+                disbursementMode: 'Full', partialCount: 1, partialPayDates: [null],
+            },
+            {
+                scheduleId: 'ps-001', assumedMonth: null, assumedCutoff: null, actualMonth: null, actualCutoff: null,
+                disbursementMode: 'Full', partialCount: 1, partialPayDates: [null],
+            }
+        ],
+        'Quarterly': Array.from({ length: 4 }).map(() => ({
+            scheduleId: 'ps-001', assumedMonth: null, assumedCutoff: null, actualMonth: null, actualCutoff: null,
+            disbursementMode: 'Full', partialCount: 1, partialPayDates: [null],
+        }))
+    },
     serviceIncentiveLeave: 5,
 
     riceSubsidyCap: 2000,
@@ -359,25 +380,19 @@ const PoliciesPage: React.FC = () => {
     const [policies, setPolicies] = useState<PolicyState>(INITIAL_STATE);
 
     const currentYear = new Date().getFullYear();
-    const selectedPaySchedule = React.useMemo(() => {
-        return INITIAL_SCHEDULES.find(s => s.id === policies.thirteenthMonthScheduleId) || INITIAL_SCHEDULES[0];
-    }, [policies.thirteenthMonthScheduleId]);
+    const currentInstallments = policies.thirteenthMonthConfigs[policies.thirteenthMonthFrequency];
 
-    const allCutoffs = React.useMemo(() => {
+    const getCutoffsForSchedule = React.useCallback((scheduleId: string | null) => {
+        const schedule = INITIAL_SCHEDULES.find(s => s.id === scheduleId) || INITIAL_SCHEDULES[0];
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const list: { month: number; index: number; label: string; range: any; year: number }[] = [];
-        // Current year: Jan–Dec
         for (let m = 0; m < 12; m++) {
-            const ranges = getActiveRanges(selectedPaySchedule, m, currentYear);
+            const ranges = getActiveRanges(schedule, m, currentYear);
             ranges.forEach((range, idx) => {
                 let rangeText = `${range.startDay} - ${range.endDay}`;
-                if (range.endDayNextMonth) {
-                    rangeText = `${range.startDay} - ${range.endDay} (Next Mo)`;
-                }
+                if (range.endDayNextMonth) rangeText = `${range.startDay} - ${range.endDay} (Next Mo)`;
                 let payText = `${range.payDay}`;
-                if (range.payDayNextMonth || (range.payDay < range.startDay && range.endDayNextMonth === undefined)) {
-                    payText = `${range.payDay} (Next Mo)`;
-                }
+                if (range.payDayNextMonth || (range.payDay < range.startDay && range.endDayNextMonth === undefined)) payText = `${range.payDay} (Next Mo)`;
                 list.push({
                     month: m,
                     index: idx,
@@ -387,18 +402,13 @@ const PoliciesPage: React.FC = () => {
                 });
             });
         }
-        // Next year: January only (for actual 13th month)
         const nextYear = currentYear + 1;
-        const janRanges = getActiveRanges(selectedPaySchedule, 0, nextYear);
+        const janRanges = getActiveRanges(schedule, 0, nextYear);
         janRanges.forEach((range, idx) => {
             let rangeText = `${range.startDay} - ${range.endDay}`;
-            if (range.endDayNextMonth) {
-                rangeText = `${range.startDay} - ${range.endDay} (Next Mo)`;
-            }
+            if (range.endDayNextMonth) rangeText = `${range.startDay} - ${range.endDay} (Next Mo)`;
             let payText = `${range.payDay}`;
-            if (range.payDayNextMonth || (range.payDay < range.startDay && range.endDayNextMonth === undefined)) {
-                payText = `${range.payDay} (Next Mo)`;
-            }
+            if (range.payDayNextMonth || (range.payDay < range.startDay && range.endDayNextMonth === undefined)) payText = `${range.payDay} (Next Mo)`;
             list.push({
                 month: 0,
                 index: idx,
@@ -408,7 +418,10 @@ const PoliciesPage: React.FC = () => {
             });
         });
         return list;
-    }, [selectedPaySchedule, currentYear]);
+    }, [currentYear]);
+
+    // Legacy support for other parts of the UI that might still expect allCutoffs from first schedule
+    const allCutoffs = React.useMemo(() => getCutoffsForSchedule(currentInstallments[0].scheduleId), [getCutoffsForSchedule, currentInstallments]);
 
     // Divisor Setup State
     const [divisors, setDivisors] = useState<Divisor[]>([
@@ -1319,202 +1332,272 @@ const PoliciesPage: React.FC = () => {
                                         {/* 13th Month Cutoff & Disbursement Configuration */}
                                         <div className="mt-6 bg-white p-6 border border-slate-200 rounded-2xl shadow-sm">
                                             <div className="mb-6">
-                                                <h4 className="font-bold text-slate-900 text-sm">13th Month Cutoff & Disbursement</h4>
-                                                <p className="text-[10px] text-slate-400 italic">Configure cutoff schedules, pay dates, and how the 13th month pay will be disbursed.</p>
+                                                <h4 className="font-bold text-slate-900 text-sm">13th Month Pay Frequency & Schedule</h4>
+                                                <p className="text-[10px] text-slate-400 italic">Determine how often the 13th month is calculated and disbursed (Statutory: Annual, by Dec 24).</p>
                                             </div>
 
-                                            {/* Base Pay Schedule */}
-                                            <div className="mb-6 border-b border-slate-100 pb-4">
-                                                <label className="block text-xs font-bold text-slate-700 mb-2">Base Pay Schedule</label>
-                                                <select
-                                                    value={policies.thirteenthMonthScheduleId || ''}
-                                                    onChange={(e) => {
-                                                        updatePolicy('thirteenthMonthScheduleId', e.target.value);
-                                                        updatePolicy('thirteenthMonthAssumedMonth', null);
-                                                        updatePolicy('thirteenthMonthAssumedCutoff', null);
-                                                        updatePolicy('thirteenthMonthActualMonth', null);
-                                                        updatePolicy('thirteenthMonthActualCutoff', null);
-                                                    }}
-                                                    className="w-full md:w-1/2 p-2 border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-indigo-500 bg-slate-50 relative z-20"
-                                                >
-                                                    {INITIAL_SCHEDULES.map(s => (
-                                                        <option key={s.id} value={s.id}>{s.name} ({s.frequency})</option>
+                                            {/* Frequency Selection */}
+                                            <div className="mb-8 p-6 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
+                                                <label className="block text-xs font-black text-indigo-700 uppercase tracking-widest mb-4">Payoff Frequency</label>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {(['Annual', 'Semi-annual', 'Quarterly'] as const).map(freq => (
+                                                        <button
+                                                            key={freq}
+                                                            onClick={() => {
+                                                                updatePolicy('thirteenthMonthFrequency', freq);
+                                                            }}
+                                                            className={`py-4 px-4 rounded-xl text-center transition-all border-2 ${policies.thirteenthMonthFrequency === freq
+                                                                ? 'bg-white border-indigo-600 shadow-md shadow-indigo-100'
+                                                                : 'bg-white/50 border-transparent text-slate-400 hover:border-slate-200'
+                                                                }`}
+                                                        >
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <Calendar size={18} className={policies.thirteenthMonthFrequency === freq ? 'text-indigo-600' : 'text-slate-300'} />
+                                                                <span className={`text-[10px] font-black uppercase tracking-widest ${policies.thirteenthMonthFrequency === freq ? 'text-indigo-900' : 'text-slate-500'}`}>{freq}</span>
+                                                            </div>
+                                                        </button>
                                                     ))}
-                                                </select>
-                                            </div>
-
-                                            {/* Assumed & Actual Cutoff Selectors */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 mb-6 border-b border-slate-100 pb-6">
-                                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl relative">
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Assumed Cutoff</label>
-                                                    <select
-                                                        value={policies.thirteenthMonthAssumedMonth !== null && policies.thirteenthMonthAssumedCutoff !== null ? JSON.stringify({ month: policies.thirteenthMonthAssumedMonth, index: policies.thirteenthMonthAssumedCutoff }) : ''}
-                                                        onChange={(e) => {
-                                                            if (!e.target.value) return;
-                                                            const val = JSON.parse(e.target.value);
-                                                            updatePolicy('thirteenthMonthAssumedMonth', val.month);
-                                                            updatePolicy('thirteenthMonthAssumedCutoff', val.index);
-                                                        }}
-                                                        className="w-full p-2 border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-indigo-500 bg-white"
-                                                    >
-                                                        <option value="" disabled>Select Cutoff &amp; Pay Date...</option>
-                                                        {allCutoffs.map((c, i) => (
-                                                            <option key={i} value={JSON.stringify({ month: c.month, index: c.index })}>{c.label}</option>
-                                                        ))}
-                                                    </select>
                                                 </div>
-                                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl relative">
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Actual Cutoff</label>
-                                                    <select
-                                                        value={policies.thirteenthMonthActualMonth !== null && policies.thirteenthMonthActualCutoff !== null ? JSON.stringify({ month: policies.thirteenthMonthActualMonth, index: policies.thirteenthMonthActualCutoff }) : ''}
-                                                        onChange={(e) => {
-                                                            if (!e.target.value) return;
-                                                            const val = JSON.parse(e.target.value);
-                                                            updatePolicy('thirteenthMonthActualMonth', val.month);
-                                                            updatePolicy('thirteenthMonthActualCutoff', val.index);
-                                                        }}
-                                                        className="w-full p-2 border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-indigo-500 bg-white"
-                                                    >
-                                                        <option value="" disabled>Select Cutoff &amp; Pay Date...</option>
-                                                        {allCutoffs.map((c, i) => (
-                                                            <option key={i} value={JSON.stringify({ month: c.month, index: c.index })}>{c.label}</option>
-                                                        ))}
-                                                    </select>
+                                                <div className="mt-4 flex items-center gap-2 text-[10px] text-indigo-600 font-bold bg-white/80 p-3 rounded-lg border border-indigo-50">
+                                                    <Info size={14} />
+                                                    <span>
+                                                        {policies.thirteenthMonthFrequency === 'Annual' && 'Standard annual payoff typically released in December.'}
+                                                        {policies.thirteenthMonthFrequency === 'Semi-annual' && 'Payoff divided into two installments (e.g., June and December).'}
+                                                        {policies.thirteenthMonthFrequency === 'Quarterly' && 'Payoff disbursed at the end of every quarter (March, June, Sept, Dec).'}
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            {/* Disbursement Mode */}
-                                            <div className="mb-4">
-                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Assumed 13th Month Disbursement Mode</label>
-                                            </div>
-                                            <div className="flex gap-2 mb-6">
-                                                {(['Full', 'Partial'] as const).map(mode => (
-                                                    <button
-                                                        key={mode}
-                                                        onClick={() => {
-                                                            updatePolicy('thirteenthMonthDisbursementMode', mode);
-                                                            if (mode === 'Full') {
-                                                                updatePolicy('thirteenthMonthPartialCount', 2);
-                                                                updatePolicy('thirteenthMonthPartialPayDates', [null, null]);
-                                                            }
-                                                        }}
-                                                        className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold border-2 transition-all ${policies.thirteenthMonthDisbursementMode === mode
-                                                            ? 'bg-amber-50 border-amber-500 text-amber-700 shadow-sm'
-                                                            : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
-                                                            }`}
-                                                    >
-                                                        {mode === 'Full' ? '\ud83d\udcb0 Full Payout' : '\ud83d\udcca Partial Disbursement'}
-                                                    </button>
-                                                ))}
-                                            </div>
+                                            {/* Configuration based on Frequency */}
+                                            <div className="space-y-12">
+                                                {currentInstallments.map((inst, idx) => {
+                                                    const instCutoffs = getCutoffsForSchedule(inst.scheduleId);
+                                                    const instLabel = policies.thirteenthMonthFrequency === 'Annual' ? 'Main Payoff' :
+                                                        policies.thirteenthMonthFrequency === 'Semi-annual' ? (idx === 0 ? 'Mid-Year Enrollment' : 'Year-End Final Payoff') :
+                                                            `Quarter ${idx + 1} Payoff`;
 
-                                            {policies.thirteenthMonthDisbursementMode === 'Full' ? (
-                                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">13th Month Pay Date</label>
-                                                    {(() => {
-                                                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                                        const assumed = allCutoffs.find(c => c.month === policies.thirteenthMonthAssumedMonth && c.index === policies.thirteenthMonthAssumedCutoff);
-                                                        if (assumed) {
-                                                            const payDay = assumed.range.payDay;
-                                                            const payMonth = assumed.range.payDayNextMonth ? (policies.thirteenthMonthAssumedMonth! + 1) % 12 : policies.thirteenthMonthAssumedMonth!;
-                                                            return (
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="p-3 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900 flex-1">
-                                                                        {monthNames[payMonth]} {payDay}, {assumed.year || currentYear}
-                                                                    </div>
-                                                                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Auto-filled from cutoff</span>
+                                                    return (
+                                                        <div key={idx} className="p-6 border-2 border-slate-100 rounded-3xl bg-white shadow-sm hover:border-indigo-100 transition-all">
+                                                            <div className="flex items-center gap-3 mb-6">
+                                                                <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black">
+                                                                    {idx + 1}
                                                                 </div>
-                                                            );
-                                                        }
-                                                        return <p className="text-[10px] text-slate-400 italic">Select an Assumed Cutoff above to auto-fill the pay date.</p>;
-                                                    })()}
-                                                    <div className="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                                                        <div className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Sample Computation</div>
-                                                        <div className="text-sm font-bold text-amber-900">{'\u20b1'}24,000.00 {'\u2192'} <span className="text-amber-600">{'\u20b1'}24,000.00</span> (1 disbursement)</div>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-4">
-                                                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
-                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Number of Partial Disbursements</label>
-                                                        <div className="flex items-center gap-3">
-                                                            <input
-                                                                type="number"
-                                                                min={2}
-                                                                max={6}
-                                                                value={policies.thirteenthMonthPartialCount}
-                                                                onChange={(e) => {
-                                                                    const count = Math.max(2, Math.min(6, Number(e.target.value) || 2));
-                                                                    updatePolicy('thirteenthMonthPartialCount', count);
-                                                                    updatePolicy('thirteenthMonthPartialPayDates', Array(count).fill(null));
-                                                                }}
-                                                                className="w-20 p-2 border border-slate-200 rounded-lg text-sm font-bold text-center outline-none focus:border-indigo-500 bg-white"
-                                                            />
-                                                            <span className="text-xs font-bold text-slate-500">disbursements</span>
-                                                        </div>
-                                                    </div>
+                                                                <h5 className="font-black text-slate-800 uppercase tracking-widest text-sm">{instLabel} Configuration</h5>
+                                                            </div>
 
-                                                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
-                                                        <div className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Sample Computation</div>
-                                                        <div className="text-sm font-bold text-amber-900">
-                                                            {'\u20b1'}24,000.00 {'\u2192'} <span className="text-amber-600">{'\u20b1'}{(24000 / policies.thirteenthMonthPartialCount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span> {'\u00d7'} {policies.thirteenthMonthPartialCount} disbursements
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        {Array.from({ length: policies.thirteenthMonthPartialCount }).map((_, idx) => {
-                                                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                                            const isFirst = idx === 0;
-                                                            const assumed = allCutoffs.find(c => c.month === policies.thirteenthMonthAssumedMonth && c.index === policies.thirteenthMonthAssumedCutoff);
-                                                            let autoPayDate: string | null = null;
-                                                            if (isFirst && assumed) {
-                                                                const payDay = assumed.range.payDay;
-                                                                const payMonth = assumed.range.payDayNextMonth ? (policies.thirteenthMonthAssumedMonth! + 1) % 12 : policies.thirteenthMonthAssumedMonth!;
-                                                                autoPayDate = `${monthNames[payMonth]} ${payDay}, ${assumed.year || currentYear}`;
-                                                            }
-                                                            const currentPayDate = policies.thirteenthMonthPartialPayDates[idx] || autoPayDate || null;
-
-                                                            return (
-                                                                <div key={idx} className={`p-4 border rounded-xl ${isFirst ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-100'}`}>
-                                                                    <div className="flex items-center justify-between mb-2">
-                                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Disbursement {idx + 1} Pay Date</label>
-                                                                        <span className="text-[10px] font-bold text-amber-600">{'\u20b1'}{(24000 / policies.thirteenthMonthPartialCount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                                                                {/* Base Pay Schedule */}
+                                                                <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl">
+                                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Base Pay Schedule</label>
+                                                                    <select
+                                                                        value={inst.scheduleId || ''}
+                                                                        onChange={(e) => {
+                                                                            const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                            newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                ...inst,
+                                                                                scheduleId: e.target.value,
+                                                                                assumedMonth: null,
+                                                                                assumedCutoff: null,
+                                                                                actualMonth: null,
+                                                                                actualCutoff: null
+                                                                            };
+                                                                            updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                        }}
+                                                                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 bg-white"
+                                                                    >
+                                                                        {INITIAL_SCHEDULES.map(s => (
+                                                                            <option key={s.id} value={s.id}>{s.name} ({s.frequency})</option>
+                                                                        ))}
+                                                                    </select>
+                                                                    <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400 font-medium">
+                                                                        <Info size={12} />
+                                                                        <span>Determines payroll ranges and cutoff options.</span>
                                                                     </div>
-                                                                    {isFirst && autoPayDate ? (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <div className="flex-1 p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900">
-                                                                                {autoPayDate}
-                                                                            </div>
-                                                                            <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Auto</span>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="relative">
-                                                                            <input
-                                                                                type="date"
-                                                                                value={currentPayDate || ''}
-                                                                                onChange={(e) => {
-                                                                                    const newDates = [...policies.thirteenthMonthPartialPayDates];
-                                                                                    newDates[idx] = e.target.value || null;
-                                                                                    updatePolicy('thirteenthMonthPartialPayDates', newDates);
+                                                                </div>
+
+                                                                {/* Disbursement Mode */}
+                                                                <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl">
+                                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Disbursement Strategy</label>
+                                                                    <div className="flex gap-2">
+                                                                        {(['Full', 'Partial'] as const).map(mode => (
+                                                                            <button
+                                                                                key={mode}
+                                                                                onClick={() => {
+                                                                                    const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                                    newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                        ...inst,
+                                                                                        disbursementMode: mode,
+                                                                                        partialCount: mode === 'Full' ? 1 : 2,
+                                                                                        partialPayDates: mode === 'Full' ? [null] : [null, null]
+                                                                                    };
+                                                                                    updatePolicy('thirteenthMonthConfigs', newConfigs);
                                                                                 }}
-                                                                                className="w-full p-2 border border-slate-200 rounded-lg text-sm font-medium outline-none focus:border-indigo-500 bg-white text-transparent caret-transparent"
-                                                                                style={{ colorScheme: 'light' }}
-                                                                            />
-                                                                            <div className="absolute inset-0 flex items-center px-3 pointer-events-none text-sm font-bold text-slate-900">
-                                                                                {currentPayDate ? (() => {
-                                                                                    const d = new Date(currentPayDate + 'T00:00:00');
-                                                                                    const mn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                                                                    return `${mn[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-                                                                                })() : <span className="text-slate-400 font-medium">Select Pay Date...</span>}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
+                                                                                className={`flex-1 py-2 px-3 rounded-lg text-[11px] font-black uppercase tracking-widest border-2 transition-all ${inst.disbursementMode === mode
+                                                                                    ? 'bg-amber-500 border-amber-600 text-white'
+                                                                                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                                                                                    }`}
+                                                                            >
+                                                                                {mode === 'Full' ? 'Single Payment' : 'Split Payment'}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )}
+                                                            </div>
+
+                                                            {/* Cutoff Selectors */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 border-b border-slate-50 pb-8">
+                                                                <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm relative overflow-hidden group">
+                                                                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                                        <History size={24} />
+                                                                    </div>
+                                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Assumed Cutoff</label>
+                                                                    <select
+                                                                        value={inst.assumedMonth !== null && inst.assumedCutoff !== null ? JSON.stringify({ month: inst.assumedMonth, index: inst.assumedCutoff }) : ''}
+                                                                        onChange={(e) => {
+                                                                            if (!e.target.value) return;
+                                                                            const val = JSON.parse(e.target.value);
+                                                                            const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                            newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                ...inst,
+                                                                                assumedMonth: val.month,
+                                                                                assumedCutoff: val.index
+                                                                            };
+                                                                            updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                        }}
+                                                                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 bg-slate-50"
+                                                                    >
+                                                                        <option value="" disabled>Select Cutoff...</option>
+                                                                        {instCutoffs.map((c, i) => (
+                                                                            <option key={i} value={JSON.stringify({ month: c.month, index: c.index })}>{c.label}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+
+                                                                <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm relative overflow-hidden group">
+                                                                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                                        <Calendar size={24} />
+                                                                    </div>
+                                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Actual Cutoff</label>
+                                                                    <select
+                                                                        value={inst.actualMonth !== null && inst.actualCutoff !== null ? JSON.stringify({ month: inst.actualMonth, index: inst.actualCutoff }) : ''}
+                                                                        onChange={(e) => {
+                                                                            if (!e.target.value) return;
+                                                                            const val = JSON.parse(e.target.value);
+                                                                            const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                            newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                ...inst,
+                                                                                actualMonth: val.month,
+                                                                                actualCutoff: val.index
+                                                                            };
+                                                                            updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                        }}
+                                                                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 bg-slate-50"
+                                                                    >
+                                                                        <option value="" disabled>Select Cutoff...</option>
+                                                                        {instCutoffs.map((c, i) => (
+                                                                            <option key={i} value={JSON.stringify({ month: c.month, index: c.index })}>{c.label}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Payment Date Detail */}
+                                                            {inst.disbursementMode === 'Full' ? (
+                                                                <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                                                                    <label className="block text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-3">Calculated Pay Date</label>
+                                                                    {(() => {
+                                                                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                                        const assumed = instCutoffs.find(c => c.month === inst.assumedMonth && c.index === inst.assumedCutoff);
+                                                                        if (assumed) {
+                                                                            const payDay = assumed.range.payDay;
+                                                                            const payMonth = assumed.range.payDayNextMonth ? (inst.assumedMonth! + 1) % 12 : inst.assumedMonth!;
+                                                                            return (
+                                                                                <div className="flex items-center gap-4">
+                                                                                    <div className="p-4 bg-white border border-emerald-200 rounded-xl text-lg font-black text-emerald-950 flex-1 shadow-sm">
+                                                                                        {monthNames[payMonth]} {payDay}, {assumed.year || currentYear}
+                                                                                    </div>
+                                                                                    <div className="text-[10px] font-black text-emerald-600 bg-white px-3 py-2 rounded-lg border border-emerald-100 uppercase tracking-widest">Auto-Synced</div>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                        return <p className="text-[10px] text-emerald-600 font-bold italic">Select an Assumed Cutoff to lock in the payoff date.</p>;
+                                                                    })()}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="space-y-6">
+                                                                    <div className="flex items-center justify-between p-5 bg-amber-50 border border-amber-100 rounded-2xl">
+                                                                        <div>
+                                                                            <label className="block text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1">Sub-Disbursements</label>
+                                                                            <p className="text-[11px] text-amber-700 font-medium">Splitting this {instLabel} into smaller payments.</p>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <input
+                                                                                type="number"
+                                                                                min={2}
+                                                                                max={4}
+                                                                                value={inst.partialCount}
+                                                                                onChange={(e) => {
+                                                                                    const count = Math.max(2, Math.min(4, Number(e.target.value) || 2));
+                                                                                    const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                                    newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                        ...inst,
+                                                                                        partialCount: count,
+                                                                                        partialPayDates: Array(count).fill(null)
+                                                                                    };
+                                                                                    updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                                }}
+                                                                                className="w-16 p-2 border border-amber-200 rounded-lg text-sm font-black text-center outline-none focus:ring-2 ring-amber-500/20 bg-white"
+                                                                            />
+                                                                            <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest">Parts</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                        {inst.partialPayDates.map((pDate, pIdx) => {
+                                                                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                                            const assumed = instCutoffs.find(c => c.month === inst.assumedMonth && c.index === inst.assumedCutoff);
+                                                                            let autoPayDate: string | null = null;
+                                                                            if (pIdx === 0 && assumed) {
+                                                                                const payDay = assumed.range.payDay;
+                                                                                const payMonth = assumed.range.payDayNextMonth ? (inst.assumedMonth! + 1) % 12 : inst.assumedMonth!;
+                                                                                autoPayDate = `${monthNames[payMonth]} ${payDay}, ${assumed.year || currentYear}`;
+                                                                            }
+
+                                                                            return (
+                                                                                <div key={pIdx} className="p-4 border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col gap-2">
+                                                                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Part {pIdx + 1} Date</label>
+                                                                                    {pIdx === 0 && autoPayDate ? (
+                                                                                        <div className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl text-xs font-black text-indigo-900 flex justify-between items-center">
+                                                                                            {autoPayDate}
+                                                                                            <span className="text-[8px] font-black text-indigo-400 uppercase">Primary</span>
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <input
+                                                                                            type="date"
+                                                                                            value={pDate || ''}
+                                                                                            onChange={(e) => {
+                                                                                                const newDates = [...inst.partialPayDates];
+                                                                                                newDates[pIdx] = e.target.value || null;
+                                                                                                const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                                                newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                                    ...inst,
+                                                                                                    partialPayDates: newDates
+                                                                                                };
+                                                                                                updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                                            }}
+                                                                                            className="w-full p-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:border-indigo-500"
+                                                                                        />
+                                                                                    )}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -3286,7 +3369,7 @@ const PoliciesPage: React.FC = () => {
                                     {/* === RETIREMENT PAY TOGGLE === */}
                                     <div className="border-2 border-emerald-200 bg-emerald-50/50 rounded-2xl p-6">
                                         <div className="flex items-center gap-5">
-                                            <button 
+                                            <button
                                                 onClick={() => updatePolicy('retirementPayEnabled', !policies.retirementPayEnabled)}
                                                 className={`shrink-0 relative inline-flex h-10 w-20 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-200/50 cursor-pointer ${policies.retirementPayEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
                                                 aria-pressed={policies.retirementPayEnabled}
@@ -3300,8 +3383,8 @@ const PoliciesPage: React.FC = () => {
                                                     )}
                                                 </span>
                                             </button>
-                                            <div 
-                                                className="flex-1 cursor-pointer" 
+                                            <div
+                                                className="flex-1 cursor-pointer"
                                                 onClick={() => updatePolicy('retirementPayEnabled', !policies.retirementPayEnabled)}
                                                 role="switch"
                                                 aria-checked={policies.retirementPayEnabled}
@@ -3332,120 +3415,120 @@ const PoliciesPage: React.FC = () => {
                                         />
 
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        {/* Inputs */}
-                                        <div className="space-y-6">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Monthly Basic Salary</label>
-                                                    <div className="relative">
-                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₱</span>
+                                            {/* Inputs */}
+                                            <div className="space-y-6">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Monthly Basic Salary</label>
+                                                        <div className="relative">
+                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₱</span>
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                className="w-full pl-7 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                                value={retCalcSalary}
+                                                                onChange={(e) => setRetCalcSalary(Number(e.target.value))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Years of Service</label>
                                                         <input
                                                             type="number"
-                                                            min={0}
-                                                            className="w-full pl-7 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-                                                            value={retCalcSalary}
-                                                            onChange={(e) => setRetCalcSalary(Number(e.target.value))}
+                                                            min={1}
+                                                            className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                            value={retCalcYears}
+                                                            onChange={(e) => setRetCalcYears(Number(e.target.value))}
                                                         />
                                                     </div>
                                                 </div>
+
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Years of Service</label>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Employee Age</label>
                                                     <input
                                                         type="number"
-                                                        min={1}
+                                                        min={0}
                                                         className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-                                                        value={retCalcYears}
-                                                        onChange={(e) => setRetCalcYears(Number(e.target.value))}
+                                                        value={retCalcAge}
+                                                        onChange={(e) => setRetCalcAge(Number(e.target.value))}
                                                     />
                                                 </div>
-                                            </div>
 
-                                            <div>
-                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Employee Age</label>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-                                                    value={retCalcAge}
-                                                    onChange={(e) => setRetCalcAge(Number(e.target.value))}
-                                                />
-                                            </div>
-
-                                            {/* Eligibility checks */}
-                                            <div className="space-y-2">
-                                                <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retCalcYears >= 5 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
-                                                    {retCalcYears >= 5 ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-                                                    {retCalcYears >= 5 ? `${retCalcYears} years — Service requirement met (min. 5)` : `${retCalcYears} yr(s) — Below minimum service (5 years required)`}
-                                                </div>
-                                                <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retEligible ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
-                                                    {retEligible ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-                                                    {retCompulsory
-                                                        ? `Age ${retCalcAge} — Compulsory Retirement (≥ ${policies.retirementAgeMax})`
-                                                        : retEligible
-                                                            ? `Age ${retCalcAge} — Optional Retirement (≥ ${policies.retirementAgeMin})`
-                                                            : `Age ${retCalcAge} — Below minimum retirement age (${policies.retirementAgeMin})`
-                                                    }
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                                    <Info size={11} /> Divisor Used
-                                                </div>
-                                                <div className="font-mono text-xs text-slate-700 font-bold">{divisors[0]?.name || '314 Days'}</div>
-                                                <div className="text-[10px] text-slate-400 mt-1">
-                                                    Daily Rate = (₱{retCalcSalary.toLocaleString()} × 12) ÷ {retDivisor} = ₱{retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / day
-                                                </div>
-                                            </div>
-
-                                            <LegalNote text="½ month salary = 15 days basic pay + 1/12 of 13th month (2.5 days) + 5 SIL days = 22.5 days. Fraction ≥ 6 months = 1 whole year (RA 7641)." />
-                                        </div>
-
-                                        {/* Result */}
-                                        <div className="flex flex-col gap-4">
-                                            <div className={`bg-gradient-to-br rounded-2xl p-6 text-white relative overflow-hidden flex-1 ${retEligible ? 'from-emerald-900 to-slate-900' : 'from-slate-700 to-slate-900'}`}>
-                                                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                                                    <Briefcase size={100} />
-                                                </div>
-                                                <div className="relative z-10 space-y-4">
-                                                    <div>
-                                                        <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Formula</div>
-                                                        <div className="font-mono text-xs text-emerald-100 bg-white/10 px-3 py-2 rounded-lg">
-                                                            (₱{retCalcSalary.toLocaleString()} × 12 ÷ {retDivisor}) × {policies.retirementPayMultiplier} days × {retCalcYears} yrs
-                                                        </div>
+                                                {/* Eligibility checks */}
+                                                <div className="space-y-2">
+                                                    <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retCalcYears >= 5 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                                                        {retCalcYears >= 5 ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                                        {retCalcYears >= 5 ? `${retCalcYears} years — Service requirement met (min. 5)` : `${retCalcYears} yr(s) — Below minimum service (5 years required)`}
                                                     </div>
-                                                    <div className="border-t border-white/10 pt-4 space-y-2">
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-slate-400">Daily rate</span>
-                                                            <span className="font-bold text-white">₱ {retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-slate-400">Pay/year ({policies.retirementPayMultiplier} days)</span>
-                                                            <span className="font-bold text-white">₱ {(retDailyRate * policies.retirementPayMultiplier).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-slate-400">× {retCalcYears} years</span>
-                                                            <span className="font-bold text-white">₱ {retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="border-t border-white/10 pt-4">
-                                                        <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Total Retirement Pay</div>
-                                                        <div className={`text-3xl font-black tracking-tight ${retEligible ? 'text-white' : 'text-slate-400'}`}>
-                                                            {retEligible
-                                                                ? `₱ ${retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                                                : 'Not Eligible'
-                                                            }
-                                                        </div>
-                                                        {!retEligible && <p className="text-xs text-slate-400 mt-1">Employee does not meet minimum service or age requirements.</p>}
+                                                    <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retEligible ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                                                        {retEligible ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                                        {retCompulsory
+                                                            ? `Age ${retCalcAge} — Compulsory Retirement (≥ ${policies.retirementAgeMax})`
+                                                            : retEligible
+                                                                ? `Age ${retCalcAge} — Optional Retirement (≥ ${policies.retirementAgeMin})`
+                                                                : `Age ${retCalcAge} — Below minimum retirement age (${policies.retirementAgeMin})`
+                                                        }
                                                     </div>
                                                 </div>
+
+                                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                        <Info size={11} /> Divisor Used
+                                                    </div>
+                                                    <div className="font-mono text-xs text-slate-700 font-bold">{divisors[0]?.name || '314 Days'}</div>
+                                                    <div className="text-[10px] text-slate-400 mt-1">
+                                                        Daily Rate = (₱{retCalcSalary.toLocaleString()} × 12) ÷ {retDivisor} = ₱{retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / day
+                                                    </div>
+                                                </div>
+
+                                                <LegalNote text="½ month salary = 15 days basic pay + 1/12 of 13th month (2.5 days) + 5 SIL days = 22.5 days. Fraction ≥ 6 months = 1 whole year (RA 7641)." />
                                             </div>
-                                            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-start gap-3">
-                                                <Info size={16} className="text-emerald-600 mt-0.5 shrink-0" />
-                                                <p className="text-[10px] text-emerald-800 leading-relaxed font-medium">
-                                                    Multiplier ({policies.retirementPayMultiplier} days) and age thresholds (optional: {policies.retirementAgeMin}, compulsory: {policies.retirementAgeMax}) are set in Government Standards › Book VI.
-                                                </p>
-                                            </div>
+
+                                            {/* Result */}
+                                            <div className="flex flex-col gap-4">
+                                                <div className={`bg-gradient-to-br rounded-2xl p-6 text-white relative overflow-hidden flex-1 ${retEligible ? 'from-emerald-900 to-slate-900' : 'from-slate-700 to-slate-900'}`}>
+                                                    <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                                                        <Briefcase size={100} />
+                                                    </div>
+                                                    <div className="relative z-10 space-y-4">
+                                                        <div>
+                                                            <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Formula</div>
+                                                            <div className="font-mono text-xs text-emerald-100 bg-white/10 px-3 py-2 rounded-lg">
+                                                                (₱{retCalcSalary.toLocaleString()} × 12 ÷ {retDivisor}) × {policies.retirementPayMultiplier} days × {retCalcYears} yrs
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-t border-white/10 pt-4 space-y-2">
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-slate-400">Daily rate</span>
+                                                                <span className="font-bold text-white">₱ {retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-slate-400">Pay/year ({policies.retirementPayMultiplier} days)</span>
+                                                                <span className="font-bold text-white">₱ {(retDailyRate * policies.retirementPayMultiplier).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-slate-400">× {retCalcYears} years</span>
+                                                                <span className="font-bold text-white">₱ {retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-t border-white/10 pt-4">
+                                                            <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Total Retirement Pay</div>
+                                                            <div className={`text-3xl font-black tracking-tight ${retEligible ? 'text-white' : 'text-slate-400'}`}>
+                                                                {retEligible
+                                                                    ? `₱ ${retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                    : 'Not Eligible'
+                                                                }
+                                                            </div>
+                                                            {!retEligible && <p className="text-xs text-slate-400 mt-1">Employee does not meet minimum service or age requirements.</p>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-start gap-3">
+                                                    <Info size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                                                    <p className="text-[10px] text-emerald-800 leading-relaxed font-medium">
+                                                        Multiplier ({policies.retirementPayMultiplier} days) and age thresholds (optional: {policies.retirementAgeMin}, compulsory: {policies.retirementAgeMax}) are set in Government Standards › Book VI.
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
