@@ -88,7 +88,7 @@ const YearEndTaxPrepPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right px-6 border-r border-slate-100 hidden lg:block">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Actual Tax Remittance</div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Annual Tax Remittance</div>
                             <div className="text-xl font-black text-emerald-600">₱ 1,450,000.00</div>
                         </div>
                         <div className="flex gap-3">
@@ -96,7 +96,7 @@ const YearEndTaxPrepPage: React.FC = () => {
                                 onClick={() => navigate('/manage/year-end-batch-tax?stage=actual')}
                                 className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-2xl shadow-slate-200"
                             >
-                                <ShieldCheck size={16} /> Batch Process Tax (Jan)
+                                <ShieldCheck size={16} /> Batch Process Tax Annualization
                             </button>
                         </div>
                     </div>
@@ -105,20 +105,13 @@ const YearEndTaxPrepPage: React.FC = () => {
                 <div className="overflow-hidden flex-1 flex flex-col">
                     <table className="min-w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th rowSpan={2} className="pl-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Employee Information</th>
-                                <th colSpan={3} className="px-6 py-4 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100 bg-indigo-50/20">Tax Assumed (Dec)</th>
-                                <th colSpan={3} className="px-6 py-4 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100 bg-emerald-50/20">Tax Actual (Jan)</th>
-                                <th rowSpan={2} className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">Adjustment</th>
-                                <th rowSpan={2} className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">ITR Document</th>
-                            </tr>
-                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right border-l border-slate-100">Amount</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Action</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right border-l border-slate-100">Amount</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Action</th>
+                            <tr className="bg-slate-50/50 border-b border-slate-100 uppercase tracking-widest text-[11px] font-black text-slate-400">
+                                <th className="pl-10 py-6">Employee Information</th>
+                                <th className="px-6 py-6 text-right">Annual Tax Due</th>
+                                <th className="px-6 py-6 text-right">Total Tax Withheld</th>
+                                <th className="px-6 py-6 text-right">Adjustment</th>
+                                <th className="px-6 py-6 text-center">Status</th>
+                                <th className="px-6 py-6 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -135,37 +128,43 @@ const YearEndTaxPrepPage: React.FC = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-5 text-right font-mono text-sm font-black text-indigo-600 border-l border-slate-50 bg-indigo-50/5">
-                                        {formatCurrency(item.actualTax)}
+                                    <td className="px-6 py-5 text-right font-mono text-sm font-black text-slate-900 border-l border-slate-50">
+                                        {formatCurrency(item.taxDue)}
+                                    </td>
+                                    <td className="px-6 py-5 text-right font-mono text-sm font-black text-indigo-600 border-l border-slate-50">
+                                        {formatCurrency(item.taxWithheld)}
+                                    </td>
+                                    <td className={`px-6 py-5 text-right font-mono text-sm font-black border-l border-slate-50 ${(item.taxWithheld - item.taxDue) > 0 ? 'text-emerald-600 bg-emerald-50/30' :
+                                        (item.taxWithheld - item.taxDue) < 0 ? 'text-rose-600 bg-rose-50/30' : 'text-slate-400'
+                                        }`}>
+                                        {(item.taxWithheld - item.taxDue) > 0 ? '+' : ''}{formatCurrency(item.taxWithheld - item.taxDue)}
                                     </td>
                                     <td className="px-6 py-5 text-center border-l border-slate-50">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${item.actualTaxStatus === 'Finalized'
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${item.status === 'Balanced'
                                             ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                            : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                            : item.status === 'Refund Due'
+                                                ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                                : 'bg-rose-50 text-rose-600 border-rose-100'
                                             }`}>
-                                            {item.actualTaxStatus}
+                                            {item.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-5 text-center border-l border-slate-50">
-                                        <button
-                                            onClick={() => { setSelectedEmpId(item.id); }}
-                                            className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-indigo-100 shadow-sm"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                    </td>
-                                    <td className={`px-6 py-5 text-right font-mono text-sm font-black border-l border-slate-50 ${(item.actualTax - item.assumedTax) > 0 ? 'text-rose-600 bg-rose-50/30' :
-                                        (item.actualTax - item.assumedTax) < 0 ? 'text-emerald-600 bg-emerald-50/30' : 'text-slate-400'
-                                        }`}>
-                                        {formatCurrency(item.actualTax - item.assumedTax)}
-                                    </td>
-                                    <td className="px-6 py-5 text-center border-l border-slate-50">
-                                        <button
-                                            onClick={() => setItrModalEmpId(item.id)}
-                                            className="px-4 py-2 text-[10px] font-black text-white bg-indigo-600 border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mx-auto whitespace-nowrap"
-                                        >
-                                            <FileText size={14} /> View ITR
-                                        </button>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => setSelectedEmpId(item.id)}
+                                                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-100 shadow-none hover:shadow-sm"
+                                                title="View Ledger"
+                                            >
+                                                <Calculator size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => setItrModalEmpId(item.id)}
+                                                className="px-3 py-1.5 text-[10px] font-black text-white bg-slate-900 border border-slate-900 rounded-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                                            >
+                                                <FileText size={14} /> ITR
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -322,14 +321,14 @@ const YearEndTaxPrepPage: React.FC = () => {
                         {/* Content Body - Authentic BIR Form 2316 Layout */}
                         <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-slate-200">
                             <div className="bg-white border-2 border-slate-900 w-full max-w-4xl shadow-2xl text-slate-900 font-sans tracking-tight">
-                                
+
                                 {/* HEADER SECTION */}
                                 <div className="flex border-b-2 border-slate-900">
                                     <div className="w-1/4 border-r-2 border-slate-900 p-4 flex flex-col items-center justify-center">
                                         <div className="w-12 h-12 border-2 border-slate-900 rounded-full flex items-center justify-center mb-2">
                                             <span className="text-xs font-black">BIR</span>
                                         </div>
-                                        <span className="text-[9px] text-center font-bold leading-tight">Republika ng Pilipinas<br/>Kawanihan ng Rentas Internas</span>
+                                        <span className="text-[9px] text-center font-bold leading-tight">Republika ng Pilipinas<br />Kawanihan ng Rentas Internas</span>
                                     </div>
                                     <div className="w-2/4 p-4 text-center flex flex-col justify-center bg-slate-50">
                                         <h1 className="text-sm font-black uppercase leading-tight">Certificate of Compensation Payment / Tax Withheld</h1>
@@ -353,7 +352,7 @@ const YearEndTaxPrepPage: React.FC = () => {
                                 <div className="grid grid-cols-4 border-b-2 border-slate-900 text-[10px]">
                                     <div className="col-span-1 border-r border-slate-900 p-2 font-bold">1 Taxpayer Identification No.</div>
                                     <div className="col-span-3 p-2 font-mono font-black text-sm tracking-widest">{itrEmployeeData.tin || '___ - ___ - ___ - ___'}</div>
-                                    
+
                                     <div className="col-span-4 border-t border-slate-900 p-1 px-2 font-bold">2 Employee's Name (Last Name, First Name, Middle Name)</div>
                                     <div className="col-span-4 border-t border-slate-900 p-2 font-black text-sm uppercase bg-slate-50">{itrEmployeeData.name}</div>
                                 </div>
@@ -364,10 +363,10 @@ const YearEndTaxPrepPage: React.FC = () => {
                                 <div className="grid grid-cols-4 border-b-2 border-slate-900 text-[10px]">
                                     <div className="col-span-1 border-r border-slate-900 p-2 font-bold">4 Employer's TIN</div>
                                     <div className="col-span-3 p-2 font-mono font-black text-sm tracking-widest">{itrEmployeeData.employerTIN || '000 - 111 - 222 - 333'}</div>
-                                    
+
                                     <div className="col-span-4 border-t border-slate-900 p-1 px-2 font-bold">5 Employer's Name</div>
                                     <div className="col-span-4 border-t border-slate-900 p-2 font-black text-xs uppercase bg-slate-50">{itrEmployeeData.employerName || 'YOUR COMPANY NAME INC.'}</div>
-                                    
+
                                     <div className="col-span-4 border-t border-slate-900 p-1 px-2 font-bold">6 Registered Address</div>
                                     <div className="col-span-4 border-t border-slate-900 p-2 font-bold text-xs uppercase bg-slate-50">{itrEmployeeData.employerAddress || '123 BUSINESS PARK, MAKATI CITY'}</div>
                                 </div>
@@ -375,7 +374,7 @@ const YearEndTaxPrepPage: React.FC = () => {
                                 <div className="bg-slate-800 text-white border-b-2 border-slate-900 px-2 py-1 text-[10px] font-black uppercase text-center tracking-widest">
                                     Summary of Record of Employee's Compensation and Tax Withheld
                                 </div>
-                                
+
                                 <div className="grid grid-cols-2 text-[10px] divide-x-2 divide-slate-900 bg-white">
                                     <div className="flex flex-col">
                                         <div className="bg-slate-200 border-b-2 border-slate-900 px-2 py-1.5 text-[10px] font-black text-center uppercase tracking-tight">
@@ -433,13 +432,13 @@ const YearEndTaxPrepPage: React.FC = () => {
                         </div>
 
                         <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
-                            <button 
-                                onClick={() => setItrModalEmpId(null)} 
+                            <button
+                                onClick={() => setItrModalEmpId(null)}
                                 className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all"
                             >
                                 Close Preview
                             </button>
-                            <button 
+                            <button
                                 onClick={() => alert(`Downloading official ITR file for ${itrEmployeeData.name}...`)}
                                 className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"
                             >
