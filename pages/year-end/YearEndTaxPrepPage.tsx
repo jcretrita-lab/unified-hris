@@ -5,7 +5,8 @@ import {
     Eye,
     TrendingDown,
     X as CloseIcon,
-    Download
+    Download,
+    FileText
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +19,9 @@ const YearEndTaxPrepPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedYear, setSelectedYear] = useState('2026');
     const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
+
+    const [itrModalEmpId, setItrModalEmpId] = useState<string | null>(null);
+    const itrEmployeeData = MOCK_YEAR_END_DATA.find(d => d.id === itrModalEmpId);
 
     const filteredData = MOCK_YEAR_END_DATA.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -102,10 +106,19 @@ const YearEndTaxPrepPage: React.FC = () => {
                     <table className="min-w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="pl-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Employee Information</th>
-                                <th className="px-6 py-6 text-[11px] font-black text-right text-slate-400 uppercase tracking-widest border-l border-slate-100">Annual Tax Liability</th>
-                                <th className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">Filing Status</th>
-                                <th className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">Action</th>
+                                <th rowSpan={2} className="pl-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Employee Information</th>
+                                <th colSpan={3} className="px-6 py-4 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100 bg-indigo-50/20">Tax Assumed (Dec)</th>
+                                <th colSpan={3} className="px-6 py-4 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100 bg-emerald-50/20">Tax Actual (Jan)</th>
+                                <th rowSpan={2} className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">Adjustment</th>
+                                <th rowSpan={2} className="px-6 py-6 text-[11px] font-black text-center text-slate-400 uppercase tracking-widest border-l border-slate-100">ITR Document</th>
+                            </tr>
+                            <tr className="bg-slate-50/50 border-b border-slate-100">
+                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right border-l border-slate-100">Amount</th>
+                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
+                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Action</th>
+                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right border-l border-slate-100">Amount</th>
+                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
+                                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -139,6 +152,19 @@ const YearEndTaxPrepPage: React.FC = () => {
                                             className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-indigo-100 shadow-sm"
                                         >
                                             <Eye size={18} />
+                                        </button>
+                                    </td>
+                                    <td className={`px-6 py-5 text-right font-mono text-sm font-black border-l border-slate-50 ${(item.actualTax - item.assumedTax) > 0 ? 'text-rose-600 bg-rose-50/30' :
+                                        (item.actualTax - item.assumedTax) < 0 ? 'text-emerald-600 bg-emerald-50/30' : 'text-slate-400'
+                                        }`}>
+                                        {formatCurrency(item.actualTax - item.assumedTax)}
+                                    </td>
+                                    <td className="px-6 py-5 text-center border-l border-slate-50">
+                                        <button
+                                            onClick={() => setItrModalEmpId(item.id)}
+                                            className="px-4 py-2 text-[10px] font-black text-white bg-indigo-600 border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mx-auto whitespace-nowrap"
+                                        >
+                                            <FileText size={14} /> View ITR
                                         </button>
                                     </td>
                                 </tr>
@@ -262,6 +288,162 @@ const YearEndTaxPrepPage: React.FC = () => {
                             <button onClick={() => setSelectedEmpId(null)} className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all">Close</button>
                             <button className="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-lg flex items-center gap-2">
                                 <Download size={16} /> Export Detailed Ledger
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+            {/* --- ADD THIS NEW ITR PREVIEW MODAL --- */}
+            <Modal isOpen={!!itrModalEmpId} onClose={() => setItrModalEmpId(null)} className="max-w-3xl">
+                {itrEmployeeData && (
+                    <div className="flex flex-col max-h-[85vh] overflow-hidden bg-white">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                                    <FileText size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">BIR Form 2316 (ITR)</h3>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">
+                                        {itrEmployeeData.name} • {itrEmployeeData.id}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setItrModalEmpId(null)}
+                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+                            >
+                                <CloseIcon size={20} />
+                            </button>
+                        </div>
+
+                        {/* Content Body - Authentic BIR Form 2316 Layout */}
+                        <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-slate-200">
+                            <div className="bg-white border-2 border-slate-900 w-full max-w-4xl shadow-2xl text-slate-900 font-sans tracking-tight">
+                                
+                                {/* HEADER SECTION */}
+                                <div className="flex border-b-2 border-slate-900">
+                                    <div className="w-1/4 border-r-2 border-slate-900 p-4 flex flex-col items-center justify-center">
+                                        <div className="w-12 h-12 border-2 border-slate-900 rounded-full flex items-center justify-center mb-2">
+                                            <span className="text-xs font-black">BIR</span>
+                                        </div>
+                                        <span className="text-[9px] text-center font-bold leading-tight">Republika ng Pilipinas<br/>Kawanihan ng Rentas Internas</span>
+                                    </div>
+                                    <div className="w-2/4 p-4 text-center flex flex-col justify-center bg-slate-50">
+                                        <h1 className="text-sm font-black uppercase leading-tight">Certificate of Compensation Payment / Tax Withheld</h1>
+                                        <p className="text-[10px] mt-1 font-bold">For Compensation Payment With or Without Tax Withheld</p>
+                                    </div>
+                                    <div className="w-1/4 border-l-2 border-slate-900 p-4 flex flex-col items-center justify-center">
+                                        <span className="text-[10px] font-bold">BIR Form No.</span>
+                                        <span className="text-4xl font-black tracking-tighter">2316</span>
+                                        <span className="text-[9px] font-bold">January 2018 (ENCS)</span>
+                                    </div>
+                                </div>
+
+                                <div className="border-b-2 border-slate-900 p-2 flex justify-center items-center gap-3 bg-slate-100">
+                                    <span className="text-xs font-black uppercase">For the Year</span>
+                                    <span className="px-6 py-1 bg-white border-2 border-slate-900 font-mono font-black text-sm tracking-widest">{selectedYear}</span>
+                                </div>
+
+                                <div className="bg-slate-300 border-b-2 border-slate-900 px-2 py-1 text-[10px] font-black uppercase text-center tracking-widest">
+                                    Employee Information
+                                </div>
+                                <div className="grid grid-cols-4 border-b-2 border-slate-900 text-[10px]">
+                                    <div className="col-span-1 border-r border-slate-900 p-2 font-bold">1 Taxpayer Identification No.</div>
+                                    <div className="col-span-3 p-2 font-mono font-black text-sm tracking-widest">{itrEmployeeData.tin || '___ - ___ - ___ - ___'}</div>
+                                    
+                                    <div className="col-span-4 border-t border-slate-900 p-1 px-2 font-bold">2 Employee's Name (Last Name, First Name, Middle Name)</div>
+                                    <div className="col-span-4 border-t border-slate-900 p-2 font-black text-sm uppercase bg-slate-50">{itrEmployeeData.name}</div>
+                                </div>
+
+                                <div className="bg-slate-300 border-b-2 border-slate-900 px-2 py-1 text-[10px] font-black uppercase text-center tracking-widest">
+                                    Part II - Employer Information (Present)
+                                </div>
+                                <div className="grid grid-cols-4 border-b-2 border-slate-900 text-[10px]">
+                                    <div className="col-span-1 border-r border-slate-900 p-2 font-bold">4 Employer's TIN</div>
+                                    <div className="col-span-3 p-2 font-mono font-black text-sm tracking-widest">{itrEmployeeData.employerTIN || '000 - 111 - 222 - 333'}</div>
+                                    
+                                    <div className="col-span-4 border-t border-slate-900 p-1 px-2 font-bold">5 Employer's Name</div>
+                                    <div className="col-span-4 border-t border-slate-900 p-2 font-black text-xs uppercase bg-slate-50">{itrEmployeeData.employerName || 'YOUR COMPANY NAME INC.'}</div>
+                                    
+                                    <div className="col-span-4 border-t border-slate-900 p-1 px-2 font-bold">6 Registered Address</div>
+                                    <div className="col-span-4 border-t border-slate-900 p-2 font-bold text-xs uppercase bg-slate-50">{itrEmployeeData.employerAddress || '123 BUSINESS PARK, MAKATI CITY'}</div>
+                                </div>
+
+                                <div className="bg-slate-800 text-white border-b-2 border-slate-900 px-2 py-1 text-[10px] font-black uppercase text-center tracking-widest">
+                                    Summary of Record of Employee's Compensation and Tax Withheld
+                                </div>
+                                
+                                <div className="grid grid-cols-2 text-[10px] divide-x-2 divide-slate-900 bg-white">
+                                    <div className="flex flex-col">
+                                        <div className="bg-slate-200 border-b-2 border-slate-900 px-2 py-1.5 text-[10px] font-black text-center uppercase tracking-tight">
+                                            A. Non-Taxable / Exempt Compensation Income
+                                        </div>
+                                        <div className="flex justify-between border-b border-slate-300 p-2 hover:bg-slate-50">
+                                            <span>30 Basic Salary/ Statutory Minimum Wage</span>
+                                            <span className="font-mono font-bold">-</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-slate-300 p-2 hover:bg-slate-50">
+                                            <span>32 De Minimis Benefits</span>
+                                            <span className="font-mono font-bold">-</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-slate-300 p-2 hover:bg-slate-50">
+                                            <span>33 SSS, GSIS, PHIC, & PAG-IBIG Contributions</span>
+                                            <span className="font-mono font-bold">{formatCurrency((itrEmployeeData.govContributions?.sss || 0) + (itrEmployeeData.govContributions?.philhealth || 0) + (itrEmployeeData.govContributions?.pagibig || 0))}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b-2 border-slate-900 p-2 hover:bg-slate-50">
+                                            <span>36 13th Month Pay and Other Benefits</span>
+                                            <span className="font-mono font-bold">{formatCurrency(itrEmployeeData.exemptIncome || 0)}</span>
+                                        </div>
+                                        <div className="flex justify-between p-2 bg-slate-100 font-black">
+                                            <span>38 TOTAL NON-TAXABLE/EXEMPT COMP. INCOME</span>
+                                            <span className="font-mono">{formatCurrency((itrEmployeeData.exemptIncome || 0) + (itrEmployeeData.govContributions?.sss || 0) + (itrEmployeeData.govContributions?.philhealth || 0) + (itrEmployeeData.govContributions?.pagibig || 0))}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col">
+                                        <div className="bg-slate-200 border-b-2 border-slate-900 px-2 py-1.5 text-[10px] font-black text-center uppercase tracking-tight">
+                                            B. Taxable Compensation Income (Regular & Supplementary)
+                                        </div>
+                                        <div className="flex justify-between border-b border-slate-300 p-2 hover:bg-slate-50">
+                                            <span>39 Basic Salary</span>
+                                            <span className="font-mono font-bold">{formatCurrency(itrEmployeeData.ytdGross - (itrEmployeeData.exemptIncome || 0))}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b-2 border-slate-900 p-2 hover:bg-slate-50">
+                                            <span>41 13th Month Pay and Other Benefits</span>
+                                            <span className="font-mono font-bold">-</span>
+                                        </div>
+                                        <div className="flex justify-between p-2 bg-indigo-50 font-black border-b-2 border-slate-900">
+                                            <span>43 TOTAL TAXABLE COMPENSATION INCOME</span>
+                                            <span className="font-mono text-indigo-700">{formatCurrency(itrEmployeeData.ytdTaxable)}</span>
+                                        </div>
+                                        <div className="flex justify-between border-b border-slate-300 p-2 hover:bg-slate-50">
+                                            <span>44 Tax Due</span>
+                                            <span className="font-mono font-bold">{formatCurrency(itrEmployeeData.taxDue)}</span>
+                                        </div>
+                                        <div className="flex justify-between p-3 bg-rose-50 font-black text-sm border-t-2 border-slate-900">
+                                            <span className="uppercase">50 Total Taxes Withheld</span>
+                                            <span className="font-mono text-rose-600">{formatCurrency(itrEmployeeData.actualTax || itrEmployeeData.taxWithheld)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
+                            <button 
+                                onClick={() => setItrModalEmpId(null)} 
+                                className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all"
+                            >
+                                Close Preview
+                            </button>
+                            <button 
+                                onClick={() => alert(`Downloading official ITR file for ${itrEmployeeData.name}...`)}
+                                className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"
+                            >
+                                <Download size={16} /> Download Official ITR
                             </button>
                         </div>
                     </div>

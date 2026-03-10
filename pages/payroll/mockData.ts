@@ -76,7 +76,7 @@ export const MOCK_PAYROLL_DATA: PayrollItem[] = [
 
 export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
   {
-    id: 'emp-1',
+id: 'emp-1',
     name: 'James Cordon',
     role: 'IT Developer Intern',
     department: 'IT',
@@ -86,8 +86,8 @@ export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
     taxWithheld: 15000,
     taxDue: 18500,
     thirteenthMonth: 20833.33,
-    assumedThirteenthMonth: 18500.00, // Significant diff
-    actualThirteenthMonth: 21250.00,  // Higher due to Dec OT
+    assumedThirteenthMonth: 18500.00,
+    actualThirteenthMonth: 21250.00,
     assumedStatus: 'Finalized',
     actualStatus: 'Draft',
     assumedTax: 16000.00,
@@ -95,7 +95,14 @@ export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
     assumedTaxStatus: 'Finalized',
     actualTaxStatus: 'Draft',
     govContributions: { sss: 12000, philhealth: 4500, pagibig: 2400 },
-    status: 'Tax Payable'
+    // --- START: ITR Related Fields (Added) ---
+    tin: '123-456-789-000',
+    employerName: 'Your Company Name Inc.',
+    employerTIN: '987-654-321-000',
+    employerAddress: '123 Business Park, Makati City, Metro Manila',
+    exemptIncome: 20833.33,
+    // --- END: ITR Related Fields (Added) ---
+    status: 'Tax Payable' // <-- This should match the type 'Balanced' | 'Refund Due' | 'Tax Payable'
   },
   {
     id: 'emp-2',
@@ -117,6 +124,12 @@ export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
     assumedTaxStatus: 'Finalized',
     actualTaxStatus: 'Draft',
     govContributions: { sss: 24000, philhealth: 12500, pagibig: 2400 },
+    tin: '123-456-789-000',
+    employerName: 'Your Company Name Inc.',
+    employerTIN: '987-654-321-000',
+    employerAddress: '123 Business Park, Makati City, Metro Manila',
+    exemptIncome: 20833.33,
+    // --- END: ITR Related Fields (Added) ---
     status: 'Refund Due'
   },
   {
@@ -139,6 +152,11 @@ export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
     assumedTaxStatus: 'Finalized',
     actualTaxStatus: 'Draft',
     govContributions: { sss: 18000, philhealth: 8000, pagibig: 2400 },
+    tin: '123-456-789-000',
+    employerName: 'Your Company Name Inc.',
+    employerTIN: '987-654-321-000',
+    employerAddress: '123 Business Park, Makati City, Metro Manila',
+    exemptIncome: 20833.33,
     status: 'Balanced'
   },
   {
@@ -161,6 +179,11 @@ export const MOCK_YEAR_END_DATA: YearEndSummary[] = [
     assumedTaxStatus: 'Finalized',
     actualTaxStatus: 'Draft',
     govContributions: { sss: 24000, philhealth: 11000, pagibig: 2400 },
+    tin: '123-456-789-000',
+    employerName: 'Your Company Name Inc.',
+    employerTIN: '987-654-321-000',
+    employerAddress: '123 Business Park, Makati City, Metro Manila',
+    exemptIncome: 20833.33,
     status: 'Tax Payable'
   }
 ];

@@ -12,6 +12,33 @@ const ScheduleOverview: React.FC = () => {
   const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
   const MotionDiv = motion.div as any;
 
+    const employeeSchedule = {
+      name: 'Corporate Employees',
+      frequency: 'Semi-Monthly',
+      firstCutoffRange: { startDay: 1, endDay: 15 },
+      secondCutoffRange: { startDay: 16, endDay: 30 }
+    };
+
+    const getCurrentCutoffDisplay = () => {
+      const today = new Date();
+      const currentDay = today.getDate(); // Gets the day of the month (1-31)
+      const currentMonth = today.toLocaleString('default', { month: 'short' }); // Gets 'Jan', 'Feb', etc.
+      
+      if (employeeSchedule.frequency === 'Semi-Monthly') {
+          // If today is between the 1st and the 15th
+          if (currentDay <= employeeSchedule.firstCutoffRange.endDay) {
+              return `${currentMonth} ${employeeSchedule.firstCutoffRange.startDay} - ${currentMonth} ${employeeSchedule.firstCutoffRange.endDay}`;
+          } else {
+              // If today is after the 15th, calculate the last day of the current month (28, 30, or 31)
+              const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+              return `${currentMonth} ${employeeSchedule.secondCutoffRange.startDay} - ${currentMonth} ${lastDayOfMonth}`;
+          }
+      }
+      return "Custom Cutoff";
+  };
+
+  const activeCutoffText = getCurrentCutoffDisplay();
+
   const renderScheduleGrid = () => {
       if (scheduleViewMode === 'Day') {
           return (
@@ -142,7 +169,12 @@ const ScheduleOverview: React.FC = () => {
                 <span className="text-xs text-slate-500 font-bold">Current Cutoff</span>
                 <div className="flex items-center gap-2 mt-1 text-xl font-bold text-slate-800">
                     <CalendarDays className="text-indigo-600" />
-                    July 6 - Aug 20
+                    {/* --- ADDED CODE: Dynamic Text --- */}
+                    {activeCutoffText}
+                </div>
+                {/* --- ADDED CODE: Schedule Identifier --- */}
+                <div className="text-[10px] text-slate-400 mt-1.5 uppercase tracking-widest font-bold">
+                    Based on <span className="text-indigo-600 border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 rounded">{employeeSchedule.name}</span>
                 </div>
             </div>
         </div>

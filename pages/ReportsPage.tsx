@@ -387,6 +387,16 @@ const INITIAL_REPORTS: ReportDef[] = [
     tags: ['Payslip', 'Earnings', 'Net Pay']
   },
   {
+    id: 'rep-pay-itr-2316',
+    title: 'BIR Form 2316 (ITR)',
+    description: 'Certificate of Compensation Payment/Tax Withheld. Generates the official annual tax return document per employee.',
+    category: 'Payroll',
+    type: 'Standard',
+    lastGenerated: 'Mar 9, 2026',
+    icon: <ShieldCheck size={24} className="text-emerald-600" />,
+    tags: ['BIR Form 2316', 'ITR', 'Compliance', 'Tax']
+  },
+  {
     id: 'rep-ps-hist',
     title: 'Payslip History',
     description: 'Archive of previously generated payslips; used for reference and dispute resolution.',

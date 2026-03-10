@@ -52,6 +52,17 @@ export const PAY_COLUMNS: string[] = [
   'Disbursement Status',
 ];
 
+export const ITR_COLUMNS: string[] = [
+  'Employee ID', 'Last Name', 'First Name', 'Department', 'TIN', 'Total Taxable Income', 'Total Tax Withheld', 'Action'
+];
+
+const ITR_DATA: Record<string, string>[] = [
+  { 'Employee ID': 'EMP-001', 'Last Name': 'Reyes', 'First Name': 'Maria', 'Department': 'HR', 'TIN': '100-200-300-000', 'Total Taxable Income': '1,440,000.00', 'Total Tax Withheld': '350,000.00', 'Action': 'Preview' },
+  { 'Employee ID': 'EMP-002', 'Last Name': 'Santos', 'First Name': 'Ricardo', 'Department': 'IT', 'TIN': '200-300-400-000', 'Total Taxable Income': '1,560,000.00', 'Total Tax Withheld': '380,000.00', 'Action': 'Preview' },
+  { 'Employee ID': 'EMP-003', 'Last Name': 'Cruz', 'First Name': 'Jennifer', 'Department': 'Finance', 'TIN': '300-400-500-000', 'Total Taxable Income': '900,000.00', 'Total Tax Withheld': '150,000.00', 'Action': 'Preview' },
+  { 'Employee ID': 'EMP-004', 'Last Name': 'Garcia', 'First Name': 'Mark Anthony', 'Department': 'IT', 'TIN': '400-500-600-000', 'Total Taxable Income': '780,000.00', 'Total Tax Withheld': '110,000.00', 'Action': 'Preview' },
+];
+
 // ─── Master Data (12–15 realistic rows each) ──────────────────────────────────
 
 const HR_DATA: Record<string, string>[] = [
@@ -120,6 +131,7 @@ export const MASTER_SCHEMAS = {
   'rep-hr-1':  { label: 'Masterlist ALL',                       columns: HR_COLUMNS,  data: HR_DATA  },
   'rep-ta-1':  { label: 'Time and Attendance Summary Report',   columns: TA_COLUMNS,  data: TA_DATA  },
   'rep-pay-1': { label: 'Payslip',                              columns: PAY_COLUMNS, data: PAY_DATA },
+  'rep-pay-itr-2316': { label: 'BIR Form 2316 (ITR)',           columns: ITR_COLUMNS, data: ITR_DATA },
 } as const;
 
 type MasterSourceId = keyof typeof MASTER_SCHEMAS;
@@ -139,6 +151,7 @@ const REPORT_DEFINITIONS: Record<string, ReportDefinition> = {
   'rep-hr-1':  { id: 'rep-hr-1',  title: 'Masterlist ALL',                          category: 'Employee Masterlist', type: 'Standard', sourceId: 'rep-hr-1',  visibleColumns: HR_COLUMNS },
   'rep-ta-1':  { id: 'rep-ta-1',  title: 'Time and Attendance Summary Report',      category: 'Time & Attendance',   type: 'Standard', sourceId: 'rep-ta-1',  visibleColumns: TA_COLUMNS },
   'rep-pay-1': { id: 'rep-pay-1', title: 'Payslip',                                 category: 'Payroll',             type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: PAY_COLUMNS },
+  'rep-pay-itr-2316': { id: 'rep-pay-itr-2316', title: 'BIR Form 2316 (ITR)',       category: 'Payroll',             type: 'Standard', sourceId: 'rep-pay-itr-2316', visibleColumns: ITR_COLUMNS },
 
   // ── Employee Masterlist Sub-Reports ───────────────────────────────────────────
   'rep-em-01': { id: 'rep-em-01', title: 'Masterlist of Level 5 And Up',            category: 'Employee Masterlist', type: 'Standard', sourceId: 'rep-hr-1',  visibleColumns: ['Employee ID', 'Last Name', 'First Name', 'Department', 'Position', 'Rank / Job Level', 'Employment Status', 'Monthly Basic Pay', 'Salary Grade', 'Date Hired'] },
@@ -228,6 +241,8 @@ const ReportDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filterDept, setFilterDept] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [itrModalEmpId, setItrModalEmpId] = useState<string | null>(null);
 
   // Source-specific filter state
   const [filterStatus, setFilterStatus]       = useState('All'); // HR: Employment Status  |  Pay: Disbursement Status
@@ -670,20 +685,29 @@ const ReportDetail: React.FC = () => {
                       <tr key={rIdx} className="hover:bg-slate-50/70 transition-colors">
                         {reportConfig?.allSourceColumns
                           .filter(col => reportConfig.visibleColumns.includes(col))
-                          .map(col => (
-                            <td key={col} className="px-5 py-3.5 font-medium text-slate-700 whitespace-nowrap text-sm">
-                              {row[col] || '—'}
-                            </td>
-                          ))}
+                          .map(col => {
+                            // --- ADD THIS CONDITION ---
+                            if (col === 'Action') {
+                              return (
+                                <td key={col} className="px-5 py-3.5 font-medium text-slate-700 whitespace-nowrap text-sm">
+                                  <button
+                                    onClick={() => setItrModalEmpId(row['Employee ID'])}
+                                    className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                                  >
+                                    <FileText size={14} /> View ITR Form
+                                  </button>
+                                </td>
+                              );
+                            }
+
+                            return (
+                              <td key={col} className="px-5 py-3.5 font-medium text-slate-700 whitespace-nowrap text-sm">
+                                {row[col] || '—'}
+                              </td>
+                            );
+                          })}
                       </tr>
                     ))}
-                    {displayedData.length === 0 && (
-                      <tr>
-                        <td colSpan={reportConfig?.visibleColumns.length || 1} className="px-5 py-12 text-center text-slate-400 italic text-sm">
-                          No records match the current filters.
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
@@ -787,6 +811,57 @@ const ReportDetail: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </Modal>
+    <Modal isOpen={!!itrModalEmpId} onClose={() => setItrModalEmpId(null)} className="max-w-3xl">
+        <div className="flex flex-col max-h-[85vh] overflow-hidden bg-white">
+          {/* Header */}
+          <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">BIR Form 2316 (ITR)</h3>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">
+                  Employee ID: {itrModalEmpId}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setItrModalEmpId(null)}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-slate-100">
+            <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm max-w-full text-center">
+              <img 
+                src="https://d2v55crl1k4v3v.cloudfront.net/uploads/files/39d4b5f71d6eb6f96b206419a705c5fa.jpg" 
+                alt="Sample ITR"
+                className="max-w-full h-auto rounded-lg mx-auto border border-slate-100"
+              />
+              <p className="mt-4 text-sm font-bold text-slate-500">Official 2316 Form Preview for {itrModalEmpId}</p>
+            </div>
+          </div>
+
+          {/* Footer with Download Button */}
+          <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
+            <button 
+              onClick={() => setItrModalEmpId(null)} 
+              className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all"
+            >
+              Close Preview
+            </button>
+            <button 
+              onClick={() => alert(`Downloading official ITR file for ${itrModalEmpId}...`)}
+              className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"
+            >
+              <Download size={16} /> Download Official ITR
+            </button>
           </div>
         </div>
       </Modal>
