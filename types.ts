@@ -183,6 +183,16 @@ export interface OrganizationStructureConfig {
   level5Label?: string;
 }
 
+export interface RankStructureConfig {
+  rankLabel: string;
+  subRankLabel: string;
+}
+
+export const defaultRankStructureConfig: RankStructureConfig = {
+  rankLabel: "Rank",
+  subRankLabel: "Sub-Rank",
+};
+
 export const defaultOrgStructureConfig: OrganizationStructureConfig = {
   level1Label: "Division",
   level2Label: "Department",

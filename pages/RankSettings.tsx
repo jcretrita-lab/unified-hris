@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import RankLabelsModal from "../components/RankLabelsComponent";
-import { Rank, SalaryGrade, SubRank } from "../types";
+import { Rank, SalaryGrade, SubRank,RankStructureConfig, defaultRankStructureConfig } from "../types";
 import {
   Settings,
   Plus,
@@ -125,28 +125,74 @@ const RankSettingsPage: React.FC = () => {
   const [isRankLabelsModalOpen, setIsRankLabelsModalOpen] = useState(false);
   const [grades] = useState<SalaryGrade[]>(MOCK_SALARY_GRADES);
 
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Rank Configuration</h1>
-        <p className="text-slate-500 font-medium mt-1">Define organizational hierarchy levels and structure.</p>
-      </div>
-        <button
-          onClick={() => setIsRankLabelsModalOpen(true)} // Open the new modal
-          className="flex items-center gap-2 px-3 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300 self-start" // self-start aligns to top
-        >
-          {/* Use Settings or another appropriate icon, ensure it's imported */}
-          <Settings size={16} /> Configure Ranks
-        </button>
-      <GlobalRanks ranks={ranks} setRanks={setRanks} grades={grades} />
+  const [rankConfig, setRankConfig] = useState<RankStructureConfig>(defaultRankStructureConfig);
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [tempConfig, setTempConfig] = useState<RankStructureConfig>(rankConfig);
 
-      {isRankLabelsModalOpen && (
-        <RankLabelsModal
-          initialRanks={ranks} // Pass current ranks
-          onSave={(updatedRanks) => setRanks(updatedRanks)} // Update main state
-          onClose={() => setIsRankLabelsModalOpen(false)} // Close modal
-        />
+  const saveConfig = () => {
+    setRankConfig(tempConfig);
+    setIsConfigModalOpen(false);
+  };
+
+  return (
+    <div className="space-y-8 relative">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            {rankConfig.rankLabel} Configuration
+          </h1>
+          <p className="text-slate-500 font-medium mt-1">
+            Define organizational hierarchy levels and structure.
+          </p>
+        </div>
+        <button 
+          onClick={() => {
+            setTempConfig(rankConfig);
+            setIsConfigModalOpen(true);
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold shadow-sm"
+        >
+          <Settings size={16} /> Edit Terminologies
+        </button>
+      </div>
+
+      {/* NEW: Configuration Modal */}
+      {isConfigModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Settings size={20} className="text-indigo-600"/> Edit Terminologies
+            </h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Main Level Label</label>
+                <input 
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={tempConfig.rankLabel}
+                  onChange={(e) => setTempConfig({...tempConfig, rankLabel: e.target.value})}
+                  placeholder="e.g. Rank, Level, Grade"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Sub-Level Label</label>
+                <input 
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={tempConfig.subRankLabel}
+                  onChange={(e) => setTempConfig({...tempConfig, subRankLabel: e.target.value})}
+                  placeholder="e.g. Sub-Rank, Tier, Step"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={saveConfig} className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-all text-sm">Save Changes</button>
+              <button onClick={() => setIsConfigModalOpen(false)} className="px-6 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all text-sm">Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
+
+      {/* Pass config down to child component */}
+      <GlobalRanks ranks={ranks} setRanks={setRanks} grades={grades} rankConfig={rankConfig} />
     </div>
   );
 };
@@ -155,6 +201,7 @@ interface GlobalRanksProps {
   ranks: Rank[];
   setRanks: (ranks: Rank[]) => void;
   grades: SalaryGrade[];
+  rankConfig: RankStructureConfig;
 }
 
 const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) => {

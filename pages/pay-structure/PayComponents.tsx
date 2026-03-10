@@ -592,7 +592,7 @@ const PayComponents: React.FC<PayComponentsProps> = ({
                               value={editor.category || ''}
                               onChange={(e) => setEditor({ ...editor, category: e.target.value as any })}
                             >
-                              <option value="">Standard Deduction</option>
+                              <option value="">Standar  d Deduction</option>
                               <option value="loan">Loan</option>
                               <option value="government">Government</option>
                               <option value="other">Other</option>

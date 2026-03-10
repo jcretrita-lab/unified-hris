@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { 
-  Search, 
-  MoreHorizontal, 
+import {
+  Search,
+  MoreHorizontal,
   Download, 
-  Calculator, 
+  Calculator,
   CalendarRange,
   Wallet,
   X,
@@ -61,16 +61,16 @@ const YearEndTab: React.FC = () => {
         <div className="flex-1 overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-50">
                 <thead className="bg-slate-50/50 text-left">
-                    <tr>
-                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Employee</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">YTD Gross</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Taxable Income</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Tax Due vs Withheld</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">13th Month Pay</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">ITR</th>
-                        <th className="px-6 py-4 w-10"></th>
-                    </tr>
+                <tr>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Employee</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">YTD Gross</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Taxable Income</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Tax Due vs Withheld</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">13th Month Pay</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
+                    <th className="px-6 py-4 w-10"></th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Download ITR File</th>
+                </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                     {filteredYearEnd.map((item) => {
@@ -135,6 +135,15 @@ const YearEndTab: React.FC = () => {
                                         <MoreHorizontal size={18} />
                                     </button>
                                 </td>
+                                <td className="px-6 py-4 text-center">
+                                    <button
+                                        onClick={() => setModalConfig({ type: 'itr', empId: item.id })}
+                                        className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all flex items-center gap-2 mx-auto"
+                                    >
+                                        <Download size={14} />
+                                        Download ITR
+                                    </button>
+                                </td>
                             </tr>
                         );
                     })}
@@ -195,22 +204,30 @@ const YearEndTab: React.FC = () => {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50">
-                                                {monthlyHistory.map((m, idx) => (
-                                                    <tr key={idx} className="hover:bg-slate-50/50">
-                                                        <td className="px-6 py-3 font-bold text-slate-700">{m.month}</td>
-                                                        <td className="px-6 py-3 text-slate-500 text-xs">{m.period}</td>
-                                                        <td className="px-6 py-3 text-right font-mono">{formatCurrency(m.basicPay)}</td>
-                                                        <td className="px-6 py-3 text-right font-mono text-rose-500">
-                                                        {m.absences > 0 ? `(${formatCurrency(m.absences)})` : '-'}
-                                                        </td>
-                                                        <td className="px-6 py-3 text-right font-mono font-bold text-slate-800">{formatCurrency(m.earnedBasic)}</td>
-                                                        <td className="px-6 py-3 text-center">
-                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${m.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                                                                {m.status}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                            {monthlyHistory.map((m, idx) => {
+                                            // Calculate combined values from p1 and p2
+                                            const combinedBasicPay = m.p1.basicPay + m.p2.basicPay;
+                                            const combinedAbsences = m.p1.absences + m.p2.absences;
+                                            const combinedLateUndertime = (m.p1.lateUndertime || 0) + (m.p2.lateUndertime || 0);
+
+                                            return (
+                                                <tr key={idx} className="hover:bg-slate-50/50">
+                                                <td className="px-6 py-3 font-bold text-slate-700">{m.month}</td>
+                                                {/* Display a static value since p1 and p2 are internal to the record */}
+                                                <td className="px-6 py-3 text-slate-500 text-xs">P1 & P2</td>
+                                                <td className="px-6 py-3 text-right font-mono">{formatCurrency(combinedBasicPay)}</td>
+                                                <td className="px-6 py-3 text-right font-mono text-rose-500">
+                                                    {combinedAbsences > 0 ? `(${formatCurrency(combinedAbsences)})` : '-'}
+                                                </td>
+                                                <td className="px-6 py-3 text-right font-mono font-bold text-slate-800">{formatCurrency(m.earnedBasic)}</td>
+                                                <td className="px-6 py-3 text-center">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${m.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                                                    {m.status}
+                                                    </span>
+                                                </td>
+                                                </tr>
+                                            );
+                                            })}
                                             </tbody>
                                             <tfoot className="sticky bottom-0 z-10 bg-slate-50 font-bold border-t border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
                                             <tr>
@@ -276,36 +293,97 @@ const YearEndTab: React.FC = () => {
                             </div>
                             </div>
                     )}
-                    {/* --- ITR Autofill View --- */}
-                    {modalConfig.type === 'itr' && (
+                    {modalConfig.type === 'itr' && selectedEmployeeData && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 h-full flex flex-col">
                             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-1">
-                                <h4 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                    <CalendarRange className="text-indigo-600" size={20} />
-                                    ITR Autofill Preview
-                                </h4>
+                            <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <CalendarRange className="text-indigo-600" size={20} />
+                                BIR Form 2316 - Certificate of Compensation Payment/Tax Withheld
+                            </h4>
 
-                                <img
-                                    src="https://d2v55crl1k4v3v.cloudfront.net/uploads/files/39d4b5f71d6eb6f96b206419a705c5fa.jpg"
-                                    alt="ITR Preview"
-                                    className="w-full rounded-xl border border-slate-200 shadow-sm"
-                                    />
+                            {/* ITR Form Preview Container */}
+                            <div className="border border-slate-300 rounded-xl p-6 bg-slate-50 mb-6">
+                                {/* Form Header */}
+                                <div className="text-center mb-6 border-b-2 border-slate-800 pb-4">
+                                <h5 className="text-base font-bold text-slate-900">CERTIFICATE OF COMPENSATION PAYMENT/TAX WITHHELD</h5>
+                                <p className="text-sm font-bold text-slate-700">BIR Form No. 2316</p>
+                                </div>
 
-                                <button
-                                    onClick={() => {
-                                        const link = document.createElement('a');
-                                        link.href = 'https://the-bithub.com/ITR_SAMPLE_DOWNLOAD';
-                                        link.download = 'ITR-Autofill.jpg';
-                                        link.click();
-                                    }}
-                                    className="mt-6 w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-                                >
-                                    <Download size={18} />
-                                    Download ITR
-                                </button>
+                                {/* Employee & Employer Info Grid */}
+                                <div className="grid grid-cols-2 gap-4 mb-6 text-xs">
+                                <div>
+                                    <p className="text-slate-500 font-bold mb-1">Employee's Name:</p>
+                                    <p className="font-bold text-slate-900 border-b border-slate-300 pb-1">{selectedEmployeeData.name}</p>
+                                </div>
+                                <div>
+                                    <p className="text-slate-500 font-bold mb-1">TIN:</p>
+                                    <p className="font-mono font-bold text-slate-900 border-b border-slate-300 pb-1">{selectedEmployeeData.tin || 'N/A'}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-slate-500 font-bold mb-1">Employer's Name:</p>
+                                    <p className="font-bold text-slate-900 border-b border-slate-300 pb-1">{selectedEmployeeData.employerName || 'N/A'}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-slate-500 font-bold mb-1">Employer's Address:</p>
+                                    <p className="text-slate-600 border-b border-slate-300 pb-1">{selectedEmployeeData.employerAddress || 'N/A'}</p>
+                                </div>
+                                </div>
+
+                                {/* Compensation Table */}
+                                <div className="border border-slate-300 rounded-lg overflow-hidden mb-6">
+                                <table className="w-full text-xs">
+                                    <thead className="bg-slate-200">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left font-bold text-slate-700">Compensation Income</th>
+                                        <th className="px-4 py-2 text-right font-bold text-slate-700">Amount</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200">
+                                    <tr>
+                                        <td className="px-4 py-2 text-slate-600">Gross Compensation Income Paid</td>
+                                        <td className="px-4 py-2 text-right font-mono font-bold">{formatCurrency(selectedEmployeeData.ytdGross)}</td>
+                                    </tr>
+                                    <tr className="bg-slate-50">
+                                        <td className="px-4 py-2 text-slate-600">Less: De Minimis Benefits / Other Exemptions</td>
+                                        <td className="px-4 py-2 text-right font-mono font-bold text-slate-500">({formatCurrency(selectedEmployeeData.exemptIncome || 0)})</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-2 text-slate-600 font-bold">Taxable Compensation Income</td>
+                                        <td className="px-4 py-2 text-right font-mono font-bold text-indigo-700">{formatCurrency(selectedEmployeeData.ytdTaxable)}</td>
+                                    </tr>
+                                    <tr className="bg-indigo-50">
+                                        <td className="px-4 py-2 text-slate-700 font-bold">Tax Withheld</td>
+                                        <td className="px-4 py-2 text-right font-mono font-bold text-indigo-700">{formatCurrency(selectedEmployeeData.taxWithheld)}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                                </div>
+
+                                {/* Form Footer */}
+                                <div className="text-[10px] text-slate-400 text-center">
+                                <p>This is an electronically generated form. No signature is required.</p>
+                                <p>BIR Form No. 2316 (January 2023) - For BIR Use Only</p>
+                                </div>
+                            </div>
+
+                            {/* Download Button */}
+                            <button
+                                onClick={() => {
+                                alert(`Downloading ITR for ${selectedEmployeeData.name} (${selectedEmployeeData.tin}).`);
+                                // In a real app, this would trigger a PDF generation/download
+                                // const link = document.createElement('a');
+                                // link.href = 'path_to_generated_pdf.pdf'; // This would be the generated file
+                                // link.download = `BIR_Form_2316_${selectedEmployeeData.tin}.pdf`;
+                                // link.click();
+                                }}
+                                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Download size={18} />
+                                Download ITR (PDF)
+                            </button>
                             </div>
                         </div>
-                    )}
+                        )}
                 </div>
 
                 <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
