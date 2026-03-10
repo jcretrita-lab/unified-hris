@@ -47,6 +47,7 @@ import YearEndBatchTaxPage from './pages/YearEndBatchTaxPage';
 import YearEnd13thPrepPage from './pages/year-end/YearEnd13thPrepPage';
 import YearEndTaxPrepPage from './pages/year-end/YearEndTaxPrepPage';
 import YearEndGovPrepPage from './pages/year-end/YearEndGovPrepPage';
+import YearEndLeaveConversionPage from './pages/year-end/YearEndLeaveConversionPage';
 import NotificationCenter from './pages/NotificationCenter';
 import NotificationDetail from './pages/NotificationDetail';
 import SettingsOverview from './pages/settings/SettingsOverview';
@@ -150,6 +151,7 @@ const AnimatedRoutes = () => {
         <Route path="/manage/pay-structure" element={<ProtectedRoute><PageWrapper><PayStructure /></PageWrapper></ProtectedRoute>} />
         <Route path="/manage/year-end-prep" element={<Navigate to="/manage/year-end/13th" replace />} />
         <Route path="/manage/year-end/13th" element={<ProtectedRoute><PageWrapper><YearEnd13thPrepPage /></PageWrapper></ProtectedRoute>} />
+        <Route path="/manage/year-end/leave-conversion" element={<ProtectedRoute><PageWrapper><YearEndLeaveConversionPage /></PageWrapper></ProtectedRoute>} />
         <Route path="/manage/year-end/tax" element={<ProtectedRoute><PageWrapper><YearEndTaxPrepPage /></PageWrapper></ProtectedRoute>} />
         <Route path="/manage/year-end/gov" element={<ProtectedRoute><PageWrapper><YearEndGovPrepPage /></PageWrapper></ProtectedRoute>} />
         <Route path="/manage/year-end-prep/batch-13th" element={<ProtectedRoute><PageWrapper><YearEndBatch13thPage /></PageWrapper></ProtectedRoute>} />
@@ -195,16 +197,16 @@ const AnimatedRoutes = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-  <OrganizationProvider>
-    <RequestProvider>
-      <HashRouter>
-        <Layout>
-          <AnimatedRoutes />
-        </Layout>
-      </HashRouter>
-    </RequestProvider>
-  </OrganizationProvider>
-</AuthProvider>
+      <OrganizationProvider>
+        <RequestProvider>
+          <HashRouter>
+            <Layout>
+              <AnimatedRoutes />
+            </Layout>
+          </HashRouter>
+        </RequestProvider>
+      </OrganizationProvider>
+    </AuthProvider>
   );
 };
 

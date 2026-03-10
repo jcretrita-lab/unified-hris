@@ -5,13 +5,14 @@ import {
     Calendar,
     Wallet,
     Calculator,
-    ShieldCheck
+    ShieldCheck,
+    ArrowRightLeft
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface YearEndPrepLayoutProps {
     children: React.ReactNode;
-    activeTab: '13th' | 'tax' | 'gov';
+    activeTab: '13th' | 'tax' | 'gov' | 'leave-conversion';
     searchTerm: string;
     setSearchTerm: (s: string) => void;
     selectedYear: string;
@@ -31,6 +32,7 @@ const YearEndPrepLayout: React.FC<YearEndPrepLayoutProps> = ({
     const tabs = [
         { id: '13th', label: '13th Month Pay', icon: Wallet, path: '/manage/year-end/13th' },
         { id: 'tax', label: 'Tax Annualization', icon: Calculator, path: '/manage/year-end/tax' },
+        { id: 'leave-conversion', label: 'Leave Conversion', icon: ArrowRightLeft, path: '/manage/year-end/leave-conversion' },
         { id: 'gov', label: 'Government Contributions', icon: ShieldCheck, path: '/manage/year-end/gov' },
     ] as const;
 

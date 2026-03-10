@@ -27,6 +27,7 @@ export const SEGMENT_LABELS: Record<string, string> = {
   'year-end-prep': 'Year-End Preparation',
   'year-end': 'Year-End',
   '13th': '13th Month Pay',
+  'leave-conversion': 'Leave Conversion',
   tax: 'Tax Annualization',
   gov: 'Govt Contributions',
 
