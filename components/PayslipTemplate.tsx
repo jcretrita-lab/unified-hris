@@ -83,7 +83,7 @@ export const PayslipTemplate: React.FC<PayslipTemplateProps> = ({ data }) => {
                     <div className="p-1 flex-1">
                         <table className="w-full text-[8px] border-collapse">
                             <tbody>
-                                {(data.attendance || [
+                                {(Array.isArray(data.attendance) ? data.attendance : [
                                     { date: 'Aug 06', status: 'present', hours: 8.0 },
                                     { date: 'Aug 07', status: 'present', hours: 8.0 },
                                     { date: 'Aug 08', status: 'late', hours: 8.0 },
@@ -94,6 +94,11 @@ export const PayslipTemplate: React.FC<PayslipTemplateProps> = ({ data }) => {
                                     { date: 'Aug 15', status: 'present', hours: 8.0 },
                                     { date: 'Aug 18', status: 'present', hours: 8.0 },
                                     { date: 'Aug 19', status: 'present', hours: 8.0 },
+                                    { date: 'Aug 20', status: 'present', hours: 8.0 },
+                                    { date: 'Aug 21', status: 'present', hours: 8.0 },
+                                    { date: 'Aug 22', status: 'present', hours: 8.0 },
+                                    { date: 'Aug 23', status: 'restday', hours: 0 },
+                                    { date: 'Aug 24', status: 'restday', hours: 0 },
                                 ]).slice(0, 15).map((day: any, i: number) => (
                                     <tr key={i} className="border-b border-black/10 last:border-0">
                                         <td className="p-1 font-bold uppercase">{day.date}</td>
@@ -134,16 +139,16 @@ export const PayslipTemplate: React.FC<PayslipTemplateProps> = ({ data }) => {
                         <span className="font-bold text-[7px] uppercase block">Vacation Leave</span>
                         <div className="grid grid-cols-3 text-center border border-black text-[9px]">
                             <div className="p-1 border-r border-black font-medium">Ent: 15</div>
-                            <div className="p-1 border-r border-black font-medium">Use: 2.5</div>
-                            <div className="p-1 font-bold">Rem: {data.leaveBalances?.vacation.remaining || '12.50'}</div>
+                            <div className="p-1 border-r border-black font-medium">Use: 2.50</div>
+                            <div className="p-1 font-bold">Rem: {data.leaveBalances?.vacation?.remaining || '12.50'}</div>
                         </div>
                     </div>
                     <div className="flex-1 space-y-1">
                         <span className="font-bold text-[7px] uppercase block">Sick Leave</span>
                         <div className="grid grid-cols-3 text-center border border-black text-[9px]">
                             <div className="p-1 border-r border-black font-medium">Ent: 12</div>
-                            <div className="p-1 border-r border-black font-medium">Use: 1.0</div>
-                            <div className="p-1 font-bold">Rem: {data.leaveBalances?.sick.remaining || '11.00'}</div>
+                            <div className="p-1 border-r border-black font-medium">Use: 1.00</div>
+                            <div className="p-1 font-bold">Rem: {data.leaveBalances?.sick?.remaining || '11.00'}</div>
                         </div>
                     </div>
                 </div>
