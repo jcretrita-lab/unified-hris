@@ -412,8 +412,54 @@ const ReportDetail: React.FC = () => {
   };
 
   const handleExport = (format: 'csv' | 'pdf') => {
-    console.log(`Exporting ${reportConfig?.title} as ${format.toUpperCase()}`);
+    if (!reportConfig) return;
     setIsDownloadMenuOpen(false);
+
+    const cols = reportConfig.visibleColumns;
+    const rows = displayedData;
+    const filename = reportConfig.title.replace(/[^a-z0-9]/gi, '_');
+
+    if (format === 'csv') {
+      const escape = (v: string) => `"${(v || '').replace(/"/g, '""')}"`;
+      const header = cols.map(escape).join(',');
+      const body = rows.map(row => cols.map(c => escape(row[c] || '')).join(',')).join('\n');
+      const blob = new Blob([`${header}\n${body}`], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const tableRows = rows.map(row =>
+        `<tr>${cols.map(c => `<td>${row[c] || ''}</td>`).join('')}</tr>`
+      ).join('');
+      const generatedDate = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+      const html = `<!DOCTYPE html><html><head><title>${reportConfig.title}</title><style>
+        body{font-family:Arial,sans-serif;font-size:10px;margin:20px}
+        h2{font-size:14px;margin-bottom:4px}
+        p{font-size:10px;color:#666;margin-bottom:12px}
+        table{border-collapse:collapse;width:100%}
+        th{background:#1e293b;color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:5px 8px;border-bottom:1px solid #e2e8f0;font-size:9px}
+        tr:nth-child(even) td{background:#f8fafc}
+        @media print{body{margin:0}}
+      </style></head><body>
+        <h2>${reportConfig.title}</h2>
+        <p>${reportConfig.category} &mdash; ${rows.length} record(s) &mdash; Generated ${generatedDate}</p>
+        <table>
+          <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </body></html>`;
+      const w = window.open('', '_blank');
+      if (w) {
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        w.print();
+      }
+    }
   };
 
   if (!reportConfig && !isLoading) return (
