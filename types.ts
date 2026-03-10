@@ -167,6 +167,7 @@ export interface OrgUnit {
   type: string;
   parentId?: string | null;
   children: OrgUnit[];
+  headPositionId?: string; // Position.id of the person who leads this unit
 }
 
 export interface OrgUnitType {

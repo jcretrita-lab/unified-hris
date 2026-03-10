@@ -53,48 +53,199 @@ const MOCK_ORG_UNITS: OrgUnit[] = [
     id: 'root',
     name: 'Nexus Corp',
     type: 'Company',
+    headPositionId: 'p-ceo',
     children: [
       {
         id: 'div-1',
         name: 'Engineering',
         type: 'Division',
         parentId: 'root',
+        headPositionId: 'p-cto',
         children: [
-          { id: 'dept-1', name: 'Platform Team', type: 'Team', parentId: 'div-1', children: [] },
-          { id: 'dept-2', name: 'Mobile Team', type: 'Team', parentId: 'div-1', children: [] }
-        ]
+          {
+            id: 'dept-1',
+            name: 'Platform Engineering',
+            type: 'Department',
+            parentId: 'div-1',
+            headPositionId: 'p-plat-lead',
+            children: [
+              { id: 'team-1', name: 'Backend Team', type: 'Team', parentId: 'dept-1', headPositionId: 'p-be-lead', children: [] },
+              { id: 'team-2', name: 'Frontend Team', type: 'Team', parentId: 'dept-1', headPositionId: 'p-fe-lead', children: [] },
+            ],
+          },
+          { id: 'dept-2', name: 'Mobile Development', type: 'Department', parentId: 'div-1', headPositionId: 'p-mob-lead', children: [] },
+          { id: 'dept-3', name: 'DevOps & Infrastructure', type: 'Department', parentId: 'div-1', headPositionId: 'p-devops-lead', children: [] },
+          { id: 'dept-4', name: 'QA & Testing', type: 'Department', parentId: 'div-1', headPositionId: 'p-qa-lead', children: [] },
+        ],
       },
       {
         id: 'div-2',
         name: 'Human Resources',
         type: 'Division',
         parentId: 'root',
+        headPositionId: 'p-chro',
         children: [
-          { id: 'dept-3', name: 'Recruiting', type: 'Team', parentId: 'div-2', children: [] }
-        ]
-      }
-    ]
-  }
+          { id: 'dept-5', name: 'Talent Acquisition', type: 'Department', parentId: 'div-2', headPositionId: 'p-ta-mgr', children: [] },
+          { id: 'dept-6', name: 'Compensation & Benefits', type: 'Department', parentId: 'div-2', headPositionId: 'p-cb-mgr', children: [] },
+          { id: 'dept-7', name: 'Employee Relations', type: 'Department', parentId: 'div-2', headPositionId: 'p-er-mgr', children: [] },
+        ],
+      },
+      {
+        id: 'div-3',
+        name: 'Finance & Accounting',
+        type: 'Division',
+        parentId: 'root',
+        headPositionId: 'p-cfo',
+        children: [
+          { id: 'dept-8', name: 'Accounting', type: 'Department', parentId: 'div-3', headPositionId: 'p-acct-mgr', children: [] },
+          { id: 'dept-9', name: 'Payroll', type: 'Department', parentId: 'div-3', headPositionId: 'p-pay-mgr', children: [] },
+          { id: 'dept-10', name: 'Financial Planning', type: 'Department', parentId: 'div-3', headPositionId: 'p-fp-mgr', children: [] },
+        ],
+      },
+      {
+        id: 'div-4',
+        name: 'Sales & Marketing',
+        type: 'Division',
+        parentId: 'root',
+        headPositionId: 'p-cmo',
+        children: [
+          { id: 'dept-11', name: 'Sales', type: 'Department', parentId: 'div-4', headPositionId: 'p-sales-mgr', children: [] },
+          { id: 'dept-12', name: 'Marketing', type: 'Department', parentId: 'div-4', headPositionId: 'p-mkt-mgr', children: [] },
+          { id: 'dept-13', name: 'Customer Success', type: 'Department', parentId: 'div-4', headPositionId: 'p-cs-mgr', children: [] },
+        ],
+      },
+      {
+        id: 'div-5',
+        name: 'Operations',
+        type: 'Division',
+        parentId: 'root',
+        headPositionId: 'p-coo',
+        children: [
+          { id: 'dept-14', name: 'Supply Chain', type: 'Department', parentId: 'div-5', headPositionId: 'p-sc-mgr', children: [] },
+          { id: 'dept-15', name: 'IT Support', type: 'Department', parentId: 'div-5', headPositionId: 'p-it-mgr', children: [] },
+        ],
+      },
+      {
+        id: 'div-6',
+        name: 'Legal & Compliance',
+        type: 'Division',
+        parentId: 'root',
+        headPositionId: 'p-gc',
+        children: [],
+      },
+    ],
+  },
 ];
 
 const MOCK_POSITIONS: Position[] = [
-  { id: 'p1', title: 'VP of Engineering', orgUnitId: 'div-1', defaultBasePay: 120000, salaryGradeId: 'sg-4', rankId: 'rank-3', employmentStatus: 'Regular' },
-  { id: 'p2', title: 'Senior Backend Eng', orgUnitId: 'dept-1', defaultBasePay: 65000, salaryGradeId: 'sg-3', rankId: 'rank-2', employmentStatus: 'Regular', supervisorId: 'p1' },
-  { id: 'p3', title: 'Junior Backend Eng', orgUnitId: 'dept-1', defaultBasePay: 35000, salaryGradeId: 'sg-2', rankId: 'rank-1', employmentStatus: 'Probationary', supervisorId: 'p2' },
-  { id: 'p4', title: 'HR Manager', orgUnitId: 'div-2', defaultBasePay: 55000, salaryGradeId: 'sg-3', rankId: 'rank-3', employmentStatus: 'Regular' },
+  // C-Suite — SG-15 (President / CEO band)
+  { id: 'p-ceo',        title: 'Chief Executive Officer',         orgUnitId: 'root',    defaultBasePay: 550000, salaryGradeId: 'sg-15', rankId: 'rank-15', employmentStatus: 'Regular' },
+  { id: 'p-cto',        title: 'Chief Technology Officer',        orgUnitId: 'div-1',   defaultBasePay: 480000, salaryGradeId: 'sg-15', rankId: 'rank-15', employmentStatus: 'Regular', supervisorId: 'p-ceo' },
+  { id: 'p-chro',       title: 'Chief HR Officer',                orgUnitId: 'div-2',   defaultBasePay: 450000, salaryGradeId: 'sg-15', rankId: 'rank-15', employmentStatus: 'Regular', supervisorId: 'p-ceo' },
+  { id: 'p-cfo',        title: 'Chief Financial Officer',         orgUnitId: 'div-3',   defaultBasePay: 470000, salaryGradeId: 'sg-15', rankId: 'rank-15', employmentStatus: 'Regular', supervisorId: 'p-ceo' },
+  { id: 'p-cmo',        title: 'Chief Sales & Marketing Officer', orgUnitId: 'div-4',   defaultBasePay: 450000, salaryGradeId: 'sg-15', rankId: 'rank-15', employmentStatus: 'Regular', supervisorId: 'p-ceo' },
+  { id: 'p-coo',        title: 'Chief Operating Officer',         orgUnitId: 'div-5',   defaultBasePay: 450000, salaryGradeId: 'sg-15', rankId: 'rank-15', employmentStatus: 'Regular', supervisorId: 'p-ceo' },
+  // SG-13 — Senior Director / VP
+  { id: 'p-gc',         title: 'General Counsel',                 orgUnitId: 'div-6',   defaultBasePay: 320000, salaryGradeId: 'sg-13', rankId: 'rank-13', employmentStatus: 'Regular', supervisorId: 'p-ceo' },
+  // Engineering — Platform  (SG-12 Director manages multiple departments)
+  { id: 'p-plat-lead',  title: 'Platform Engineering Manager',    orgUnitId: 'dept-1',  defaultBasePay: 255000, salaryGradeId: 'sg-12', rankId: 'rank-12', employmentStatus: 'Regular', supervisorId: 'p-cto' },
+  // SG-09 Manager — team leads
+  { id: 'p-be-lead',    title: 'Backend Lead',                    orgUnitId: 'team-1',  defaultBasePay: 135000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-plat-lead' },
+  { id: 'p-fe-lead',    title: 'Frontend Lead',                   orgUnitId: 'team-2',  defaultBasePay: 135000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-plat-lead' },
+  { id: 'p-mob-lead',   title: 'Mobile Development Lead',         orgUnitId: 'dept-2',  defaultBasePay: 138000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-cto' },
+  { id: 'p-devops-lead',title: 'DevOps Lead',                     orgUnitId: 'dept-3',  defaultBasePay: 138000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-cto' },
+  // SG-08 Team Lead — smaller QA team
+  { id: 'p-qa-lead',    title: 'QA Lead',                         orgUnitId: 'dept-4',  defaultBasePay: 110000, salaryGradeId: 'sg-08', rankId: 'rank-08', employmentStatus: 'Regular', supervisorId: 'p-cto' },
+  // SG-07 Senior Specialist — senior individual contributors
+  { id: 'p-sr-be',      title: 'Senior Backend Engineer',         orgUnitId: 'team-1',  defaultBasePay: 80000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-be-lead' },
+  { id: 'p-sr-fe',      title: 'Senior Frontend Engineer',        orgUnitId: 'team-2',  defaultBasePay: 78000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-fe-lead' },
+  { id: 'p-sr-mob',     title: 'Senior Mobile Engineer',          orgUnitId: 'dept-2',  defaultBasePay: 78000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-mob-lead' },
+  { id: 'p-sr-devops',  title: 'Senior DevOps Engineer',          orgUnitId: 'dept-3',  defaultBasePay: 82000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-devops-lead' },
+  // SG-06 Specialist II
+  { id: 'p-sr-qa',      title: 'Senior QA Engineer',              orgUnitId: 'dept-4',  defaultBasePay: 62000,  salaryGradeId: 'sg-06', rankId: 'rank-06', employmentStatus: 'Regular', supervisorId: 'p-qa-lead' },
+  // SG-04 Rank & File II — junior engineers
+  { id: 'p-jr-be',      title: 'Junior Backend Engineer',         orgUnitId: 'team-1',  defaultBasePay: 35000,  salaryGradeId: 'sg-04', rankId: 'rank-04', employmentStatus: 'Regular', supervisorId: 'p-sr-be' },
+  { id: 'p-jr-fe',      title: 'Junior Frontend Engineer',        orgUnitId: 'team-2',  defaultBasePay: 33000,  salaryGradeId: 'sg-04', rankId: 'rank-04', employmentStatus: 'Probationary', supervisorId: 'p-sr-fe' },
+  { id: 'p-jr-mob',     title: 'Junior Mobile Engineer',          orgUnitId: 'dept-2',  defaultBasePay: 33000,  salaryGradeId: 'sg-04', rankId: 'rank-04', employmentStatus: 'Probationary', supervisorId: 'p-sr-mob' },
+  // Human Resources — SG-09 Managers
+  { id: 'p-ta-mgr',     title: 'Talent Acquisition Manager',      orgUnitId: 'dept-5',  defaultBasePay: 128000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-chro' },
+  { id: 'p-cb-mgr',     title: 'Compensation & Benefits Manager', orgUnitId: 'dept-6',  defaultBasePay: 132000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-chro' },
+  { id: 'p-er-mgr',     title: 'Employee Relations Manager',      orgUnitId: 'dept-7',  defaultBasePay: 128000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-chro' },
+  // SG-07 Senior Specialist
+  { id: 'p-sr-rec',     title: 'Senior Recruiter',                orgUnitId: 'dept-5',  defaultBasePay: 75000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-ta-mgr' },
+  // SG-06 Specialist II
+  { id: 'p-cb-spec',    title: 'C&B Specialist',                  orgUnitId: 'dept-6',  defaultBasePay: 60000,  salaryGradeId: 'sg-06', rankId: 'rank-06', employmentStatus: 'Regular', supervisorId: 'p-cb-mgr' },
+  { id: 'p-er-spec',    title: 'Employee Relations Specialist',   orgUnitId: 'dept-7',  defaultBasePay: 58000,  salaryGradeId: 'sg-06', rankId: 'rank-06', employmentStatus: 'Regular', supervisorId: 'p-er-mgr' },
+  // SG-04 Rank & File II
+  { id: 'p-jr-rec',     title: 'Junior Recruiter',                orgUnitId: 'dept-5',  defaultBasePay: 33000,  salaryGradeId: 'sg-04', rankId: 'rank-04', employmentStatus: 'Probationary', supervisorId: 'p-sr-rec' },
+  // Finance & Accounting — SG-09 Managers
+  { id: 'p-acct-mgr',   title: 'Accounting Manager',              orgUnitId: 'dept-8',  defaultBasePay: 130000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-cfo' },
+  { id: 'p-pay-mgr',    title: 'Payroll Manager',                 orgUnitId: 'dept-9',  defaultBasePay: 130000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-cfo' },
+  { id: 'p-fp-mgr',     title: 'Financial Planning Manager',      orgUnitId: 'dept-10', defaultBasePay: 135000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-cfo' },
+  // SG-07 Senior Specialist
+  { id: 'p-sr-acct',    title: 'Senior Accountant',               orgUnitId: 'dept-8',  defaultBasePay: 72000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-acct-mgr' },
+  { id: 'p-fp-analyst', title: 'Financial Analyst',               orgUnitId: 'dept-10', defaultBasePay: 72000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-fp-mgr' },
+  // SG-06 Specialist II
+  { id: 'p-pay-spec',   title: 'Payroll Specialist',              orgUnitId: 'dept-9',  defaultBasePay: 58000,  salaryGradeId: 'sg-06', rankId: 'rank-06', employmentStatus: 'Regular', supervisorId: 'p-pay-mgr' },
+  // SG-04 Rank & File II
+  { id: 'p-jr-acct',    title: 'Junior Accountant',               orgUnitId: 'dept-8',  defaultBasePay: 33000,  salaryGradeId: 'sg-04', rankId: 'rank-04', employmentStatus: 'Regular', supervisorId: 'p-sr-acct' },
+  // Sales & Marketing — SG-09 Managers
+  { id: 'p-sales-mgr',  title: 'Sales Manager',                   orgUnitId: 'dept-11', defaultBasePay: 132000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-cmo' },
+  { id: 'p-mkt-mgr',    title: 'Marketing Manager',               orgUnitId: 'dept-12', defaultBasePay: 128000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-cmo' },
+  { id: 'p-cs-mgr',     title: 'Customer Success Manager',        orgUnitId: 'dept-13', defaultBasePay: 128000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-cmo' },
+  // SG-07 Senior Specialist
+  { id: 'p-sr-sales',   title: 'Senior Sales Executive',          orgUnitId: 'dept-11', defaultBasePay: 75000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-sales-mgr' },
+  { id: 'p-sr-mkt',     title: 'Senior Marketing Specialist',     orgUnitId: 'dept-12', defaultBasePay: 72000,  salaryGradeId: 'sg-07', rankId: 'rank-07', employmentStatus: 'Regular', supervisorId: 'p-mkt-mgr' },
+  // SG-06 Specialist II
+  { id: 'p-cs-spec',    title: 'Customer Success Specialist',     orgUnitId: 'dept-13', defaultBasePay: 58000,  salaryGradeId: 'sg-06', rankId: 'rank-06', employmentStatus: 'Regular', supervisorId: 'p-cs-mgr' },
+  // SG-05 Specialist I — sales reps (incentive-based)
+  { id: 'p-sales-rep',  title: 'Sales Representative',            orgUnitId: 'dept-11', defaultBasePay: 45000,  salaryGradeId: 'sg-05', rankId: 'rank-05', employmentStatus: 'Regular', supervisorId: 'p-sr-sales' },
+  // Operations — SG-09 Manager / SG-08 Team Lead
+  { id: 'p-sc-mgr',     title: 'Supply Chain Manager',            orgUnitId: 'dept-14', defaultBasePay: 128000, salaryGradeId: 'sg-09', rankId: 'rank-09', employmentStatus: 'Regular', supervisorId: 'p-coo' },
+  { id: 'p-it-mgr',     title: 'IT Support Manager',              orgUnitId: 'dept-15', defaultBasePay: 112000, salaryGradeId: 'sg-08', rankId: 'rank-08', employmentStatus: 'Regular', supervisorId: 'p-coo' },
+  // SG-06 Specialist II
+  { id: 'p-sc-analyst', title: 'Supply Chain Analyst',            orgUnitId: 'dept-14', defaultBasePay: 58000,  salaryGradeId: 'sg-06', rankId: 'rank-06', employmentStatus: 'Regular', supervisorId: 'p-sc-mgr' },
+  // SG-05 Specialist I
+  { id: 'p-it-spec',    title: 'IT Support Specialist',           orgUnitId: 'dept-15', defaultBasePay: 48000,  salaryGradeId: 'sg-05', rankId: 'rank-05', employmentStatus: 'Regular', supervisorId: 'p-it-mgr' },
+  // Legal & Compliance — SG-11 Associate Director / SG-05 Specialist I
+  { id: 'p-sr-legal',   title: 'Senior Legal Counsel',            orgUnitId: 'div-6',   defaultBasePay: 210000, salaryGradeId: 'sg-11', rankId: 'rank-11', employmentStatus: 'Regular', supervisorId: 'p-gc' },
+  { id: 'p-legal-asst', title: 'Legal Assistant',                 orgUnitId: 'div-6',   defaultBasePay: 42000,  salaryGradeId: 'sg-05', rankId: 'rank-05', employmentStatus: 'Regular', supervisorId: 'p-sr-legal' },
 ];
 
 const MOCK_GRADES: SalaryGrade[] = [
-  { id: 'sg-1', code: 'SG-10', name: 'Entry Level', amount: 25000, minSalary: 25000, maxSalary: 35000 },
-  { id: 'sg-2', code: 'SG-11', name: 'Junior', amount: 35000, minSalary: 35000, maxSalary: 45000 },
-  { id: 'sg-3', code: 'SG-12', name: 'Senior', amount: 55000, minSalary: 55000, maxSalary: 75000 },
-  { id: 'sg-4', code: 'SG-13', name: 'Exec', amount: 100000, minSalary: 100000, maxSalary: 150000 },
+  { id: 'sg-01', code: 'SG-01', name: 'Entry Level I',          amount: 18000,  minSalary: 15000,  maxSalary: 21000  },
+  { id: 'sg-02', code: 'SG-02', name: 'Entry Level II',         amount: 22000,  minSalary: 21000,  maxSalary: 26000  },
+  { id: 'sg-03', code: 'SG-03', name: 'Junior Associate',       amount: 28000,  minSalary: 26000,  maxSalary: 33000  },
+  { id: 'sg-04', code: 'SG-04', name: 'Associate',              amount: 35000,  minSalary: 33000,  maxSalary: 42000  },
+  { id: 'sg-05', code: 'SG-05', name: 'Senior Associate',       amount: 48000,  minSalary: 42000,  maxSalary: 57000  },
+  { id: 'sg-06', code: 'SG-06', name: 'Specialist I',           amount: 63000,  minSalary: 57000,  maxSalary: 72000  },
+  { id: 'sg-07', code: 'SG-07', name: 'Specialist II',          amount: 80000,  minSalary: 72000,  maxSalary: 95000  },
+  { id: 'sg-08', code: 'SG-08', name: 'Senior Specialist',      amount: 100000, minSalary: 95000,  maxSalary: 120000 },
+  { id: 'sg-09', code: 'SG-09', name: 'Lead / Principal',       amount: 135000, minSalary: 120000, maxSalary: 155000 },
+  { id: 'sg-10', code: 'SG-10', name: 'Manager I',              amount: 170000, minSalary: 155000, maxSalary: 195000 },
+  { id: 'sg-11', code: 'SG-11', name: 'Manager II / Sr Manager',amount: 210000, minSalary: 195000, maxSalary: 240000 },
+  { id: 'sg-12', code: 'SG-12', name: 'Director',               amount: 260000, minSalary: 240000, maxSalary: 300000 },
+  { id: 'sg-13', code: 'SG-13', name: 'Senior Director',        amount: 330000, minSalary: 300000, maxSalary: 380000 },
+  { id: 'sg-14', code: 'SG-14', name: 'Vice President',         amount: 420000, minSalary: 380000, maxSalary: 490000 },
+  { id: 'sg-15', code: 'SG-15', name: 'C-Level / Executive',    amount: 570000, minSalary: 490000, maxSalary: 750000 },
 ];
 
 const MOCK_RANKS: Rank[] = [
-  { id: 'rank-1', name: 'Junior', level: 1, salaryGradeId: 'sg-2' },
-  { id: 'rank-2', name: 'Senior', level: 2, salaryGradeId: 'sg-3' },
-  { id: 'rank-3', name: 'Lead/Manager', level: 3, salaryGradeId: 'sg-4' },
+  { id: 'rank-01', name: 'Entry Level I',           level: 1,  salaryGradeId: 'sg-01' },
+  { id: 'rank-02', name: 'Entry Level II',          level: 2,  salaryGradeId: 'sg-02' },
+  { id: 'rank-03', name: 'Junior Associate',        level: 3,  salaryGradeId: 'sg-03' },
+  { id: 'rank-04', name: 'Associate',               level: 4,  salaryGradeId: 'sg-04' },
+  { id: 'rank-05', name: 'Senior Associate',        level: 5,  salaryGradeId: 'sg-05' },
+  { id: 'rank-06', name: 'Specialist I',            level: 6,  salaryGradeId: 'sg-06' },
+  { id: 'rank-07', name: 'Specialist II',           level: 7,  salaryGradeId: 'sg-07' },
+  { id: 'rank-08', name: 'Senior Specialist',       level: 8,  salaryGradeId: 'sg-08' },
+  { id: 'rank-09', name: 'Lead / Principal',        level: 9,  salaryGradeId: 'sg-09' },
+  { id: 'rank-10', name: 'Manager I',               level: 10, salaryGradeId: 'sg-10' },
+  { id: 'rank-11', name: 'Manager II / Sr Manager', level: 11, salaryGradeId: 'sg-11' },
+  { id: 'rank-12', name: 'Director',                level: 12, salaryGradeId: 'sg-12' },
+  { id: 'rank-13', name: 'Senior Director',         level: 13, salaryGradeId: 'sg-13' },
+  { id: 'rank-14', name: 'Vice President',          level: 14, salaryGradeId: 'sg-14' },
+  { id: 'rank-15', name: 'C-Level / Executive',     level: 15, salaryGradeId: 'sg-15' },
 ];
 
 // Helper
@@ -209,7 +360,8 @@ const OrgStructure: React.FC<Props> = ({
     rankId: "",
     subRankId: "",
     employmentStatus: "Regular",
-    supervisorId: ""
+    supervisorId: "",
+    isUnitHead: false
   });
   const [newTypeForm, setNewTypeForm] = useState({ name: "", level: 1 });
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
@@ -315,7 +467,8 @@ const OrgStructure: React.FC<Props> = ({
       rankId: "",
       subRankId: "",
       employmentStatus: "Regular",
-      supervisorId: ""
+      supervisorId: "",
+      isUnitHead: false
     });
     setModalMode("create-pos");
   };
@@ -323,6 +476,7 @@ const OrgStructure: React.FC<Props> = ({
   const handleOpenEditPos = (pos: Position) => {
     setTargetUnitId(pos.orgUnitId);
     setEditingPosId(pos.id);
+    const unit = findUnit(orgUnits, pos.orgUnitId);
     setPosForm({
       title: pos.title,
       gradeId: pos.salaryGradeId || "",
@@ -330,7 +484,8 @@ const OrgStructure: React.FC<Props> = ({
       rankId: pos.rankId || "",
       subRankId: pos.subRankId || "",
       employmentStatus: pos.employmentStatus || "Regular",
-      supervisorId: pos.supervisorId || ""
+      supervisorId: pos.supervisorId || "",
+      isUnitHead: unit?.headPositionId === pos.id
     });
     setModalMode("edit-pos");
   };
@@ -441,6 +596,13 @@ const OrgStructure: React.FC<Props> = ({
     closeModal();
   };
 
+  const updateUnitHeadRecursive = (units: OrgUnit[], unitId: string, headPositionId: string | undefined): OrgUnit[] => {
+    return units.map(u => {
+      if (u.id === unitId) return { ...u, headPositionId };
+      return { ...u, children: updateUnitHeadRecursive(u.children, unitId, headPositionId) };
+    });
+  };
+
   const handleSubmitPos = () => {
     if (!targetUnitId || !posForm.title || !posForm.gradeId) return;
     const posData: Position = {
@@ -462,6 +624,14 @@ const OrgStructure: React.FC<Props> = ({
     } else {
       setPositions([...positions, posData]);
       toggleExpand(targetUnitId, true);
+    }
+    // Handle unit head designation
+    const unit = findUnit(orgUnits, targetUnitId);
+    if (posForm.isUnitHead) {
+      setOrgUnits(updateUnitHeadRecursive(orgUnits, targetUnitId, posData.id));
+    } else if (unit?.headPositionId === posData.id) {
+      // Unchecked and was previously head — clear it
+      setOrgUnits(updateUnitHeadRecursive(orgUnits, targetUnitId, undefined));
     }
     closeModal();
   };
@@ -1562,7 +1732,37 @@ const OrgStructure: React.FC<Props> = ({
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                  Supervisor Position <span className="text-slate-400 normal-case font-normal">(optional)</span>
+                </label>
+                <select
+                  className="w-full border border-slate-300 p-2.5 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-600 outline-none"
+                  value={posForm.supervisorId}
+                  onChange={(e) => setPosForm({ ...posForm, supervisorId: e.target.value })}
+                >
+                  <option value="">-- No Supervisor --</option>
+                  {positions
+                    .filter(p => p.id !== (editingPosId || ''))
+                    .map(p => (
+                      <option key={p.id} value={p.id}>{p.title}</option>
+                    ))}
+                </select>
+              </div>
 
+              <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="isUnitHead"
+                  checked={posForm.isUnitHead}
+                  onChange={(e) => setPosForm({ ...posForm, isUnitHead: e.target.checked })}
+                  className="w-4 h-4 accent-amber-600 cursor-pointer"
+                />
+                <label htmlFor="isUnitHead" className="text-xs font-bold text-amber-800 cursor-pointer select-none">
+                  Designate as unit head
+                  <span className="block font-normal text-amber-700 mt-0.5">This position anchors the approval chain for this org unit.</span>
+                </label>
+              </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1 flex justify-between items-center">
