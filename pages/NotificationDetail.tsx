@@ -621,7 +621,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'View Leave History', url: '/my-profile/leave' },
+    actionLink: { label: 'View Leave History', url: '/monitor/approvals' },
     metadata: [
       { label: 'Request ID', value: 'LR-2026-012' },
       { label: 'Approver', value: 'Maria Santos' }
@@ -663,7 +663,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </div>
       </div>
     ),
-    actionLink: { label: 'Submit New Request', url: '/my-profile/leave' },
+    actionLink: { label: 'Submit New Request', url: '/monitor/approvals' },
     metadata: [
       { label: 'Request ID', value: 'LR-2026-015' },
       { label: 'Rejected By', value: 'John Rivera' }
@@ -698,7 +698,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'View Leave Balances', url: '/my-profile/leave-balances' },
+    actionLink: { label: 'View Leave Balances', url: '/manage/leave-balances' },
     metadata: [
       { label: 'Leave Type', value: 'Sick Leave' },
       { label: 'Year', value: '2026' }
@@ -738,7 +738,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'View Attendance Record', url: '/my-profile/attendance' },
+    actionLink: { label: 'View Attendance Record', url: '/monitor/attendance' },
     metadata: [
       { label: 'Request ID', value: 'OT-2026-008' },
       { label: 'Status', value: 'Approved' }
@@ -773,7 +773,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'Request Time Adjustment', url: '/my-profile/attendance' },
+    actionLink: { label: 'Request Time Adjustment', url: '/monitor/attendance' },
     metadata: [
       { label: 'Date', value: 'January 9, 2026' },
       { label: 'Status', value: 'Pending Adjustment' }
@@ -858,7 +858,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'View Payslip', url: '/my-profile/payroll' },
+    actionLink: { label: 'View Payslip', url: '/manage/payroll' },
     metadata: [
       { label: 'Pay Period', value: 'Jan 1-15, 2026' },
       { label: 'Pay Date', value: 'January 15, 2026' }
@@ -890,7 +890,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'Download Form 2316', url: '/my-profile/payroll' },
+    actionLink: { label: 'Download Form 2316', url: '/manage/payroll' },
     metadata: [
       { label: 'Document', value: 'BIR Form 2316' },
       { label: 'Tax Year', value: '2025' }
@@ -926,7 +926,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'View Deductions', url: '/my-profile/payroll' },
+    actionLink: { label: 'View Deductions', url: '/manage/payroll' },
     metadata: [
       { label: 'Deduction Type', value: 'SSS Contribution' },
       { label: 'Effective', value: 'January 2026' }
@@ -1003,7 +1003,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'Upload Document', url: '/my-profile/documents' },
+    actionLink: { label: 'Upload Document', url: '/my-profile' },
     metadata: [
       { label: 'Document', value: 'NBI Clearance' },
       { label: 'Expires', value: 'Feb 28, 2026' }
@@ -1044,7 +1044,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'Start Evaluation', url: '/manage/employees' },
+    actionLink: { label: 'Start Evaluation', url: '/manage/employee' },
     metadata: [
       { label: 'Employee', value: 'Marcus Villanueva' },
       { label: 'Due', value: 'Jan 13, 2026' }
@@ -1095,7 +1095,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'View Contracts', url: '/manage/employees' },
+    actionLink: { label: 'View Contracts', url: '/manage/employee' },
     metadata: [
       { label: 'Total Expiring', value: '3 contracts' },
       { label: 'Window', value: '30 days' }
@@ -1144,7 +1144,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </div>
       </div>
     ),
-    actionLink: { label: 'View Onboarding Tasks', url: '/manage/employees' },
+    actionLink: { label: 'View Onboarding Tasks', url: '/manage/employee/onboarding' },
     metadata: [
       { label: 'Onboarding ID', value: 'OB-2026-001' },
       { label: 'Start Date', value: 'Jan 20, 2026' }
@@ -1186,7 +1186,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'View Schedule', url: '/settings/system' },
+    actionLink: { label: 'View Schedule', url: '/settings/overview' },
     metadata: [
       { label: 'Duration', value: '4 hours' },
       { label: 'Type', value: 'Planned Maintenance' }
@@ -1227,7 +1227,7 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
         </p>
       </div>
     ),
-    actionLink: { label: 'View Backup Logs', url: '/settings/system' },
+    actionLink: { label: 'View Backup Logs', url: '/settings/overview' },
     metadata: [
       { label: 'Backup ID', value: 'BK-2026-W01' },
       { label: 'Status', value: 'Complete' }

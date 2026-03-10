@@ -37,7 +37,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: 'Just now',
     type: 'Success',
     isRead: false,
-    link: '/my-profile/leave'
+    link: '/monitor/approvals'
   },
   {
     id: 'leave-2',
@@ -46,7 +46,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '1 hour ago',
     type: 'Error',
     isRead: false,
-    link: '/my-profile/leave'
+    link: '/monitor/approvals'
   },
   {
     id: 'leave-3',
@@ -55,7 +55,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '2 hours ago',
     type: 'Warning',
     isRead: false,
-    link: '/my-profile/leave-balances'
+    link: '/manage/leave-balances'
   },
   {
     id: 'ta-1',
@@ -74,7 +74,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '4 hours ago',
     type: 'Success',
     isRead: false,
-    link: '/my-profile/attendance'
+    link: '/monitor/attendance'
   },
   {
     id: 'att-2',
@@ -83,7 +83,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '5 hours ago',
     type: 'Warning',
     isRead: false,
-    link: '/my-profile/attendance'
+    link: '/monitor/attendance'
   },
   {
     id: 'att-3',
@@ -102,7 +102,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: 'Yesterday',
     type: 'Info',
     isRead: true,
-    link: '/my-profile/payroll'
+    link: '/manage/payroll'
   },
   {
     id: 'pay-2',
@@ -111,7 +111,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '2 days ago',
     type: 'Info',
     isRead: false,
-    link: '/my-profile/payroll'
+    link: '/manage/payroll'
   },
   {
     id: 'pay-3',
@@ -120,7 +120,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '3 days ago',
     type: 'Info',
     isRead: true,
-    link: '/my-profile/payroll'
+    link: '/manage/payroll'
   },
   // Employee profile updates
   {
@@ -139,7 +139,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '1 day ago',
     type: 'Warning',
     isRead: false,
-    link: '/my-profile/documents'
+    link: '/my-profile'
   },
   // HR task reminders
   {
@@ -149,7 +149,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '8 hours ago',
     type: 'Warning',
     isRead: false,
-    link: '/manage/employees'
+    link: '/manage/employee'
   },
   {
     id: 'hr-task-2',
@@ -158,7 +158,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '1 day ago',
     type: 'Warning',
     isRead: false,
-    link: '/manage/employees'
+    link: '/manage/employee'
   },
   {
     id: 'hr-task-3',
@@ -167,7 +167,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '2 days ago',
     type: 'Info',
     isRead: false,
-    link: '/manage/employees'
+    link: '/manage/employee/onboarding'
   },
   // System alerts related to HR processes
   {
@@ -177,7 +177,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '3 days ago',
     type: 'Info',
     isRead: true,
-    link: '/settings/system'
+    link: '/settings/overview'
   },
   {
     id: 'sys-3',
@@ -186,7 +186,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     timestamp: '4 days ago',
     type: 'Success',
     isRead: true,
-    link: '/settings/system'
+    link: '/settings/overview'
   },
   // Legacy notifications for backward compatibility
   {
