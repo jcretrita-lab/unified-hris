@@ -34,6 +34,7 @@ import BatchPayrollPage from './pages/BatchPayrollPage';
 import AttendanceMonitor from './pages/AttendanceMonitor';
 import OvertimeDetail from './pages/OvertimeDetail';
 import TimekeepingDetail from './pages/TimekeepingDetail';
+import AttendanceDetail from './pages/AttendanceDetail';
 import UserManagement from './pages/UserManagement';
 import NewOrganization from './pages/NewOrganization';
 import NewEmployee from './pages/NewEmployee';
@@ -165,7 +166,8 @@ const AnimatedRoutes = () => {
         {/* Attendance Routes */}
         <Route path="/monitor/attendance" element={<ProtectedRoute><PageWrapper><AttendanceMonitor /></PageWrapper></ProtectedRoute>} />
         <Route path="/monitor/attendance/overtime/:id" element={<ProtectedRoute><PageWrapper><OvertimeDetail /></PageWrapper></ProtectedRoute>} />
-        <Route path="/monitor/attendance/dtr/:id" element={<ProtectedRoute><PageWrapper><TimekeepingDetail /></PageWrapper></ProtectedRoute>} />
+        <Route path="/monitor/attendance/timekeeping/:id" element={<ProtectedRoute><PageWrapper><TimekeepingDetail /></PageWrapper></ProtectedRoute>} />
+        <Route path="/monitor/attendance/logs/:id" element={<ProtectedRoute><PageWrapper><AttendanceDetail /></PageWrapper></ProtectedRoute>} />
 
         <Route path="/monitor/reports" element={<ProtectedRoute><PageWrapper><ReportsPage /></PageWrapper></ProtectedRoute>} />
         <Route path="/monitor/reports/:id" element={<ProtectedRoute><PageWrapper><ReportDetail /></PageWrapper></ProtectedRoute>} />

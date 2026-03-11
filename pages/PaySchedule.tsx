@@ -11,15 +11,37 @@ import {
     Globe,
     Check,
     RotateCcw,
-    StickyNote
+    StickyNote,
+    Building2,
+    Briefcase,
+    User,
+    Search as SearchIcon
 } from 'lucide-react';
 import { PaySchedule, CutoffRange, MonthOverride } from '../types';
 import Modal from '../components/Modal';
 
-// --- Mock Data ---
 const MOCK_DIVISORS = [
     { id: 'div-1', name: '314 Days - Regular', days: 314 },
     { id: 'div-2', name: '288 Days - Compressed', days: 288 }
+];
+
+const MOCK_DEPARTMENTS = [
+    { id: 'dept-ops', name: 'Operations' },
+    { id: 'dept-exec', name: 'Executive' },
+    { id: 'dept-it', name: 'IT' },
+    { id: 'dept-hr', name: 'Human Resources' }
+];
+
+const MOCK_POSITIONS = [
+    { id: 'pos-01', name: 'Software Engineer' },
+    { id: 'pos-02', name: 'Account Manager' },
+    { id: 'pos-03', name: 'Department Head' }
+];
+
+const MOCK_EMPLOYEES = [
+    { id: 'emp-01', name: 'James Cordon' },
+    { id: 'emp-02', name: 'Louis Panganiban' },
+    { id: 'emp-03', name: 'Sarah Wilson' }
 ];
 
 export const INITIAL_SCHEDULES: PaySchedule[] = [
@@ -37,7 +59,8 @@ export const INITIAL_SCHEDULES: PaySchedule[] = [
         firstCutoffRange: { startDay: 1, endDay: 15, payDay: 20 },
         secondCutoffRange: { startDay: 16, endDay: 30, payDay: 5 },
         applyToAllMonths: true,
-        monthOverrides: []
+        monthOverrides: [],
+        universalCutoffId: '0-default-1'
     },
     {
         id: 'ps-002',
@@ -663,8 +686,8 @@ export const PaySchedulePage: React.FC = () => {
             id: activeId || Math.random().toString(36).substr(2, 9),
             name: editor.name!,
             frequency: editor.frequency!,
-            targetType: 'Global',
-            targetId: null,
+            targetType: editor.targetType || 'Global',
+            targetId: editor.targetId || null,
             firstCutoff: editor.firstCutoffRange?.endDay || editor.firstCutoff || 15,
             firstPayDate: editor.firstCutoffRange?.payDay || editor.firstPayDate || 30,
             secondCutoff: editor.secondCutoffRange?.endDay || editor.secondCutoff,
@@ -677,6 +700,7 @@ export const PaySchedulePage: React.FC = () => {
             dailyEndTime: editor.dailyEndTime,
             dailyPayTime: editor.dailyPayTime,
             monthOverrides: activeId ? (schedules.find(s => s.id === activeId)?.monthOverrides || []) : [],
+            universalCutoffId: editor.universalCutoffId,
         };
 
         if (activeId) {
@@ -750,18 +774,26 @@ export const PaySchedulePage: React.FC = () => {
                                     </span>
                                     {s.divisorId && (
                                         <span className="text-[10px] text-slate-400 font-bold border border-slate-200 px-2 py-0.5 rounded-lg">
-                                            {MOCK_DIVISORS.find(d => d.id === s.divisorId)?.days} Days
+                                            {MOCK_DIVISORS.find((d: any) => d.id === s.divisorId)?.days} Days
                                         </span>
                                     )}
-                                    {(s.monthOverrides?.length ?? 0) > 0 && (
-                                        <span className="text-[10px] text-indigo-500 font-bold border border-indigo-100 bg-indigo-50 px-2 py-0.5 rounded-lg">
-                                            {s.monthOverrides!.length} custom month{s.monthOverrides!.length > 1 ? 's' : ''}
+                                    {s.universalCutoffId && (
+                                        <span className="text-[10px] text-emerald-600 font-bold border border-emerald-100 bg-emerald-50 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                            <Globe size={10} /> Universal
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-1.5 mt-3 text-xs text-slate-400 font-medium">
-                                    <Globe size={14} />
-                                    <span className="truncate">All Employees</span>
+                                    {s.targetType === 'Global' && <Globe size={14} />}
+                                    {s.targetType === 'Department' && <Building2 size={14} />}
+                                    {s.targetType === 'Position' && <Briefcase size={14} />}
+                                    {s.targetType === 'Employee' && <User size={14} />}
+                                    <span className="truncate">
+                                        {s.targetType === 'Global' && 'All Employees'}
+                                        {s.targetType === 'Department' && (MOCK_DEPARTMENTS.find(d => d.id === s.targetId)?.name || 'Select Department')}
+                                        {s.targetType === 'Position' && (MOCK_POSITIONS.find(p => p.id === s.targetId)?.name || 'Select Position')}
+                                        {s.targetType === 'Employee' && (MOCK_EMPLOYEES.find(e => e.id === s.targetId)?.name || 'Select Employee')}
+                                    </span>
                                 </div>
                             </div>
                         ))}
@@ -786,6 +818,24 @@ export const PaySchedulePage: React.FC = () => {
                                     </span>
                                 </h2>
                                 <p className="text-sm text-slate-400 font-medium mt-1 flex items-center gap-2">
+                                    <span className="flex items-center gap-1.5 bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-bold border border-slate-200 uppercase tracking-wide">
+                                        {selectedSchedule.targetType === 'Global' && <Globe size={12} />}
+                                        {selectedSchedule.targetType === 'Department' && <Building2 size={12} />}
+                                        {selectedSchedule.targetType === 'Position' && <Briefcase size={12} />}
+                                        {selectedSchedule.targetType === 'Employee' && <User size={12} />}
+                                        {selectedSchedule.targetType === 'Global' && 'Global'}
+                                        {selectedSchedule.targetType === 'Department' && 'Department'}
+                                        {selectedSchedule.targetType === 'Position' && 'Position'}
+                                        {selectedSchedule.targetType === 'Employee' && 'Employee'}
+                                        {selectedSchedule.targetId && (
+                                            <>
+                                                <span className="text-slate-300 mx-1">|</span>
+                                                {selectedSchedule.targetType === 'Department' && (MOCK_DEPARTMENTS.find(d => d.id === selectedSchedule.targetId)?.name)}
+                                                {selectedSchedule.targetType === 'Position' && (MOCK_POSITIONS.find(p => p.id === selectedSchedule.targetId)?.name)}
+                                                {selectedSchedule.targetType === 'Employee' && (MOCK_EMPLOYEES.find(e => e.id === selectedSchedule.targetId)?.name)}
+                                            </>
+                                        )}
+                                    </span>
                                     {showYearView
                                         ? <>Year at a glance — {viewDate.getFullYear()} <span className="text-[10px] text-indigo-500 font-bold">• Click edit icon on any month to customize</span></>
                                         : <>Previewing <span className="text-slate-700 font-bold mx-1">{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
@@ -869,8 +919,11 @@ export const PaySchedulePage: React.FC = () => {
                                                         onClick={() => setSelectedViewCutoffId(c.id)}
                                                         className={`p-5 cursor-pointer transition-all hover:bg-slate-50 group ${isSelected ? 'bg-indigo-50 hover:bg-indigo-50 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
                                                     >
-                                                        <div className={`text-sm font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
-                                                            {c.name}
+                                                        <div className="flex items-center justify-between">
+                                                            <div className={`text-sm font-bold flex items-center gap-2 ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
+                                                                <Globe size={12} className={selectedSchedule.universalCutoffId === c.id ? 'text-emerald-500' : 'text-slate-300'} />
+                                                                {c.name}
+                                                            </div>
                                                         </div>
                                                         <div className="text-xs text-slate-500 mt-1.5 font-medium group-hover:text-slate-700 transition-colors">
                                                             {c.monthName} {c.range.startDay} - {c.monthName} {c.range.endDay}
@@ -1047,13 +1100,60 @@ export const PaySchedulePage: React.FC = () => {
                                                 onChange={e => setEditor({ ...editor, divisorId: e.target.value })}
                                             >
                                                 <option value="">Select a divisor...</option>
-                                                {MOCK_DIVISORS.map(d => (
+                                                {MOCK_DIVISORS.map((d: any) => (
                                                     <option key={d.id} value={d.id}>{d.name} ({d.days} days)</option>
                                                 ))}
                                             </select>
                                             <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Row 2: Assignment Logic */}
+                                <div className="grid grid-cols-4 gap-6">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Assign To</label>
+                                        <div className="relative">
+                                            <select
+                                                className="w-full border border-slate-200 p-3.5 rounded-2xl text-slate-900 text-sm font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none transition-all cursor-pointer shadow-sm"
+                                                value={editor.targetType}
+                                                onChange={e => setEditor({ ...editor, targetType: e.target.value as any, targetId: null })}
+                                            >
+                                                <option value="Global">Global (All Employees)</option>
+                                                <option value="Department">Department</option>
+                                                <option value="Position">Position</option>
+                                                <option value="Employee">Specific Employee</option>
+                                            </select>
+                                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
+                                        </div>
+                                    </div>
+
+                                    {editor.targetType !== 'Global' && (
+                                        <div className="col-span-3">
+                                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                                Select {editor.targetType}
+                                            </label>
+                                            <div className="relative">
+                                                <select
+                                                    className="w-full border border-slate-200 p-3.5 rounded-2xl text-slate-900 text-sm font-bold bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 outline-none appearance-none transition-all cursor-pointer shadow-sm"
+                                                    value={editor.targetId || ''}
+                                                    onChange={e => setEditor({ ...editor, targetId: e.target.value })}
+                                                >
+                                                    <option value="">Select Target...</option>
+                                                    {editor.targetType === 'Department' && MOCK_DEPARTMENTS.map((d: any) => (
+                                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                                    ))}
+                                                    {editor.targetType === 'Position' && MOCK_POSITIONS.map((p: any) => (
+                                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                                    ))}
+                                                    {editor.targetType === 'Employee' && MOCK_EMPLOYEES.map((e: any) => (
+                                                        <option key={e.id} value={e.id}>{e.name}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 rotate-90 pointer-events-none" size={16} />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -1104,8 +1204,25 @@ export const PaySchedulePage: React.FC = () => {
                                                             onClick={() => setSelectedCutoffId(c.id)}
                                                             className={`p-4 cursor-pointer transition-all hover:bg-white group ${isSelected ? 'bg-indigo-50 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
                                                         >
-                                                            <div className={`text-sm font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
-                                                                {c.name}
+                                                            <div className="flex items-center justify-between">
+                                                                <div className={`text-sm font-bold flex items-center gap-2 ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
+                                                                    <Globe size={12} className={editor.universalCutoffId === c.id ? 'text-emerald-500' : 'text-slate-300'} />
+                                                                    {c.name}
+                                                                </div>
+                                                                <label
+                                                                    className="p-1 hover:bg-white rounded transition-colors group/check"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                >
+                                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${editor.universalCutoffId === c.id ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 bg-white group-hover/check:border-emerald-300'}`}>
+                                                                        {editor.universalCutoffId === c.id && <Check size={10} className="text-white" />}
+                                                                    </div>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className="hidden"
+                                                                        checked={editor.universalCutoffId === c.id}
+                                                                        onChange={() => setEditor({ ...editor, universalCutoffId: editor.universalCutoffId === c.id ? undefined : c.id })}
+                                                                    />
+                                                                </label>
                                                             </div>
                                                             <div className="text-xs text-slate-500 mt-1 font-medium group-hover:text-slate-700 transition-colors">
                                                                 {c.monthName} {c.range.startDay} - {c.monthName} {c.range.endDay}
@@ -1122,9 +1239,14 @@ export const PaySchedulePage: React.FC = () => {
                                         {/* Right Panel: Calendar / Date Picker View */}
                                         <div className="w-2/3 border border-slate-200 rounded-2xl overflow-y-auto bg-white p-8">
                                             <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
-                                                <div className="flex items-center gap-2 text-sm font-bold text-indigo-900 uppercase tracking-wide">
+                                                <div className="flex items-center gap-3 text-sm font-bold text-indigo-900 uppercase tracking-wide">
                                                     <CalendarRange size={18} className="text-indigo-500" />
                                                     Configure {activeCutoff?.name} ({activeCutoff?.monthName})
+                                                    {editor.universalCutoffId === activeCutoff?.id && (
+                                                        <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                                                            <Globe size={10} /> Universal Reference
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 {/* Apply to all months toggle - inside right panel header */}

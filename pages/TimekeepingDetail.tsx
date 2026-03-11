@@ -4,15 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Eye,
-  Edit2,
-  Calendar,
-  Clock,
-  Save,
-  FileText,
   CheckCircle2,
-  AlertCircle,
-  MoreHorizontal,
-  PenTool,
   Lock,
   Unlock,
   AlertTriangle,
@@ -20,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import Modal from '../components/Modal';
+import { useBreadcrumb } from '../context/BreadcrumbContext';
 
 // Mock Data Types
 interface DtrLog {
@@ -52,7 +45,7 @@ const MOCK_DTR_LOGS: DtrLog[] = [
   { id: '1', date: 'August 6, 2025', day: 'Wed', shift: '8:00 AM - 5:00 PM', timeIn: '8:00:00 AM', dateOut: 'August 6, 2025', timeOut: '5:00:00 PM', isRestDay: false, isWorkSchedule: true, isHoliday: false, hasFile: true, lastModifiedBy: 'System', lastModifiedAt: '2025-08-06 17:30' },
   { id: '2', date: 'August 7, 2025', day: 'Thu', shift: '8:00 AM - 5:00 PM', timeIn: '8:05:00 AM', dateOut: 'August 7, 2025', timeOut: '5:10:00 PM', isRestDay: false, isWorkSchedule: true, isHoliday: false, hasFile: true, lastModifiedBy: 'Admin Jane', lastModifiedAt: '2025-08-08 09:12' },
   { id: '3', date: 'August 8, 2025', day: 'Fri', shift: '8:00 AM - 5:00 PM', timeIn: '8:00:00 AM', dateOut: 'August 8, 2025', timeOut: '5:00:00 PM', isRestDay: false, isWorkSchedule: true, isHoliday: false, hasFile: true },
-  { id: '4', date: 'August 9, 2025', day: 'Sat', shift: '10:00 PM - 7:00 AM', timeIn: '8:00:00 AM', dateOut: 'August 9, 2025', timeOut: '7:00:00 PM', isRestDay: true, isWorkSchedule: false, isHoliday: false, hasFile: false }, // Wireframe specific
+  { id: '4', date: 'August 9, 2025', day: 'Sat', shift: '10:00 PM - 7:00 AM', timeIn: '8:00:00 AM', dateOut: 'August 9, 2025', timeOut: '7:00:00 PM', isRestDay: true, isWorkSchedule: false, isHoliday: false, hasFile: false },
   { id: '5', date: 'August 21, 2025', day: 'Mon', shift: '8:00 AM - 5:00 PM', timeIn: '8:00:00 AM', dateOut: 'August 21, 2025', timeOut: '5:00:00 PM', isRestDay: false, isWorkSchedule: true, isHoliday: true, hasFile: true },
 ];
 
@@ -65,9 +58,14 @@ const MOCK_OT_LOGS: DtrOvertime[] = [
 const TimekeepingDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { setPageTitle } = useBreadcrumb();
   const [isEditMode, setIsEditMode] = useState(false);
   const [isOnHold, setIsOnHold] = useState(false);
   const [showAuditHistory, setShowAuditHistory] = useState(false);
+
+  React.useEffect(() => {
+    setPageTitle('Timekeeping Summary');
+  }, [setPageTitle]);
 
   // Local state to manage edits
   const [logs, setLogs] = useState<DtrLog[]>(MOCK_DTR_LOGS);
@@ -159,7 +157,7 @@ const TimekeepingDetail: React.FC = () => {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h3 className="text-2xl font-bold text-slate-800">Daily Time Record</h3>
+              <h3 className="text-2xl font-bold text-slate-800">Timekeeping Summary</h3>
               {isEditMode && <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200">Editable</span>}
             </div>
             <button
@@ -403,11 +401,7 @@ const TimekeepingDetail: React.FC = () => {
                 <History size={20} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <span className="text-slate-400 text-sm font-medium">Timekeeping Detail</span>
-                  <span className="text-slate-200">/</span>
-                  <span>Audit History</span>
-                </h3>
+                <h3 className="text-xl font-bold text-slate-800">Audit History</h3>
                 <p className="text-xs text-slate-500 font-medium">Tracking all manual overrides and record adjustments</p>
               </div>
             </div>
@@ -415,53 +409,9 @@ const TimekeepingDetail: React.FC = () => {
               <X size={20} />
             </button>
           </div>
-
-          <div className="space-y-6">
-            {logs.filter(log => log.lastModifiedBy).length > 0 ? (
-              <div className="relative">
-                <div className="absolute left-[21px] top-2 bottom-2 w-0.5 bg-slate-100"></div>
-                <div className="space-y-8">
-                  {logs.filter(log => log.lastModifiedBy).map((log, idx) => (
-                    <div key={log.id} className="relative pl-12">
-                      <div className="absolute left-0 top-1 w-[44px] h-[44px] rounded-full bg-white border-2 border-slate-100 flex items-center justify-center z-10">
-                        <PenTool size={18} className="text-slate-400" />
-                      </div>
-                      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-sm font-bold text-slate-900">{log.lastModifiedBy} modified {log.date}</span>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{log.lastModifiedAt}</span>
-                        </div>
-                        <p className="text-xs text-slate-600 mb-3 leading-relaxed">
-                          Record override for <span className="font-bold">{log.day}</span>.
-                          Adjusted Time In to <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded italic">{log.timeIn}</span> and
-                          Time Out to <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded italic">{log.timeOut}</span>.
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[9px] font-black text-slate-400 uppercase tracking-tighter shadow-sm">Manual Override</span>
-                          <span className="px-2 py-0.5 bg-amber-50 border border-amber-100 rounded text-[9px] font-black text-amber-600 uppercase tracking-tighter shadow-sm">Verified</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="py-12 text-center">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                  <History size={24} className="text-slate-300" />
-                </div>
-                <p className="text-sm font-bold text-slate-400 italic">No override history found for this period.</p>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-10 pt-6 border-t border-slate-100">
-            <button
-              onClick={() => setShowAuditHistory(false)}
-              className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95"
-            >
-              Close History
-            </button>
+          <div className="py-12 text-center">
+            <History size={48} className="mx-auto text-slate-200 mb-4" />
+            <p className="text-slate-500 font-bold">No history available for this period.</p>
           </div>
         </div>
       </Modal>

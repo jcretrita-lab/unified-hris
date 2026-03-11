@@ -31,12 +31,18 @@ import {
     ClipboardCheck,
     Zap,
     Star,
-    Activity
+    Activity,
+    Upload,
+    Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useBreadcrumb } from '../context/BreadcrumbContext';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import { TimekeepingFileTemplate } from '../components/TimekeepingFileTemplate';
+import { TimeCollectionDeviceRecord } from './attendance-sources/TimeCollectionDeviceRecord';
+import { ODTRs } from './attendance-sources/ODTRs';
+import { AttendanceAdjustmentRecord } from './attendance-sources/AttendanceAdjustmentRecord';
 
 // --- Types ---
 type AttendanceStatus = 'Verified' | 'Pending' | 'Absent' | 'On Leave' | 'Holiday' | 'Approved' | 'Late';
@@ -50,12 +56,10 @@ interface AttendanceRecord {
         avatar: string;
         department: string;
     };
-    date: string;
-    shift: string;
-    timeIn: string;
-    timeOut: string;
+    date: string; // Keeps this for the heatmap use case, although not shown in table, maybe? Wait. The user said: "remove date, status, shift... and add status..." Let's keep date for the heatmap logic, but add our new fields.
     status: AttendanceStatus;
-    fileType: FileType;
+    lastModified: string;
+    lastModifiedBy: string;
 }
 
 interface OvertimeRecord {
@@ -91,70 +95,80 @@ interface SummaryRecord {
 const MOCK_RECORDS: AttendanceRecord[] = [
     {
         id: 'att-1',
-        employee: { name: 'James Cordon', role: 'IT Developer Intern', avatar: 'JC', department: 'IT Department' },
-        date: 'Aug 09, 2025',
-        shift: '8:00 AM - 6:00 PM',
-        timeIn: '8:01:00 AM',
-        timeOut: '6:00:00 PM',
+        employee: {
+            name: 'Sarah Wilson',
+            role: 'Product Designer',
+            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&auto=format&fit=crop',
+            department: 'Design Studio'
+        },
+        date: 'Aug 21, 2025',
         status: 'Verified',
-        fileType: 'Biometrics'
+        lastModified: 'Aug 21, 2025',
+        lastModifiedBy: 'System Auto-Sync'
     },
     {
         id: 'att-2',
-        employee: { name: 'James Cordon', role: 'IT Developer Intern', avatar: 'JC', department: 'IT Department' },
-        date: 'Aug 08, 2025',
-        shift: '8:00 AM - 6:00 PM',
-        timeIn: '9:45:00 AM',
-        timeOut: '6:00:00 PM',
-        status: 'Late',
-        fileType: 'ODTR'
+        employee: {
+            name: 'Michael Chen',
+            role: 'Frontend Dev',
+            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&auto=format&fit=crop',
+            department: 'Development'
+        },
+        date: 'Aug 21, 2025',
+        status: 'Pending',
+        lastModified: 'Aug 21, 2025',
+        lastModifiedBy: 'Michael Chen'
     },
     {
         id: 'att-3',
-        employee: { name: 'Louis Panganiban', role: 'Senior Developer', avatar: 'LP', department: 'IT Department' },
-        date: 'Aug 08, 2025',
-        shift: '7:00 AM - 5:00 PM',
-        timeIn: '-',
-        timeOut: '-',
-        status: 'Pending',
-        fileType: 'ODTR'
+        employee: {
+            name: 'Emily Davis',
+            role: 'Marketing Lead',
+            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&auto=format&fit=crop',
+            department: 'Growth HQ'
+        },
+        date: 'Aug 21, 2025',
+        status: 'Late',
+        lastModified: 'Aug 21, 2025',
+        lastModifiedBy: 'Emily Davis'
     },
     {
         id: 'att-4',
-        employee: { name: 'Sarah Wilson', role: 'HR Manager', avatar: 'SW', department: 'HR Department' },
-        date: 'Aug 08, 2025',
-        shift: '9:00 AM - 6:00 PM',
-        timeIn: '8:55:00 AM',
-        timeOut: '6:05:00 PM',
-        status: 'Verified',
-        fileType: 'Biometrics'
+        employee: {
+            name: 'James Cordon',
+            role: 'HR Manager',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&auto=format&fit=crop',
+            department: 'People Ops'
+        },
+        date: 'Aug 21, 2025',
+        status: 'On Leave',
+        lastModified: 'Aug 19, 2025',
+        lastModifiedBy: 'James Cordon'
     },
     {
         id: 'att-5',
-        employee: { name: 'Mike Brown', role: 'Payroll Specialist', avatar: 'MB', department: 'Finance' },
-        date: 'Aug 08, 2025',
-        shift: '8:00 AM - 5:00 PM',
-        timeIn: '-',
-        timeOut: '-',
-        status: 'On Leave',
-        fileType: 'System'
-    },
-    {
-        id: 'att-6',
-        employee: { name: 'Louis Panganiban', role: 'Senior Developer', avatar: 'LP', department: 'IT Department' },
-        date: 'Aug 09, 2025',
-        shift: '7:00 AM - 5:00 PM',
-        timeIn: '-',
-        timeOut: '-',
+        employee: {
+            name: 'Robert Fox',
+            role: 'Sales Executive',
+            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&auto=format&fit=crop',
+            department: 'Sales Team'
+        },
+        date: 'Aug 21, 2025',
         status: 'Absent',
-        fileType: 'System'
-    },
+        lastModified: 'Aug 21, 2025',
+        lastModifiedBy: 'System Auto-Sync'
+    }
 ];
 
 const MOCK_OVERTIME: OvertimeRecord[] = [
     {
         id: 'ot-1',
-        employee: { name: 'James Cordon', role: 'IT Developer Intern', avatar: 'JC', department: 'IT Department' },
+        employee: {
+            name: 'James Cordon',
+            role: 'IT Developer Intern',
+            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&auto=format&fit=crop',
+            department: 'IT Department'
+        },
         date: 'Aug 04, 2025',
         shift: '8:00 AM - 5:00 PM',
         clockOut: '08:30 PM',
@@ -164,7 +178,12 @@ const MOCK_OVERTIME: OvertimeRecord[] = [
     },
     {
         id: 'ot-2',
-        employee: { name: 'Louis Panganiban', role: 'Senior Developer', avatar: 'LP', department: 'IT Department' },
+        employee: {
+            name: 'Louis Panganiban',
+            role: 'Senior Developer',
+            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&auto=format&fit=crop',
+            department: 'IT Department'
+        },
         date: 'Aug 05, 2025',
         shift: '8:00 AM - 5:00 PM',
         clockOut: '07:00 PM',
@@ -174,7 +193,12 @@ const MOCK_OVERTIME: OvertimeRecord[] = [
     },
     {
         id: 'ot-3',
-        employee: { name: 'Sarah Wilson', role: 'HR Manager', avatar: 'SW', department: 'HR Department' },
+        employee: {
+            name: 'Sarah Wilson',
+            role: 'HR Manager',
+            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&auto=format&fit=crop',
+            department: 'HR Department'
+        },
         date: 'Aug 06, 2025',
         shift: '9:00 AM - 6:00 PM',
         clockOut: '08:00 PM',
@@ -184,7 +208,12 @@ const MOCK_OVERTIME: OvertimeRecord[] = [
     },
     {
         id: 'ot-4',
-        employee: { name: 'Mike Brown', role: 'Payroll Specialist', avatar: 'MB', department: 'Finance' },
+        employee: {
+            name: 'Mike Brown',
+            role: 'Payroll Specialist',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&auto=format&fit=crop',
+            department: 'Finance'
+        },
         date: 'Aug 07, 2025',
         shift: '8:00 AM - 5:00 PM',
         clockOut: '09:00 PM',
@@ -197,28 +226,48 @@ const MOCK_OVERTIME: OvertimeRecord[] = [
 const MOCK_SUMMARY: SummaryRecord[] = [
     {
         id: 'sum-1',
-        employee: { name: 'James Cordon', role: 'IT Developer Intern', avatar: 'JC', department: 'IT Department' },
+        employee: {
+            name: 'James Cordon',
+            role: 'IT Developer Intern',
+            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&auto=format&fit=crop',
+            department: 'IT Department'
+        },
         period: 'Aug 6 - Aug 20, 2025',
         dtrStatus: 'Complete',
         fileStatus: 'Uploaded'
     },
     {
         id: 'sum-2',
-        employee: { name: 'Louis Panganiban', role: 'Senior Developer', avatar: 'LP', department: 'IT Department' },
+        employee: {
+            name: 'Louis Panganiban',
+            role: 'Senior Developer',
+            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&auto=format&fit=crop',
+            department: 'IT Department'
+        },
         period: 'Aug 6 - Aug 20, 2025',
         dtrStatus: 'Pending Review',
         fileStatus: 'Uploaded'
     },
     {
         id: 'sum-3',
-        employee: { name: 'Sarah Wilson', role: 'HR Manager', avatar: 'SW', department: 'HR Department' },
+        employee: {
+            name: 'Sarah Wilson',
+            role: 'HR Manager',
+            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&auto=format&fit=crop',
+            department: 'HR Department'
+        },
         period: 'Aug 6 - Aug 20, 2025',
         dtrStatus: 'Complete',
         fileStatus: 'Uploaded'
     },
     {
         id: 'sum-4',
-        employee: { name: 'Mike Brown', role: 'Payroll Specialist', avatar: 'MB', department: 'Finance' },
+        employee: {
+            name: 'Mike Brown',
+            role: 'Payroll Specialist',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&auto=format&fit=crop',
+            department: 'Finance'
+        },
         period: 'Aug 6 - Aug 20, 2025',
         dtrStatus: 'Incomplete',
         fileStatus: 'Missing'
@@ -236,10 +285,10 @@ const HEATMAP_DATES = Array.from({ length: 15 }, (_, i) => {
 });
 
 const EMPLOYEES = [
-    { id: 'e1', name: 'James Cordon', role: 'IT Developer Intern' },
-    { id: 'e2', name: 'Louis Panganiban', role: 'Senior Developer' },
-    { id: 'e3', name: 'Sarah Wilson', role: 'HR Manager' },
-    { id: 'e4', name: 'Mike Brown', role: 'Payroll Specialist' },
+    { id: 'e1', name: 'James Cordon', role: 'IT Developer Intern', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&auto=format&fit=crop' },
+    { id: 'e2', name: 'Louis Panganiban', role: 'Senior Developer', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&auto=format&fit=crop' },
+    { id: 'e3', name: 'Sarah Wilson', role: 'HR Manager', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&auto=format&fit=crop' },
+    { id: 'e4', name: 'Mike Brown', role: 'Payroll Specialist', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&auto=format&fit=crop' },
 ];
 
 const generateHeatmapStatus = (empId: string, day: number): AttendanceStatus => {
@@ -253,10 +302,30 @@ const generateHeatmapStatus = (empId: string, day: number): AttendanceStatus => 
     return 'Verified';
 };
 
+const Avatar: React.FC<{ src?: string, initials: string, className?: string, online?: boolean }> = ({ src, initials, className = "w-10 h-10", online }) => (
+    <div className="relative">
+        <div className={`${className} rounded-[30%] bg-white flex items-center justify-center text-xs font-bold text-slate-600 border border-slate-100 overflow-hidden shadow-sm ring-4 ring-slate-50 transition-all duration-300 group-hover:scale-105 group-hover:shadow-md`}>
+            {src ? (
+                <img src={src} alt={initials} className="w-full h-full object-cover" />
+            ) : (
+                initials
+            )}
+        </div>
+        {online && (
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-lg border border-slate-50">
+                <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+            </div>
+        )}
+    </div>
+);
+
 const AttendanceMonitor: React.FC = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'Daily Time Record' | 'Overtime' | 'Timekeeping Summary Record'>('Daily Time Record');
+    const { setPageTitle } = useBreadcrumb();
+    const [activeTab, setActiveTab] = useState<'Attendance Sources' | 'Daily Time Record' | 'Overtime' | 'Timekeeping Summary'>('Attendance Sources');
+    const [activeSourceTab, setActiveSourceTab] = useState<'Time Collection Device' | 'Online Daily Time Record' | 'Attendance Adjustment Record'>('Time Collection Device');
     const [viewMode, setViewMode] = useState<'table' | 'heatmap'>('table');
+
     const [searchTerm, setSearchTerm] = useState('');
     const [hoveredData, setHoveredData] = useState<{ record: any; x: number; y: number } | null>(null);
 
@@ -373,9 +442,12 @@ const AttendanceMonitor: React.FC = () => {
 
                 <div className="p-4">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-slate-200">
-                            {data.employee.avatar}
-                        </div>
+                        <Avatar
+                            src={data.employee.avatar}
+                            initials={data.employee.avatar.length > 2 ? data.employee.name.split(' ').map((n: string) => n[0]).join('') : data.employee.avatar}
+                            className="w-10 h-10 shadow-lg shadow-slate-200 ring-2 ring-white"
+                            online={data.employee.name === 'James Cordon' || data.employee.name === 'Sarah Wilson'}
+                        />
                         <div>
                             <div className="text-sm font-bold text-slate-900">{data.employee.name}</div>
                             <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{data.employee.department}</div>
@@ -414,7 +486,7 @@ const AttendanceMonitor: React.FC = () => {
             {/* Tabs */}
             <div className="border-b border-slate-200">
                 <nav className="flex gap-8">
-                    {['Daily Time Record', 'Overtime', 'Timekeeping Summary Record'].map((tab) => (
+                    {['Attendance Sources', 'Daily Time Record', 'Overtime', 'Timekeeping Summary'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab as any)}
@@ -428,6 +500,14 @@ const AttendanceMonitor: React.FC = () => {
                     ))}
                 </nav>
             </div>
+
+            {activeTab === 'Attendance Sources' && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                    {activeSourceTab === 'Time Collection Device' && <TimeCollectionDeviceRecord activeSourceTab={activeSourceTab} setActiveSourceTab={setActiveSourceTab} />}
+                    {activeSourceTab === 'Online Daily Time Record' && <ODTRs activeSourceTab={activeSourceTab} setActiveSourceTab={setActiveSourceTab} />}
+                    {activeSourceTab === 'Attendance Adjustment Record' && <AttendanceAdjustmentRecord activeSourceTab={activeSourceTab} setActiveSourceTab={setActiveSourceTab} />}
+                </div>
+            )}
 
             {activeTab === 'Daily Time Record' && (
                 <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm min-h-[600px] flex flex-col animate-in fade-in slide-in-from-bottom-4">
@@ -515,9 +595,12 @@ const AttendanceMonitor: React.FC = () => {
                                             <div key={employee.id} className="flex items-center group">
                                                 {/* Employee Label */}
                                                 <div className="w-[240px] pr-8 flex items-center gap-3 shrink-0">
-                                                    <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-slate-100 border border-white group-hover:scale-110 transition-transform">
-                                                        {employee.name.split(' ').map(n => n[0]).join('')}
-                                                    </div>
+                                                    <Avatar
+                                                        src={employee.avatar}
+                                                        initials={employee.name.split(' ').map(n => n[0]).join('')}
+                                                        className="w-9 h-9"
+                                                        online={employee.name === 'James Cordon' || employee.name === 'Sarah Wilson'}
+                                                    />
                                                     <div className="overflow-hidden">
                                                         <div className="text-sm font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">{employee.name}</div>
                                                         <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate">{employee.role}</div>
@@ -529,7 +612,7 @@ const AttendanceMonitor: React.FC = () => {
                                                     {HEATMAP_DATES.map((date, idx) => {
                                                         const status = generateHeatmapStatus(employee.id, date.day);
                                                         const record = {
-                                                            employee: { name: employee.name, avatar: employee.name.split(' ').map(n => n[0]).join(''), department: 'IT Department' },
+                                                            employee: { name: employee.name, avatar: employee.avatar, department: 'IT Department' },
                                                             date: date.label + ', 2025',
                                                             shift: '8:00 AM - 5:00 PM',
                                                             timeIn: status === 'Absent' || status === 'On Leave' ? '-' : '08:00 AM',
@@ -561,57 +644,56 @@ const AttendanceMonitor: React.FC = () => {
                             <table className="min-w-full divide-y divide-slate-50">
                                 <thead className="bg-slate-50/50 text-left">
                                     <tr>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-600 group">
-                                            Employee Name <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">↓</span>
-                                        </th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Shift</th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time In</th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Time Out</th>
-                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">File Type</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Employee</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Department</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Modified</th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Modified By</th>
                                         <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
                                     {filteredRecords.map((item) => (
-                                        <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
+                                        <tr
+                                            key={item.id}
+                                            className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                                            onClick={() => navigate(`/monitor/attendance/logs/${item.employee.name}`)}
+                                        >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 border border-slate-200">
-                                                        {item.employee.avatar}
-                                                    </div>
+                                                    <Avatar
+                                                        src={item.employee.avatar}
+                                                        initials={item.employee.avatar.length > 2 ? item.employee.name.split(' ').map(n => n[0]).join('') : item.employee.avatar}
+                                                        online={item.employee.name === 'James Cordon' || item.employee.name === 'Sarah Wilson'}
+                                                    />
                                                     <div>
                                                         <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{item.employee.name}</div>
                                                         <div className="text-[10px] text-slate-500 font-medium">{item.employee.role}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide border ${getStatusColor(item.status, 'text')}`}>
                                                     {item.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">
-                                                {item.date}
+                                            <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-700">
+                                                {item.employee.department}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500 font-medium">
-                                                {item.shift}
+                                            <td className="px-6 py-4 whitespace-nowrap text-xs font-medium text-slate-500">
+                                                {item.lastModified}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap font-mono text-xs font-bold text-slate-700">
-                                                {item.timeIn}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap font-mono text-xs font-bold text-slate-700">
-                                                {item.timeOut}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getFileBadge(item.fileType)}`}>
-                                                    {item.fileType}
-                                                </span>
+                                            <td className="px-6 py-4 whitespace-nowrap text-xs font-medium text-slate-600">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-500">
+                                                        {item.lastModifiedBy.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                                                    </div>
+                                                    {item.lastModifiedBy}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-bold hover:bg-slate-800 transition-all shadow-sm">
-                                                    View File
+                                                    View Details
                                                 </button>
                                             </td>
                                         </tr>
@@ -623,7 +705,9 @@ const AttendanceMonitor: React.FC = () => {
 
                     {/* Footer Pagination */}
                     <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-2">Showing {filteredRecords.length} Records</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-2">
+                            Showing {filteredRecords.length} Records
+                        </span>
                         <div className="flex gap-2">
                             <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 disabled:opacity-50 transition-all"><ChevronLeft size={16} /></button>
                             <div className="flex gap-1">
@@ -682,9 +766,7 @@ const AttendanceMonitor: React.FC = () => {
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 border border-slate-200">
-                                                        {ot.employee.avatar}
-                                                    </div>
+                                                    <Avatar src={ot.employee.avatar} initials={ot.employee.avatar.length > 2 ? ot.employee.name.split(' ').map(n => n[0]).join('') : ot.employee.avatar} />
                                                     <div>
                                                         <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{ot.employee.name}</div>
                                                         <div className="text-[10px] text-slate-500 font-medium">{ot.employee.role}</div>
@@ -741,8 +823,8 @@ const AttendanceMonitor: React.FC = () => {
                 </div>
             )}
 
-            {/* --- TIMEKEEPING SUMMARY RECORD TAB --- */}
-            {activeTab === 'Timekeeping Summary Record' && (
+            {/* --- TIMEKEEPING SUMMARY TAB --- */}
+            {activeTab === 'Timekeeping Summary' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                     <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
 
@@ -788,9 +870,10 @@ const AttendanceMonitor: React.FC = () => {
                                         <tr key={sum.id} className="hover:bg-slate-50/80 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 border border-slate-200">
-                                                        {sum.employee.avatar}
-                                                    </div>
+                                                    <Avatar
+                                                        src={sum.employee.avatar}
+                                                        initials={sum.employee.avatar.length > 2 ? sum.employee.name.split(' ').map(n => n[0]).join('') : sum.employee.avatar}
+                                                    />
                                                     <div>
                                                         <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{sum.employee.name}</div>
                                                         <div className="text-[10px] text-slate-500 font-medium">{sum.employee.role}</div>
@@ -803,7 +886,7 @@ const AttendanceMonitor: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <button
-                                                    onClick={() => navigate(`/monitor/attendance/dtr/${sum.id}`)}
+                                                    onClick={() => navigate(`/monitor/attendance/timekeeping/${sum.id}`)}
                                                     className="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95"
                                                 >
                                                     View Record

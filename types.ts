@@ -64,7 +64,7 @@ export interface PaySchedule {
   id: string;
   name: string;
   frequency: 'Weekly' | 'Semi-Monthly' | 'Monthly' | 'Daily';
-  targetType: 'Global' | 'Department' | 'Position';
+  targetType: 'Global' | 'Department' | 'Position' | 'Employee';
   targetId: string | null;
   firstCutoff?: number;
   firstPayDate?: number | string;
@@ -79,6 +79,7 @@ export interface PaySchedule {
   dailyStartTime?: string;
   dailyEndTime?: string;
   dailyPayTime?: string;
+  universalCutoffId?: string;
 }
 
 export interface Divisor {

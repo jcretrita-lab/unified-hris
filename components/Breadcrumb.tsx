@@ -40,8 +40,8 @@ const Breadcrumb: React.FC = () => {
       // Skip group-only namespace prefixes that have no own page
       if (HIDDEN_SEGMENTS.has(segment)) continue;
 
-      const knownLabel = SEGMENT_LABELS[segment];
-      const label = knownLabel ?? 'Details';
+      const label = SEGMENT_LABELS[segment];
+      if (!label) continue;
 
       // 'settings' alone has no route; send it to the settings landing page
       const resolvedPath =

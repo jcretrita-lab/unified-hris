@@ -37,7 +37,8 @@ export const SEGMENT_LABELS: Record<string, string> = {
   notifications: 'Notifications',
   attendance: 'Attendance',
   overtime: 'Overtime',
-  dtr: 'Timekeeping',
+  timekeeping: 'Timekeeping Summary',
+  logs: 'Daily Time Record',
   reports: 'Reports',
 
   // /settings/*
@@ -64,4 +65,4 @@ export const SEGMENT_LABELS: Record<string, string> = {
  * page of their own. Skipped in breadcrumb rendering and ignored when
  * building global search item labels.
  */
-export const HIDDEN_SEGMENTS = new Set(['manage', 'monitor']);
+export const HIDDEN_SEGMENTS = new Set(['manage', 'monitor', 'dtr']);
