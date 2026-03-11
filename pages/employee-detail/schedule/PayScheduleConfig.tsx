@@ -1,5 +1,7 @@
-import React from 'react';
-import { PaySchedule, Employee } from '../../../types';
+import React, { useMemo, useState } from 'react';
+import { CalendarRange } from 'lucide-react';
+import { PaySchedule, Employee, CutoffRange } from '../../../types';
+import { DateRangePicker } from '../../PaySchedule';
 
 interface PayScheduleConfigProps {
     isEmployeeView: boolean;
@@ -17,71 +19,100 @@ const PayScheduleConfig: React.FC<PayScheduleConfigProps> = ({
     onSave
 }) => {
     const selectedSchedule = paySchedules.find(ps => ps.id === empData.payScheduleId);
+    
+    // We only need the current year for employee config preview
+    const viewDate = new Date();
+    const [selectedViewCutoffId, setSelectedViewCutoffId] = useState<string>('0-default-1');
 
-    // Calendar logic matching the current month for visual preview
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDow = new Date(year, month, 1).getDay();
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const viewYearlyCutoffs = useMemo(() => {
+        if (!selectedSchedule) return [];
+        const list: any[] = [];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    // Helper to figure out if a day falls on a Pay Date or Cutoff Range
-    const getDayClass = (day: number) => {
-        if (!selectedSchedule) return 'text-slate-400';
+        if (selectedSchedule.frequency === 'Semi-Monthly' || selectedSchedule.frequency === 'Monthly') {
+            for (let i = 0; i < 12; i++) {
+                const override = selectedSchedule.monthOverrides?.find(o => o.month === i && o.year === viewDate.getFullYear());
+                let cutoffs: CutoffRange[] = [];
 
-        // Exact Pay Dates
-        if (day === selectedSchedule.firstPayDate || day === selectedSchedule.secondPayDate) {
-            return 'bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-200';
+                if (override && override.cutoffs && override.cutoffs.length > 0) {
+                    cutoffs = override.cutoffs;
+                } else {
+                    if (selectedSchedule.frequency === 'Semi-Monthly') {
+                        cutoffs = [
+                            ...(selectedSchedule.extraCutoffs || []),
+                            selectedSchedule.firstCutoffRange || { startDay: 1, endDay: 10, payDay: 15 },
+                            selectedSchedule.secondCutoffRange || { startDay: 11, endDay: 25, payDay: 30 }
+                        ];
+                    } else if (selectedSchedule.frequency === 'Monthly') {
+                        cutoffs = [
+                            ...(selectedSchedule.extraCutoffs || []),
+                            selectedSchedule.firstCutoffRange || { startDay: 1, endDay: 25, payDay: 30 }
+                        ];
+                    }
+                }
+
+                const baseCount = selectedSchedule.frequency === 'Semi-Monthly' ? 2 : 1;
+                const extraCount = cutoffs.length - baseCount;
+
+                cutoffs.forEach((c, idx) => {
+                    const isExtra = idx < extraCount;
+                    const defaultIdx = idx - extraCount + 1;
+                    let name = 'New Cutoff';
+                    if (!isExtra) {
+                        const localBaseIdx = idx - extraCount;
+                        if (selectedSchedule.frequency === 'Semi-Monthly') {
+                            name = `Cutoff ${i * 2 + localBaseIdx + 1}`;
+                        } else {
+                            name = `Cutoff ${i + 1}`;
+                        }
+                    }
+                    const stableIdSuffix = isExtra ? `extra-${idx}` : `default-${defaultIdx}`;
+
+                    list.push({
+                        id: `${i}-${stableIdSuffix}`,
+                        name: name,
+                        month: i,
+                        cutoffIndex: idx,
+                        isFirst: idx === 0,
+                        range: c,
+                        monthName: months[i]
+                    });
+                });
+            }
         }
+        return list;
+    }, [selectedSchedule]);
 
-        // Cutoff ranges (e.g. 1 to 15, or 16 to 30)
-        // First cutoff logic
-        const firstCutEnd = selectedSchedule.firstCutoff || 15;
-        if (day >= 1 && day <= firstCutEnd) {
-            return 'bg-amber-100 text-amber-800 font-bold';
+    const activeViewCutoff = viewYearlyCutoffs.find(c => c.id === selectedViewCutoffId) || viewYearlyCutoffs[0];
+
+    // Ensure state defaults to a valid active ID if the schedule changes
+    React.useEffect(() => {
+        if (viewYearlyCutoffs.length > 0 && !viewYearlyCutoffs.find(c => c.id === selectedViewCutoffId)) {
+            setSelectedViewCutoffId(viewYearlyCutoffs[0].id);
         }
+    }, [viewYearlyCutoffs, selectedViewCutoffId]);
 
-        // Second cutoff logic
-        const secondCutEnd = selectedSchedule.secondCutoff || daysInMonth; // default to end of month if undefined
-        if (day > firstCutEnd && day <= secondCutEnd) {
-            return 'bg-indigo-50 text-indigo-700 font-bold';
-        }
-
-        return 'text-slate-500 font-medium';
-    };
 
     return (
-        <div className="p-8 mt-6 border border-slate-200 rounded-2xl bg-white flex flex-col md:flex-row gap-8">
-
-            {/* Left Column: Form & Access Control */}
-            <div className="flex-1 space-y-4">
-                <h3 className="text-lg font-bold text-slate-800">Pay Schedule Configuration</h3>
-                <p className="text-sm text-slate-500">
-                    This dictates the cutoff boundaries and specific pay dates for this employee.
-                </p>
+        <div className="mt-6 flex flex-col gap-6">
+            {/* Top Bar: Form & Access Control */}
+            <div className="p-6 border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex-1 space-y-1">
+                    <h3 className="text-lg font-bold text-slate-800">Pay Schedule Configuration</h3>
+                    <p className="text-sm text-slate-500">
+                        Review the detailed cutoff boundaries and pay dates for the current year.
+                    </p>
+                </div>
 
                 {isEmployeeView && selectedSchedule ? (
-                    <div className="mt-4 p-5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                        <div className="text-sm font-bold text-slate-800 uppercase tracking-wide">
-                            {selectedSchedule.name}
-                        </div>
-                        <div className="text-sm text-slate-600">
-                            <span className="font-bold text-amber-600">Cutoff 1:</span> 1st to {selectedSchedule.firstCutoff} • <span className="font-bold text-emerald-600">Pay Date:</span> {selectedSchedule.firstPayDate}
-                        </div>
-                        {selectedSchedule.secondCutoff && (
-                            <div className="text-sm text-slate-600">
-                                <span className="font-bold text-indigo-600">Cutoff 2:</span> {selectedSchedule.firstCutoff! + 1} to {selectedSchedule.secondCutoff} • <span className="font-bold text-emerald-600">Pay Date:</span> {selectedSchedule.secondPayDate}
-                            </div>
-                        )}
-                        <p className="text-xs text-slate-400 italic mt-4">
-                            * Note: Your pay schedule is fixed and assigned by Human Resources.
-                        </p>
+                     <div className="p-3 px-5 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Current Schedule</div>
+                        <div className="text-sm font-bold text-indigo-700">{selectedSchedule.name}</div>
                     </div>
                 ) : (
-                    <div className="mt-4 space-y-4">
+                    <div className="flex items-center gap-3 w-full md:w-auto">
                         <select
-                            className="w-full p-3 border border-slate-300 rounded-xl bg-white text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+                            className="p-2 border border-slate-300 rounded-xl bg-white text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none w-full md:w-64"
                             value={empData.payScheduleId || ''}
                             onChange={(e) => onScheduleChange(e.target.value)}
                         >
@@ -92,49 +123,82 @@ const PayScheduleConfig: React.FC<PayScheduleConfigProps> = ({
                         </select>
                         <button
                             onClick={onSave}
-                            className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md"
+                            className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-sm whitespace-nowrap"
                         >
-                            Save Configuration
+                            Save
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* Right Column: Visual Calendar Preview */}
-            {selectedSchedule && (
-                <div className="w-full md:w-72 border border-slate-200 rounded-xl p-4 bg-white shadow-sm h-fit">
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest text-center mb-4">
-                        {currentDate.toLocaleString('default', { month: 'short' })} Preview
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-1">
-                        {Array.from({ length: firstDow }).map((_, i) => (
-                            <div key={`empty-${i}`} className="h-8"></div>
-                        ))}
-                        {days.map(day => (
-                            <div
-                                key={day}
-                                className={`h-8 flex flex-col items-center justify-center text-[11px] rounded transition-all ${getDayClass(day)}`}
-                                title={`Day ${day}`}
-                            >
-                                {day}
+            {/* Bottom Section: Dual Calendar View similar to PaySchedule.tsx */}
+            <div className="flex-1 overflow-y-auto bg-slate-50 border border-slate-200 rounded-2xl">
+                {selectedSchedule && (selectedSchedule.frequency === 'Semi-Monthly' || selectedSchedule.frequency === 'Monthly') ? (
+                    <div className="flex flex-col md:flex-row h-[600px] p-6 gap-6">
+                        {/* Left Panel: List of Cutoffs */}
+                        <div className="w-full md:w-1/3 border border-slate-200 rounded-2xl overflow-y-auto bg-white custom-scrollbar-horizontal flex flex-col shadow-sm">
+                            <div className="sticky top-0 bg-slate-50 p-4 border-b border-slate-200 z-10 flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{viewDate.getFullYear()} Yearly Cutoffs</span>
                             </div>
-                        ))}
-                    </div>
+                            <div className="divide-y divide-slate-100">
+                                {viewYearlyCutoffs.map(c => {
+                                    const isSelected = selectedViewCutoffId === c.id;
+                                    return (
+                                        <div
+                                            key={c.id}
+                                            onClick={() => setSelectedViewCutoffId(c.id)}
+                                            className={`p-5 cursor-pointer transition-all hover:bg-slate-50 group ${isSelected ? 'bg-indigo-50 hover:bg-indigo-50 border-l-4 border-indigo-600' : 'border-l-4 border-transparent'}`}
+                                        >
+                                            <div className={`text-sm font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
+                                                {c.name}
+                                            </div>
+                                            <div className="text-xs text-slate-500 mt-1.5 font-medium group-hover:text-slate-700 transition-colors">
+                                                {c.monthName} {c.range.startDay} - {c.monthName} {c.range.endDay}
+                                            </div>
+                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 bg-white px-2 py-1 rounded inline-block border border-slate-100">
+                                                Pay Date: {c.monthName} {c.range.payDay}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
 
-                    <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase">
-                            <div className="w-3 h-3 bg-emerald-500 rounded"></div> Pay Date
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase">
-                            <div className="w-3 h-3 bg-amber-100 rounded"></div> Cutoff 1 Range
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase">
-                            <div className="w-3 h-3 bg-indigo-50 rounded"></div> Cutoff 2 Range
+                        {/* Right Panel: Calendar picker */}
+                        <div className="w-full md:w-2/3 border border-slate-200 rounded-2xl bg-white p-8 shadow-sm flex flex-col justify-center items-center">
+                            <div className="w-full max-w-2xl">
+                                {activeViewCutoff && (
+                                    <div className="flex flex-col gap-6">
+                                        <div className="flex items-center gap-2 text-lg font-bold text-indigo-900 uppercase tracking-wide border-b border-slate-100 pb-4">
+                                            <CalendarRange size={22} className="text-indigo-500" />
+                                            Viewing {activeViewCutoff.name} ({activeViewCutoff.monthName})
+                                        </div>
+                                        <DateRangePicker
+                                            label={`${activeViewCutoff.name} Cutoff Period`}
+                                            range={activeViewCutoff.range}
+                                            month={activeViewCutoff.month}
+                                            year={viewDate.getFullYear()}
+                                            onChange={() => { }}
+                                            color={activeViewCutoff.isFirst ? 'amber' : 'emerald'}
+                                            disabled={true}
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                ) : (
+                    <div className="flex-1 h-[400px] flex flex-col items-center justify-center text-slate-400 bg-white rounded-2xl">
+                        <div className="w-24 h-24 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-slate-100">
+                            <CalendarRange size={48} className="text-slate-300" />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-700 mb-2">{selectedSchedule ? 'View Not Supported' : 'No Schedule Selected'}</h3>
+                        <p className="max-w-xs text-center text-sm text-slate-500 font-medium">
+                            {selectedSchedule ? 'The Dual-Calendar view is primarily for Semi-Monthly and Monthly frequencies.' : 'Select a pay schedule from the dropdown to view its cutoffs.'}
+                        </p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

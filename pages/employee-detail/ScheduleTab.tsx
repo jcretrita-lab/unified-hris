@@ -4,6 +4,7 @@ import ShiftInformation from './schedule/ShiftInformation';
 import LeaveRequests from './schedule/LeaveRequests';
 import { PaySchedule, Employee } from '../../types';
 import PayScheduleConfig from './schedule/PayScheduleConfig';
+import { INITIAL_SCHEDULES } from '../PaySchedule';
 
 interface ScheduleTabProps {
   employee: Employee;
@@ -20,51 +21,15 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ employee, isEmployeeView }) =
   // Load pay schedules from localStorage.
   // if none exist, create a mock schedule so the dropdown has options.
   useEffect(() => {
-    // Temporary mock schedule — simulates real dates
-    const mock: PaySchedule[] = [
-      {
-        id: "ps1",
-        name: "Semi-Monthly",          // Most common PH payroll frequency
-        frequency: "Semi-Monthly",     // Required by PaySchedule type
-        targetType: "Global",          // Applies to all employees (as of now)
-        targetId: null,                // No department/position targeting
-        firstCutoff: 15,               // 1–15 cutoff
-        firstPayDate: 25,              // Paid on the 25th
-        secondCutoff: 30,              // 16–30 cutoff
-        secondPayDate: 10,             // Paid on the 10th of next month
-        divisorId: "div1"              // Salary divisor (e.g., 314 days)
-      },
-      {
-        id: "ps2",
-        name: "Monthly",
-        frequency: "Monthly",
-        targetType: "Global",
-        targetId: null,
-        firstCutoff: 30,
-        firstPayDate: 30,
-        divisorId: "div1"
-      },
-      {
-        id: "ps3",
-        name: "Weekly",
-        frequency: "Weekly",
-        targetType: "Global",
-        targetId: null,
-        firstCutoff: 5,
-        firstPayDate: "Every Friday",
-        divisorId: "div1"
-      }
-    ];
+    // Save the real schedules to localStorage
+    localStorage.setItem("paySchedules", JSON.stringify(INITIAL_SCHEDULES));
 
-    // Save mock schedules to localStorage
-    localStorage.setItem("paySchedules", JSON.stringify(mock));
+    // Load the real schedules into React state.
+    setPaySchedules(INITIAL_SCHEDULES);
 
-    // Load the mock schedules into React state.
-    setPaySchedules(mock);
-
-    // Automatically assign the employee to Semi-Monthly (ps1).
-    // This ensures the employee always has a valid schedule.
-    setEmpData(prev => ({ ...prev, payScheduleId: "ps1" }));
+    // Automatically assign the employee to Corporate Employees — Semi-Monthly (ps-001).
+    // This ensures the employee always has a valid schedule matching the real data.
+    setEmpData(prev => ({ ...prev, payScheduleId: "ps-001" }));
   }, []);
 
   const selectedSchedule = paySchedules.find(ps => ps.id === empData.payScheduleId);

@@ -112,8 +112,7 @@ interface DateRangePickerProps {
     year?: number;
     disabled?: boolean;
 }
-
-const DateRangePicker: React.FC<DateRangePickerProps> = ({ label, range, onChange, color = 'amber', month, year, disabled = false }) => {
+export const DateRangePicker: React.FC<DateRangePickerProps> = ({ label, range, onChange, color = 'amber', month, year, disabled = false }) => {
     const [selectingField, setSelectingField] = useState<'start' | 'end' | 'pay' | null>(null);
 
     const currentMonthDays = typeof month === 'number' && typeof year === 'number' ? new Date(year, month + 1, 0).getDate() : 31;
