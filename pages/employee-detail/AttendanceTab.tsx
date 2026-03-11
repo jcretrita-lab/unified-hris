@@ -21,7 +21,11 @@ import {
   Check,
   Timer,
   Moon,
-  ClipboardCheck
+  ClipboardCheck,
+  Trash2,
+  Fingerprint,
+  ArrowRight,
+  X
 } from 'lucide-react';
 import Modal from '../../components/Modal';
 
@@ -555,20 +559,41 @@ const AttendanceTab: React.FC = () => {
   const [expandedRecord, setExpandedRecord] = useState<number | null>(null);
   const MotionDiv = motion.div as any;
 
-  // ODTR Modal State
-  const [isOdtrModalOpen, setIsOdtrModalOpen] = useState(false);
-  const [odtrForm, setOdtrForm] = useState<OdtrFormData>(EMPTY_ODTR_FORM);
-  const [hoveredOdtrDateInfo, setHoveredOdtrDateInfo] = useState<{ date: string; info: OdtrDateInfo; x: number; y: number } | null>(null);
-  const existingOdtrDates = PAST_ODTR_RECORDS.map(r => r.dateIso);
+  // Attendance Filing Modal States
+  const [isFilingTypeModalOpen, setIsFilingTypeModalOpen] = useState(false);
+  const [isAttendanceFilingModalOpen, setIsAttendanceFilingModalOpen] = useState(false);
+  const [filingType, setFilingType] = useState<'ODTR' | 'AAR'>('ODTR');
+  const [filingReason, setFilingReason] = useState('');
+  const [filingEntries, setFilingEntries] = useState<any[]>([]);
+  const [hoveredFilingDateInfo, setHoveredFilingDateInfo] = useState<{ date: string; info: OdtrDateInfo; x: number; y: number } | null>(null);
+  const existingFilingDates = PAST_ODTR_RECORDS.map(r => r.dateIso);
+  const [currentFilingEntry, setCurrentFilingEntry] = useState({
+    date: '',
+    timeIn: '08:00',
+    timeOut: '17:00',
+  });
 
-  const handleOdtrOpen = () => {
-    setOdtrForm(EMPTY_ODTR_FORM);
-    setIsOdtrModalOpen(true);
+  const handleOpenFilingChoice = () => {
+    setIsFilingTypeModalOpen(true);
   };
 
-  const handleOdtrClose = () => {
-    setIsOdtrModalOpen(false);
-    setHoveredOdtrDateInfo(null);
+  const handleSelectFilingType = (type: 'ODTR' | 'AAR') => {
+    setFilingType(type);
+    setFilingEntries([]);
+    setFilingReason('');
+    setCurrentFilingEntry({ date: '', timeIn: '08:00', timeOut: '17:00' });
+    setIsFilingTypeModalOpen(false);
+    setIsAttendanceFilingModalOpen(true);
+  };
+
+  const handleAddFilingEntry = () => {
+    if (!currentFilingEntry.date) return;
+    setFilingEntries([...filingEntries, { ...currentFilingEntry, id: Math.random().toString(36).substr(2, 9) }]);
+    setCurrentFilingEntry({ date: '', timeIn: '08:00', timeOut: '17:00' });
+  };
+
+  const handleRemoveFilingEntry = (id: string) => {
+    setFilingEntries(filingEntries.filter(e => e.id !== id));
   };
 
 
@@ -1054,8 +1079,8 @@ const AttendanceTab: React.FC = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-bold text-slate-900">Current Online Daily Tracking Record</h3>
-          <button onClick={handleOdtrOpen} className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95">
-            <Plus size={16} /> Add ODTR
+          <button onClick={handleOpenFilingChoice} className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95">
+            <Plus size={16} /> File Attendance Record
           </button>
         </div>
 
@@ -1238,118 +1263,6 @@ const AttendanceTab: React.FC = () => {
         </div>
       </div>
 
-      {/* ODTR Modal */}
-      <Modal isOpen={isOdtrModalOpen} onClose={handleOdtrClose} className="max-w-lg">
-        <form onSubmit={handleOdtrClose}>
-          {/* Header */}
-          <div className="px-7 pt-7 pb-5 border-b border-slate-100">
-            <div className="flex justify-between items-center pr-8">
-              <div>
-                <h2 className="text-base font-bold text-slate-900 leading-tight">Add ODTR</h2>
-                <p className="text-[11px] text-slate-500 font-medium mt-0.5">Online Daily Time Record Request</p>
-              </div>
-              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                <ClipboardCheck size={20} />
-              </div>
-            </div>
-          </div>
-
-          {/* Form Fields */}
-          <div className="px-7 py-6 space-y-5">
-
-            {/* Date */}
-            <OdtrDatePicker
-              value={odtrForm.date}
-              onChange={v => setOdtrForm(prev => ({ ...prev, date: v }))}
-              existingOdtrDates={existingOdtrDates}
-              setHoveredDateInfo={setHoveredOdtrDateInfo}
-            />
-
-            {/* Time In / Time Out */}
-            <div className="grid grid-cols-2 gap-4">
-              <OdtrTimePicker
-                label="Time In"
-                value={odtrForm.timeIn}
-                onChange={v => setOdtrForm(prev => ({ ...prev, timeIn: v }))}
-              />
-              <OdtrTimePicker
-                label="Time Out"
-                value={odtrForm.timeOut}
-                onChange={v => setOdtrForm(prev => ({ ...prev, timeOut: v }))}
-              />
-            </div>
-
-          </div>
-
-          {/* Footer Actions */}
-          <div className="px-7 pb-7 flex gap-3">
-            <button
-              type="button"
-              onClick={handleOdtrClose}
-              className="flex-1 px-5 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all active:scale-95"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-5 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95"
-            >
-              Submit ODTR
-            </button>
-          </div>
-
-          {/* Tooltip Portal for Disabled Dates */}
-          <AnimatePresence>
-            {hoveredOdtrDateInfo && (
-              <MotionDiv
-                initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                className="fixed z-[250] bg-white rounded-xl shadow-2xl border border-slate-100 p-4 w-56 pointer-events-none"
-                style={{ left: hoveredOdtrDateInfo.x, top: hoveredOdtrDateInfo.y, transform: 'translate(-50%, -100%)' }}
-              >
-                <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-50">
-                  <span className="text-xs font-bold text-slate-500">
-                    {new Date(hoveredOdtrDateInfo.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                    hoveredOdtrDateInfo.info.type === 'RestDay' ? 'bg-amber-50 text-amber-600' :
-                    hoveredOdtrDateInfo.info.type === 'FiledOdtr' ? 'bg-purple-50 text-purple-600' :
-                    hoveredOdtrDateInfo.info.type === 'Holiday' ? 'bg-rose-50 text-rose-600' :
-                    'bg-emerald-50 text-emerald-600'
-                  }`}>
-                    {hoveredOdtrDateInfo.info.label}
-                  </span>
-                </div>
-                <div className="space-y-1.5">
-                  {hoveredOdtrDateInfo.info.type === 'RestDay' && (
-                    <div className="text-xs font-medium text-amber-700 italic">
-                      Scheduled Rest Day (Weekend)
-                    </div>
-                  )}
-                  {hoveredOdtrDateInfo.info.type === 'FiledOdtr' && (
-                    <div className="text-xs font-medium text-purple-700 italic">
-                      An ODTR request has already been filed for this date.
-                    </div>
-                  )}
-                  {hoveredOdtrDateInfo.info.type === 'Holiday' && (
-                    <div className="text-xs font-bold text-rose-700 flex items-center gap-1.5">
-                      <span>🏳</span> {hoveredOdtrDateInfo.info.details}
-                    </div>
-                  )}
-                  <div className="pt-2 mt-2 border-t border-slate-50 text-[10px] text-slate-400 italic">
-                    Date is unavailable for ODTR requests.
-                  </div>
-                </div>
-                {/* Arrow */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white border-r border-b border-slate-100 rotate-45"></div>
-              </MotionDiv>
-            )}
-          </AnimatePresence>
-        </form>
-      </Modal>
-
       {/* Render Portal/Floating Tooltip if Hovered */}
       <AnimatePresence>
         {hoveredData && (
@@ -1363,6 +1276,224 @@ const AttendanceTab: React.FC = () => {
           </MotionDiv>
         )}
       </AnimatePresence>
+      {/* Filing Type Selection Modal */}
+      <Modal isOpen={isFilingTypeModalOpen} onClose={() => setIsFilingTypeModalOpen(false)} className="max-w-md">
+        <div className="p-8">
+          <div className="mb-6 text-center">
+            <h3 className="text-xl font-bold text-slate-900">File Attendance Record</h3>
+            <p className="text-sm text-slate-500 mt-1">Select the type of record you want to file.</p>
+          </div>
+          <div className="space-y-3">
+            <button
+               onClick={() => handleSelectFilingType('ODTR')}
+               className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group flex items-center gap-4 text-left"
+            >
+              <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <Clock size={24} />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-900">Online Daily Time Record</div>
+                <div className="text-[10px] text-slate-500 font-medium mt-0.5">Regular daily attendance log for approval</div>
+              </div>
+              <ArrowRight size={18} className="ml-auto text-slate-200 group-hover:text-indigo-500 transition-all" />
+            </button>
+
+            <button
+               onClick={() => handleSelectFilingType('AAR')}
+               className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group flex items-center gap-4 text-left"
+            >
+              <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                <ClipboardCheck size={24} />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-900">Attendance Adjustment</div>
+                <div className="text-[10px] text-slate-500 font-medium mt-0.5">Correction or adjustment for existing logs</div>
+              </div>
+              <ArrowRight size={18} className="ml-auto text-slate-200 group-hover:text-amber-500 transition-all" />
+            </button>
+          </div>
+          <button onClick={() => setIsFilingTypeModalOpen(false)} className="w-full mt-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
+            Cancel
+          </button>
+        </div>
+      </Modal>
+
+      {/* Main Attendance Filing Builder Modal */}
+      <Modal isOpen={isAttendanceFilingModalOpen} onClose={() => setIsAttendanceFilingModalOpen(false)} className="max-w-5xl">
+        <div className="flex h-[700px] bg-white overflow-hidden">
+          
+          {/* Left Side: Builder */}
+          <div className="w-[45%] bg-slate-50 border-r border-slate-200 p-8 flex flex-col overflow-y-auto">
+             <div className="mb-8">
+               <div className="flex items-center gap-2 mb-1">
+                 <div className={`p-1.5 rounded-lg ${filingType === 'ODTR' ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'}`}>
+                   {filingType === 'ODTR' ? <Clock size={16} /> : <ClipboardCheck size={16} />}
+                 </div>
+                 <h3 className="text-xl font-bold text-slate-900">File {filingType === 'ODTR' ? 'ODTR' : 'Adjustment'}</h3>
+               </div>
+               <p className="text-xs text-slate-500">Build your attendance submission by adding dates below.</p>
+             </div>
+
+             <div className="space-y-6 flex-1">
+               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                   <CalendarIcon size={14} /> Entry Details
+                 </h4>
+                 
+                 <div>
+                   <OdtrDatePicker 
+                     value={currentFilingEntry.date}
+                     onChange={(d) => setCurrentFilingEntry({ ...currentFilingEntry, date: d })}
+                     existingOdtrDates={existingFilingDates}
+                     setHoveredDateInfo={setHoveredFilingDateInfo} 
+                   />
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-4">
+                   <OdtrTimePicker 
+                     label="Time In"
+                     value={currentFilingEntry.timeIn}
+                     onChange={(v) => setCurrentFilingEntry({ ...currentFilingEntry, timeIn: v })}
+                   />
+                   <OdtrTimePicker 
+                     label="Time Out"
+                     value={currentFilingEntry.timeOut}
+                     onChange={(v) => setCurrentFilingEntry({ ...currentFilingEntry, timeOut: v })}
+                   />
+                 </div>
+
+                 <button 
+                   onClick={handleAddFilingEntry}
+                   disabled={!currentFilingEntry.date}
+                   className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50
+                     ${filingType === 'ODTR' ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-amber-600 text-white shadow-amber-100'}
+                   `}
+                 >
+                   <Plus size={14} /> Add to Request
+                 </button>
+               </div>
+             </div>
+
+             {/* Tooltip Portal for Disabled Dates in Builder */}
+             <AnimatePresence>
+               {hoveredFilingDateInfo && (
+                 <MotionDiv
+                   initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                   animate={{ opacity: 1, y: 0, scale: 1 }}
+                   exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                   transition={{ duration: 0.15 }}
+                   className="fixed z-[250] bg-white rounded-xl shadow-2xl border border-slate-100 p-4 w-56 pointer-events-none"
+                   style={{ left: hoveredFilingDateInfo.x, top: hoveredFilingDateInfo.y, transform: 'translate(-50%, -100%)' }}
+                 >
+                   <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-50">
+                     <span className="text-xs font-bold text-slate-500">
+                       {new Date(hoveredFilingDateInfo.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                     </span>
+                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                       hoveredFilingDateInfo.info.type === 'RestDay' ? 'bg-amber-50 text-amber-600' :
+                       hoveredFilingDateInfo.info.type === 'FiledOdtr' ? 'bg-purple-50 text-purple-600' :
+                       hoveredFilingDateInfo.info.type === 'Holiday' ? 'bg-rose-50 text-rose-600' :
+                       'bg-emerald-50 text-emerald-600'
+                     }`}>
+                       {hoveredFilingDateInfo.info.label}
+                     </span>
+                   </div>
+                   <div className="space-y-1.5">
+                     {hoveredFilingDateInfo.info.type === 'RestDay' && (
+                       <div className="text-xs font-medium text-amber-700 italic">Scheduled Rest Day (Weekend)</div>
+                     )}
+                     {hoveredFilingDateInfo.info.type === 'FiledOdtr' && (
+                       <div className="text-xs font-medium text-purple-700 italic">An ODTR has already been filed for this date.</div>
+                     )}
+                     {hoveredFilingDateInfo.info.type === 'Holiday' && (
+                       <div className="text-xs font-bold text-rose-700">🏳 {hoveredFilingDateInfo.info.details}</div>
+                     )}
+                   </div>
+                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white border-r border-b border-slate-100 rotate-45"></div>
+                 </MotionDiv>
+               )}
+             </AnimatePresence>
+          </div>
+
+          {/* Right Side: Summary & Submit */}
+          <div className="flex-1 p-8 flex flex-col bg-white overflow-hidden">
+            <div className="flex justify-between items-center mb-6 shrink-0">
+              <h3 className="text-xl font-bold text-slate-900">Request Summary</h3>
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Records Added</span>
+                <span className={`text-2xl font-extrabold ${filingType === 'ODTR' ? 'text-indigo-600' : 'text-amber-600'}`}>
+                  {filingEntries.length} <span className="text-sm text-slate-400 font-medium">Log{filingEntries.length !== 1 ? 's' : ''}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* List of Entries */}
+            <div className="flex-1 overflow-y-auto mb-6 pr-2">
+              {filingEntries.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50 text-center p-8">
+                  <Fingerprint size={48} className="text-slate-200 mb-4" />
+                  <p className="text-sm font-bold text-slate-400">No logs added yet</p>
+                  <p className="text-xs text-slate-400 mt-1">Select dates and times on the left to populate this list.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                   {filingEntries.map((entry) => (
+                     <div key={entry.id} className="flex justify-between items-center p-4 bg-white border border-slate-100 rounded-xl shadow-sm hover:border-slate-300 transition-all group">
+                       <div className="flex items-center gap-3">
+                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold border ${filingType === 'ODTR' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                           {new Date(entry.date).getDate()}
+                         </div>
+                         <div>
+                           <div className="text-sm font-bold text-slate-800">
+                             {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                           </div>
+                           <div className="text-[10px] font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                             <Clock size={10} /> {entry.timeIn} — {entry.timeOut}
+                           </div>
+                         </div>
+                       </div>
+                       <button onClick={() => handleRemoveFilingEntry(entry.id)} className="text-slate-300 hover:text-rose-500 transition-colors p-1.5 hover:bg-rose-50 rounded-lg">
+                         <Trash2 size={16} />
+                       </button>
+                     </div>
+                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Section */}
+            <div className="shrink-0 space-y-6 pt-6 border-t border-slate-100">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Justification / Reason</label>
+                <textarea 
+                  className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-medium text-slate-900 h-24 resize-none"
+                  placeholder="Provide valid reason for this filing..."
+                  value={filingReason}
+                  onChange={(e) => setFilingReason(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  disabled={filingEntries.length === 0 || !filingReason}
+                  onClick={() => setIsAttendanceFilingModalOpen(false)}
+                  className={`flex-1 py-3.5 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2
+                    ${filingType === 'ODTR' ? 'bg-slate-900 shadow-slate-200 hover:bg-slate-800' : 'bg-amber-600 shadow-amber-100 hover:bg-amber-700'}
+                  `}
+                >
+                  Submit {filingType} Request
+                </button>
+                <button 
+                  onClick={() => setIsAttendanceFilingModalOpen(false)}
+                  className="px-6 py-3.5 bg-white border border-slate-200 text-slate-500 rounded-xl font-bold hover:bg-slate-50 transition-all text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

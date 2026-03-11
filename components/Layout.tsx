@@ -679,7 +679,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </header>
 
-        <div className="p-10 max-w-[1500px] mx-auto">
+        <div className="p-10 max-w-full mx-auto">
           <BreadcrumbProvider>
             <Breadcrumb />
             {children}
