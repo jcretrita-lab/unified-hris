@@ -36,8 +36,9 @@ export interface AppRequest {
     shiftChangeType?: 'Full Cutoff' | 'Single Day';
     shiftChangeDate?: string; // ISO date string for Single Day changes
     // Expiration fields
-    expirationDate?: string; // ISO date string
+    expirationDate?: string; // ISO date string — pre-approval deadline
     isExpired?: boolean;
+    postApprovalExpiryDate?: string; // ISO date string — how long approved shift change stays valid
     // Approval trail
     timeline: {
         id: number;
@@ -162,6 +163,33 @@ const SEED_REQUESTS: AppRequest[] = [
             { id: 4, title: '4. Application Result', description: 'Shift assignment will be updated', timestamp: '', status: 'pending' },
         ],
     },
+    {
+        id: 'req-seed-005',
+        type: 'Shift Change',
+        status: 'Approved',
+        employeeId: 'emp-005',
+        employeeName: 'Carlos Reyes',
+        employeeRole: 'Frontend Developer',
+        employeeAvatar: 'CR',
+        departmentName: 'Engineering',
+        managerName: 'Elena Torres',
+        submittedAt: '2026-03-05T09:00:00',
+        lastModifiedBy: 'Elena Torres',
+        dateModified: '3/7/2026 10:30:00 AM',
+        setupName: 'Shift Change Request',
+        shiftFromName: 'Standard Regular Shift',
+        shiftToId: '3',
+        shiftToName: 'Mid Shift (10AM–7PM)',
+        shiftChangeType: 'Full Cutoff',
+        shiftReason: 'Requesting a mid-shift schedule to better align with remote team meetings in a different timezone.',
+        postApprovalExpiryDate: '2026-03-14',
+        timeline: [
+            { id: 1, title: '1. Submit Request', description: 'Submitted shift change request', timestamp: 'March 5, 2026 9:00:00 AM', status: 'completed' },
+            { id: 2, title: '2. Department Approval', description: 'Approved by Elena Torres', timestamp: 'March 7, 2026 10:30:00 AM', status: 'completed' },
+            { id: 3, title: '3. HR Approval', description: 'Approved by Sarah Wilson', timestamp: 'March 7, 2026 11:00:00 AM', status: 'completed' },
+            { id: 4, title: '4. Application Result', description: 'Shift assignment will be updated upon employee action', timestamp: '', status: 'current' },
+        ],
+    },
 ];
 
 // --- Context Interface ---
@@ -169,6 +197,8 @@ interface RequestContextType {
     requests: AppRequest[];
     shiftRequestApprovalDeadlineDays: number;
     setShiftRequestApprovalDeadlineDays: (days: number) => void;
+    postApprovalExpiryDays: number;
+    setPostApprovalExpiryDays: (days: number) => void;
     submitLeaveRequest: (req: Omit<AppRequest, 'id' | 'status' | 'timeline' | 'dateModified' | 'lastModifiedBy' | 'setupName'>) => AppRequest;
     submitShiftRequest: (req: Omit<AppRequest, 'id' | 'status' | 'timeline' | 'dateModified' | 'lastModifiedBy' | 'setupName'>) => AppRequest;
     approveRequest: (id: string, approverName: string, isPaid?: boolean) => void;
@@ -183,6 +213,7 @@ const RequestContext = createContext<RequestContextType | undefined>(undefined);
 export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [requests, setRequests] = useState<AppRequest[]>(SEED_REQUESTS);
     const [shiftRequestApprovalDeadlineDays, setShiftRequestApprovalDeadlineDays] = useState(5);
+    const [postApprovalExpiryDays, setPostApprovalExpiryDays] = useState(7);
 
     const now = () => {
         const d = new Date();
@@ -252,6 +283,9 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
             month: 'long', day: 'numeric', year: 'numeric',
             hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
         });
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + postApprovalExpiryDays);
+        const postApprovalExpiryDate = expiryDate.toISOString().split('T')[0];
         setRequests(prev =>
             prev.map(r => {
                 if (r.id !== id) return r;
@@ -259,6 +293,7 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
                 return {
                     ...r,
                     status: 'Approved',
+                    ...(r.type === 'Shift Change' && postApprovalExpiryDays > 0 ? { postApprovalExpiryDate } : {}),
                     isPaid: isPaid !== undefined ? isPaid : r.isPaid,
                     lastModifiedBy: approverName,
                     dateModified: now(),
@@ -314,7 +349,7 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     return (
-        <RequestContext.Provider value={{ requests, shiftRequestApprovalDeadlineDays, setShiftRequestApprovalDeadlineDays, submitLeaveRequest, submitShiftRequest, approveRequest, rejectRequest, getRequestById, isRequestStillValid }}>
+        <RequestContext.Provider value={{ requests, shiftRequestApprovalDeadlineDays, setShiftRequestApprovalDeadlineDays, postApprovalExpiryDays, setPostApprovalExpiryDays, submitLeaveRequest, submitShiftRequest, approveRequest, rejectRequest, getRequestById, isRequestStillValid }}>
             {children}
         </RequestContext.Provider>
     );

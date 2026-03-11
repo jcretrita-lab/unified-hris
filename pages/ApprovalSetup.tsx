@@ -63,6 +63,7 @@ export interface ApprovalSetup {
   lastModified: string;
   feature: string;
   autoRejectDays: number;
+  postApprovalExpiryDays: number;
   // New Fields
   department?: string; // Display name (backward-compatible)
   unitType?: string;   // Serves as Unit Type
@@ -109,6 +110,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Jan 15, 2026 09:30',
     feature: 'Leave Management',
     autoRejectDays: 7,
+    postApprovalExpiryDays: 0,
     department: 'Backend Team',
     unitType: 'Team',
     orgUnitId: 'team-1',
@@ -128,6 +130,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 20, 2026 11:00',
     feature: 'Leave Management',
     autoRejectDays: 5,
+    postApprovalExpiryDays: 0,
     department: 'Engineering',
     unitType: 'Division',
     orgUnitId: 'div-1',
@@ -146,6 +149,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 18, 2026 14:45',
     feature: 'Leave Management',
     autoRejectDays: 5,
+    postApprovalExpiryDays: 0,
     department: 'Human Resources',
     unitType: 'Division',
     orgUnitId: 'div-2',
@@ -164,6 +168,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 25, 2026 08:00',
     feature: 'Time & Attendance',
     autoRejectDays: 0,
+    postApprovalExpiryDays: 0,
     startDate: '2025-01-01',
     approvers: [
       { id: 'a-ob-1', orderLabel: 'Verifier', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 25, 2026' },
@@ -178,6 +183,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 28, 2026 09:15',
     feature: 'Time & Attendance',
     autoRejectDays: 3,
+    postApprovalExpiryDays: 0,
     department: 'Platform Engineering',
     unitType: 'Department',
     orgUnitId: 'dept-1',
@@ -196,6 +202,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 10, 2026 16:30',
     feature: 'Payroll Adjustment',
     autoRejectDays: 7,
+    postApprovalExpiryDays: 0,
     department: 'Finance & Accounting',
     unitType: 'Division',
     orgUnitId: 'div-3',
@@ -215,6 +222,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 1, 2026 10:30',
     feature: 'PAF Request',
     autoRejectDays: 5,
+    postApprovalExpiryDays: 0,
     department: 'Talent Acquisition',
     unitType: 'Department',
     orgUnitId: 'dept-5',
@@ -233,6 +241,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 2, 2026 08:45',
     feature: 'Time & Attendance',
     autoRejectDays: 2,
+    postApprovalExpiryDays: 0,
     department: 'Sales & Marketing',
     unitType: 'Division',
     orgUnitId: 'div-4',
@@ -251,6 +260,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 2, 2026 09:00',
     feature: 'Payroll Adjustment',
     autoRejectDays: 5,
+    postApprovalExpiryDays: 0,
     department: 'Payroll',
     unitType: 'Department',
     orgUnitId: 'dept-9',
@@ -270,6 +280,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 4, 2026 10:00',
     feature: 'Shift Change Request',
     autoRejectDays: 3,
+    postApprovalExpiryDays: 7,
     department: 'Engineering',
     unitType: 'Division',
     orgUnitId: 'div-1',
@@ -288,6 +299,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 25, 2026 13:00',
     feature: 'PAF Request',
     autoRejectDays: 4,
+    postApprovalExpiryDays: 0,
     department: 'Operations',
     unitType: 'Division',
     orgUnitId: 'div-5',
@@ -306,6 +318,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 3, 2026 15:00',
     feature: 'PAF Request',
     autoRejectDays: 10,
+    postApprovalExpiryDays: 0,
     department: 'Legal & Compliance',
     unitType: 'Division',
     orgUnitId: 'div-6',
@@ -325,6 +338,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 5, 2026 11:30',
     feature: 'Time & Attendance',
     autoRejectDays: 3,
+    postApprovalExpiryDays: 0,
     department: 'DevOps & Infrastructure',
     unitType: 'Department',
     orgUnitId: 'dept-3',
@@ -343,6 +357,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 6, 2026 14:00',
     feature: 'Payroll Adjustment',
     autoRejectDays: 7,
+    postApprovalExpiryDays: 0,
     department: 'Marketing',
     unitType: 'Department',
     orgUnitId: 'dept-12',
@@ -593,6 +608,7 @@ const ApprovalSetupPage: React.FC = () => {
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'approver' | 'assignee' | 'delegate' | 'co-approver'>('assignee');
   const [activeApproverId, setActiveApproverId] = useState<string | null>(null); // For delegate/co-approver logic
+  const [delegationExpiryDate, setDelegationExpiryDate] = useState('');
 
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [employeeDept, setEmployeeDept] = useState('');
@@ -796,6 +812,9 @@ const ApprovalSetupPage: React.FC = () => {
     if ((mode === 'delegate' || mode === 'co-approver') && approverId) {
       setActiveApproverId(approverId);
     }
+    if (mode === 'delegate') {
+      setDelegationExpiryDate('');
+    }
     setIsEmployeeModalOpen(true);
   };
 
@@ -845,7 +864,7 @@ const ApprovalSetupPage: React.FC = () => {
             delegateName: delegate.name,
             delegateAvatar: delegate.avatar,
             delegateStartDate: new Date().toISOString().split('T')[0],
-            delegateEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            delegateEndDate: delegationExpiryDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           };
         }
         return a;
@@ -1255,7 +1274,7 @@ const ApprovalSetupPage: React.FC = () => {
                                       <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
                                           <span className="text-[9px] font-bold uppercase bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 flex items-center gap-1">
-                                            <UserCog size={10} /> Representative
+                                            <UserCog size={10} /> Delegated to
                                           </span>
                                         </div>
                                         <button onClick={() => handleRemoveDelegate(approver.id)} className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-md hover:bg-rose-50 opacity-0 group-hover/delegate:opacity-100"><X size={12} /></button>
@@ -1266,7 +1285,7 @@ const ApprovalSetupPage: React.FC = () => {
                                         </div>
                                         <div>
                                           <div className="font-bold text-xs text-slate-800">{approver.delegateName}</div>
-                                          <div className="text-[10px] text-slate-500">Acting on behalf</div>
+                                          <div className="text-[10px] text-slate-500">Valid until {approver.delegateEndDate ? new Date(approver.delegateEndDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</div>
                                         </div>
                                       </div>
                                     </div>
@@ -1299,7 +1318,7 @@ const ApprovalSetupPage: React.FC = () => {
                                   <button
                                     onClick={() => openModal('delegate', approver.id)}
                                     className="p-2 text-slate-300 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-                                    title="Assign Representative"
+                                    title="Add Delegation"
                                   >
                                     <UserCog size={16} />
                                   </button>
@@ -1431,7 +1450,7 @@ const ApprovalSetupPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-slate-900">
-                  {modalMode === 'approver' ? 'Configure Approver Sequence' : modalMode === 'delegate' ? 'Assign Representative' : modalMode === 'co-approver' ? 'Add Co-Approver' : 'Assign Employee'}
+                  {modalMode === 'approver' ? 'Configure Approver Sequence' : modalMode === 'delegate' ? 'Add Delegation' : modalMode === 'co-approver' ? 'Add Co-Approver' : 'Assign Employee'}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
                   {modalMode === 'approver'
@@ -1439,7 +1458,7 @@ const ApprovalSetupPage: React.FC = () => {
                       ? `Showing suggested chain for ${APPROVAL_ORG_UNITS.find(u => u.id === editorUnitTarget)?.name || 'selected unit'}. Uncheck steps to remove.`
                       : 'Select employees to add as approver steps.'
                     : modalMode === 'delegate'
-                      ? 'Select a designated representative for this approver.'
+                      ? 'Select an employee to delegate approvals to, and set the expiration date.'
                       : modalMode === 'co-approver'
                         ? 'Select a second person to approve alongside the primary approver.'
                         : `Select employees to assign to ${activeSetup?.name || 'this setup'}.`
@@ -1676,6 +1695,18 @@ const ApprovalSetupPage: React.FC = () => {
           {/* Footer */}
           <div className="p-5 border-t border-slate-100 flex justify-between items-center bg-white gap-3">
             <div className="text-xs text-slate-400 font-medium">
+              {modalMode === 'delegate' && (
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-bold text-slate-600 shrink-0">Delegation expires on</label>
+                  <input
+                    type="date"
+                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-indigo-400 transition-all"
+                    value={delegationExpiryDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setDelegationExpiryDate(e.target.value)}
+                  />
+                </div>
+              )}
               {modalMode === 'approver' && (
                 <>
                   {selectedDerivedPositionIds.size > 0 && (
@@ -1701,7 +1732,9 @@ const ApprovalSetupPage: React.FC = () => {
                 disabled={
                   modalMode === 'approver'
                     ? selectedDerivedPositionIds.size === 0 && selectedEmployeeIds.size === 0
-                    : selectedEmployeeIds.size === 0
+                    : modalMode === 'delegate'
+                      ? selectedEmployeeIds.size === 0 || !delegationExpiryDate
+                      : selectedEmployeeIds.size === 0
                 }
               >
                 {modalMode === 'approver' ? `Add ${selectedDerivedPositionIds.size + selectedEmployeeIds.size} Step(s)` : modalMode === 'delegate' ? 'Assign Delegate' : modalMode === 'co-approver' ? 'Add Co-Approver' : 'Add Member(s)'}
