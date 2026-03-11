@@ -159,18 +159,110 @@ const ATTENDANCE_DATA: DailyRecord[] = [
     scheduledIn: '08:00 AM',
     scheduledOut: '06:00 PM',
     scheduledHours: 10.00
+  },
+  {
+    date: '2025-10-03',
+    status: 'overtime',
+    timeIn: '07:50 AM',
+    timeOut: '09:00 PM',
+    hours: 13.10,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '06:00 PM',
+    scheduledHours: 10.00
+  },
+  {
+    date: '2025-10-06',
+    status: 'present',
+    timeIn: '07:55 AM',
+    timeOut: '06:05 PM',
+    hours: 10.10,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '06:00 PM',
+    scheduledHours: 10.00
+  },
+  {
+    date: '2025-10-07',
+    status: 'leave',
+    timeIn: '-',
+    timeOut: '-',
+    hours: 0,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '06:00 PM',
+    scheduledHours: 10.00,
+    note: 'Vacation Leave'
   }
 ];
 
 const PAST_ODTR_RECORDS = [
-  { id: 1, date: 'July 25, 2025', dateIso: '2025-07-25', status: 'Pending', range: 'July 25, 2025' },
-  { id: 2, date: 'July 10, 2025', dateIso: '2025-07-10', status: 'Approved', range: 'July 10, 2025' },
-  { id: 3, date: 'June 15, 2025', dateIso: '2025-06-15', status: 'Approved', range: 'June 15, 2025' },
-  { id: 4, date: 'August 4, 2025', dateIso: '2025-08-04', status: 'Approved', range: 'August 4, 2025' },
-  { id: 5, date: 'August 11, 2025', dateIso: '2025-08-11', status: 'Pending', range: 'August 11, 2025' },
-  { id: 6, date: 'September 3, 2025', dateIso: '2025-09-03', status: 'Approved', range: 'September 3, 2025' },
-  { id: 7, date: 'October 1, 2025', dateIso: '2025-10-01', status: 'Approved', range: 'October 1, 2025' },
-  { id: 8, date: 'February 3, 2026', dateIso: '2026-02-03', status: 'Pending', range: 'February 3, 2026' },
+  { 
+    id: 1, 
+    type: 'ODTR',
+    date: 'Oct 25, 2025', 
+    status: 'Pending', 
+    range: 'Oct 20 - Oct 25, 2025',
+    logCount: 3,
+    entries: [
+      { date: '2025-10-20', weekday: 'Monday', shift: '08:00 - 17:00', timeIn: '08:05 AM', timeOut: '05:10 PM', remarks: 'Forgot to log in' },
+      { date: '2025-10-21', weekday: 'Tuesday', shift: '08:00 - 17:00', timeIn: '08:00 AM', timeOut: '05:05 PM', remarks: 'System glitch' },
+      { date: '2025-10-22', weekday: 'Wednesday', shift: '08:00 - 17:00', timeIn: '07:55 AM', timeOut: '05:00 PM', remarks: 'Regular log' }
+    ]
+  },
+  { 
+    id: 2, 
+    type: 'AAR',
+    date: 'Nov 12, 2025', 
+    status: 'Approved', 
+    range: 'Nov 10, 2025',
+    logCount: 1,
+    entries: [
+      { date: '2025-11-10', shift: '08:00 - 17:00', originalIn: '08:30 AM', originalOut: '--:--', timeIn: '08:30 AM', timeOut: '05:30 PM', remarks: 'Official Business', adjustmentReason: 'Official Business' }
+    ]
+  },
+  { 
+    id: 3, 
+    type: 'ODTR',
+    date: 'Dec 05, 2025', 
+    status: 'Approved', 
+    range: 'Dec 01 - Dec 03, 2025',
+    logCount: 2,
+    entries: [
+      { date: '2025-12-01', weekday: 'Monday', shift: '08:00 - 17:00', timeIn: '08:00 AM', timeOut: '05:00 PM', remarks: 'Internet issue' },
+      { date: '2025-12-03', weekday: 'Wednesday', shift: '08:00 - 17:00', timeIn: '08:10 AM', timeOut: '05:15 PM', remarks: 'Power outage' }
+    ]
+  },
+  { 
+    id: 4, 
+    type: 'ODTR',
+    date: 'Jan 15, 2026', 
+    status: 'Approved', 
+    range: 'Jan 12 - Jan 14, 2026',
+    logCount: 3,
+    entries: [
+      { date: '2026-01-12', weekday: 'Monday', shift: '08:00 - 17:00', timeIn: '08:30 AM', timeOut: '05:00 PM', remarks: 'Late due to heavy rain' },
+      { date: '2026-01-13', weekday: 'Tuesday', shift: '08:00 - 17:00', timeIn: '08:00 AM', timeOut: '05:05 PM', remarks: 'Regular log' },
+      { date: '2026-01-14', weekday: 'Wednesday', shift: '08:00 - 17:00', timeIn: '07:55 AM', timeOut: '05:10 PM', remarks: 'Regular log' }
+    ]
+  },
+  { 
+    id: 5, 
+    type: 'AAR',
+    date: 'Feb 10, 2026', 
+    status: 'Pending', 
+    range: 'Feb 05, 2026',
+    logCount: 1,
+    entries: [
+      { date: '2026-02-05', shift: '08:00 - 17:00', originalIn: '08:30 AM', originalOut: '06:00 PM', timeIn: '09:00 AM', timeOut: '06:00 PM', remarks: 'Medical Checkup in the morning', adjustmentReason: 'Official Business' }
+    ]
+  }
+];
+
+// --- BIOMETRIC MOCK DATA ---
+const MOCK_BIOMETRIC_RECORDS = [
+  { id: 'BIO-101', date: '2025-08-01', timeIn: '08:00 AM', timeOut: '-', source: 'Biometrics' },
+  { id: 'BIO-102', date: '2025-08-02', timeIn: '-', timeOut: '05:00 PM', source: 'Biometrics' },
+  { id: 'BIO-103', date: '2025-08-03', timeIn: '07:55 AM', timeOut: '-', source: 'Biometrics' },
+  { id: 'BIO-104', date: '2025-08-04', timeIn: '-', timeOut: '-', source: 'Biometrics' },
+  { id: 'BIO-105', date: '2025-08-05', timeIn: '08:15 AM', timeOut: '05:15 PM', source: 'Biometrics' },
 ];
 
 // --- ODTR FORM TYPES ---
@@ -374,7 +466,7 @@ const OdtrDatePicker: React.FC<{
 };
 
 // --- ODTR TIME PICKER ---
-const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; label: string }> = ({ value, onChange, label }) => {
+const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; label: string; disabled?: boolean }> = ({ value, onChange, label, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   const ref = useRef<HTMLDivElement>(null);
@@ -388,11 +480,23 @@ const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; l
   const [selPeriod, setSelPeriod] = useState<'AM' | 'PM'>('AM');
 
   useEffect(() => {
-    if (value) {
-      const [h, m] = value.split(':').map(Number);
-      setSelPeriod(h >= 12 ? 'PM' : 'AM');
-      setSelHour(h === 0 ? 12 : h > 12 ? h - 12 : h);
-      setSelMin(m);
+    if (value && value !== '-') {
+      const match = value.match(/(\d+):(\d+)(?:\s*(AM|PM))?/i);
+      if (match) {
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        let p: 'AM' | 'PM' = match[3] ? (match[3].toUpperCase() as 'AM' | 'PM') : (h >= 12 ? 'PM' : 'AM');
+        
+        let h12 = h;
+        if (!match[3]) {
+          if (h === 0) h12 = 12;
+          else if (h > 12) h12 = h - 12;
+        }
+        
+        setSelHour(h12);
+        setSelMin(m);
+        setSelPeriod(p);
+      }
     }
   }, [value]);
 
@@ -421,10 +525,7 @@ const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; l
   }, []);
 
   const commit = (h: number, m: number, p: 'AM' | 'PM') => {
-    let hour24 = h;
-    if (p === 'AM' && h === 12) hour24 = 0;
-    else if (p === 'PM' && h !== 12) hour24 = h + 12;
-    onChange(`${hour24.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+    onChange(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${p}`);
   };
 
   const handleHour = (h: number) => {
@@ -448,12 +549,18 @@ const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; l
     setIsOpen(o => !o);
   };
 
-  const displayValue = value
+  const displayValue = value && value !== '-' 
     ? (() => {
-        const [h, m] = value.split(':').map(Number);
-        const period = h >= 12 ? 'PM' : 'AM';
-        const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-        return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
+        const match = value.match(/(\d+):(\d+)(?:\s*(AM|PM))?/i);
+        if (!match) return value;
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        let p = match[3] ? match[3].toUpperCase() : (h >= 12 ? 'PM' : 'AM');
+        if (!match[3]) {
+          if (h === 0) h = 12;
+          else if (h > 12) h -= 12;
+        }
+        return `${h}:${m.toString().padStart(2, '0')} ${p}`;
       })()
     : 'Select time';
 
@@ -465,8 +572,9 @@ const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; l
       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">{label}</label>
       <button
         type="button"
-        onClick={handleToggle}
-        className={`w-full border p-2.5 rounded-xl bg-white text-sm flex items-center justify-between cursor-pointer hover:border-indigo-300 transition-all shadow-sm ${isOpen ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-slate-200'}`}
+        onClick={() => !disabled && handleToggle()}
+        disabled={disabled}
+        className={`w-full border p-2.5 rounded-xl bg-white text-sm flex items-center justify-between transition-all shadow-sm ${isOpen ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-slate-200'} ${disabled ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer hover:border-indigo-300'}`}
       >
         <span className={value ? 'font-bold text-slate-800' : 'font-medium text-slate-400'}>{displayValue}</span>
         <Clock size={15} className={isOpen ? 'text-indigo-500' : 'text-slate-400'} />
@@ -566,11 +674,17 @@ const AttendanceTab: React.FC = () => {
   const [filingReason, setFilingReason] = useState('');
   const [filingEntries, setFilingEntries] = useState<any[]>([]);
   const [hoveredFilingDateInfo, setHoveredFilingDateInfo] = useState<{ date: string; info: OdtrDateInfo; x: number; y: number } | null>(null);
-  const existingFilingDates = PAST_ODTR_RECORDS.map(r => r.dateIso);
+  const existingFilingDates = PAST_ODTR_RECORDS.flatMap(r => r.entries.map(e => e.date));
   const [currentFilingEntry, setCurrentFilingEntry] = useState({
     date: '',
-    timeIn: '08:00',
-    timeOut: '17:00',
+    timeIn: '08:00 AM',
+    timeOut: '05:00 PM',
+    remarks: '',
+    shift: '08:00 - 17:00',
+    adjustmentReason: 'Missing Time In',
+    selectedBioId: '',
+    originalIn: '',
+    originalOut: ''
   });
 
   const handleOpenFilingChoice = () => {
@@ -581,15 +695,16 @@ const AttendanceTab: React.FC = () => {
     setFilingType(type);
     setFilingEntries([]);
     setFilingReason('');
-    setCurrentFilingEntry({ date: '', timeIn: '08:00', timeOut: '17:00' });
+    setCurrentFilingEntry({ date: '', timeIn: '08:00 AM', timeOut: '05:00 PM', remarks: '', shift: '08:00 - 17:00', adjustmentReason: 'Missing Time In', selectedBioId: '', originalIn: '', originalOut: '' });
     setIsFilingTypeModalOpen(false);
     setIsAttendanceFilingModalOpen(true);
   };
 
   const handleAddFilingEntry = () => {
     if (!currentFilingEntry.date) return;
-    setFilingEntries([...filingEntries, { ...currentFilingEntry, id: Math.random().toString(36).substr(2, 9) }]);
-    setCurrentFilingEntry({ date: '', timeIn: '08:00', timeOut: '17:00' });
+    const weekday = new Date(currentFilingEntry.date).toLocaleDateString('en-US', { weekday: 'long' });
+    setFilingEntries([...filingEntries, { ...currentFilingEntry, weekday, id: Math.random().toString(36).substr(2, 9) }]);
+    setCurrentFilingEntry({ date: '', timeIn: '08:00 AM', timeOut: '05:00 PM', remarks: '', shift: '08:00 - 17:00', adjustmentReason: 'Missing Time In', selectedBioId: '', originalIn: '', originalOut: '' });
   };
 
   const handleRemoveFilingEntry = (id: string) => {
@@ -989,35 +1104,43 @@ const AttendanceTab: React.FC = () => {
   };
 
   const renderListView = () => (
-    <div className="border border-slate-200 rounded-2xl overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-left">
-          <tr>
-            <th className="px-6 py-4 font-bold text-slate-400 uppercase text-[10px] tracking-widest">Date</th>
-            <th className="px-6 py-4 font-bold text-slate-400 uppercase text-[10px] tracking-widest">Status</th>
-            <th className="px-6 py-4 font-bold text-slate-400 uppercase text-[10px] tracking-widest">Time In</th>
-            <th className="px-6 py-4 font-bold text-slate-400 uppercase text-[10px] tracking-widest">Time Out</th>
-            <th className="px-6 py-4 font-bold text-slate-400 uppercase text-[10px] tracking-widest text-right">Hours</th>
+    <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/30">
+      <table className="w-full text-sm text-left border-collapse">
+        <thead className="bg-white border-b border-slate-100">
+          <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <th className="px-6 py-4">Date</th>
+            <th className="px-6 py-4">Status</th>
+            <th className="px-6 py-4">Time In</th>
+            <th className="px-6 py-4">Time Out</th>
+            <th className="px-6 py-4 text-right">Hours</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-slate-100 bg-white/50">
           {ATTENDANCE_DATA.map((record, i) => (
-            <tr key={i} className="hover:bg-slate-50 transition-colors">
-              <td className="px-6 py-4 font-bold text-slate-700">{record.date}</td>
+            <tr key={i} className="hover:bg-white transition-colors group">
               <td className="px-6 py-4">
-                <span className={`flex items-center gap-2 text-xs font-bold uppercase ${
+                <span className="text-sm font-bold text-slate-700">{record.date}</span>
+              </td>
+              <td className="px-6 py-4">
+                <span className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider ${
                   record.status === 'present' ? 'text-emerald-600' : 
                   record.status === 'late' ? 'text-amber-600' : 
                   record.status === 'absent' ? 'text-rose-600' : 
                   'text-slate-500'
                 }`}>
-                  <div className={`w-2 h-2 rounded-full ${getStatusColor(record.status)}`}></div>
+                  <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(record.status)}`}></div>
                   {record.status}
                 </span>
               </td>
-              <td className="px-6 py-4 font-mono text-slate-600">{record.timeIn}</td>
-              <td className="px-6 py-4 font-mono text-slate-600">{record.timeOut}</td>
-              <td className="px-6 py-4 text-right font-bold text-slate-800">{record.hours?.toFixed(1)}</td>
+              <td className="px-6 py-4">
+                <span className="text-xs font-mono font-bold text-slate-600 bg-white px-2 py-1 rounded-md border border-slate-100 shadow-sm">{record.timeIn}</span>
+              </td>
+              <td className="px-6 py-4">
+                <span className="text-xs font-mono font-bold text-slate-600 bg-white px-2 py-1 rounded-md border border-slate-100 shadow-sm">{record.timeOut}</span>
+              </td>
+              <td className="px-6 py-4 text-right">
+                <span className="text-xs font-black text-slate-900">{record.hours?.toFixed(2)}</span>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -1078,9 +1201,9 @@ const AttendanceTab: React.FC = () => {
       {/* Online Daily Tracking Record (ODTR) Section */}
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-bold text-slate-900">Current Online Daily Tracking Record</h3>
-          <button onClick={handleOpenFilingChoice} className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95">
-            <Plus size={16} /> File Attendance Record
+          <h3 className="text-xl font-black text-slate-900 tracking-tight underline underline-offset-8 decoration-indigo-500/20">Current Attendance Filing Request</h3>
+          <button onClick={handleOpenFilingChoice} className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all hover:-translate-y-0.5 active:scale-95 group">
+            <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" /> File Attendance Record
           </button>
         </div>
 
@@ -1119,115 +1242,175 @@ const AttendanceTab: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Acceptance Status Box */}
-            <div className="lg:col-span-1 bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col justify-center">
-               <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400">
-                    <CheckCircle2 size={20} />
+            <div className="lg:col-span-1 bg-slate-50 rounded-3xl p-8 border border-slate-100 flex flex-col justify-center shadow-sm">
+               <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 bg-white border border-slate-200 rounded-2xl text-indigo-600 shadow-sm">
+                    <CheckCircle2 size={24} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900">Pending Approval</h4>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Stage 2 of 3</p>
+                    <h4 className="text-base font-bold text-slate-900">Pending Approval</h4>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Stage 2 of 3</p>
                   </div>
                </div>
-               <div className="space-y-3">
+               <div className="space-y-4">
                   <div className="flex items-center gap-3 text-xs text-slate-500">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                    <span>Submitted by You</span>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+                    <span className="font-medium">Submitted by You</span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-900 font-bold">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.6)]"></div>
                     <span>Waiting for HR Manager</span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-300">
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
-                    <span>Waiting for IT Manager</span>
+                    <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                    <span className="font-medium">Waiting for IT Manager</span>
                   </div>
                </div>
             </div>
 
-            {/* ODTR Details Box */}
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-0 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
-                    <h4 className="text-sm font-bold text-slate-800">ODTR Details</h4>
-                    <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-lg text-[10px] font-bold uppercase border border-amber-100">Pending Review</span>
+            {/* ODTR Details Box - Tabular Form */}
+            <div className="lg:col-span-3 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                <div className="px-8 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                        <CalendarDays size={16} />
+                      </div>
+                      <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">ODTR Records</h4>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-bold text-slate-400">Created: July 25, 2025</span>
+                      <span className="bg-amber-50 text-amber-600 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border border-amber-100 shadow-sm">In Review</span>
+                    </div>
                 </div>
-                <div className="p-6">
-                    <div className="grid grid-cols-2 gap-8 mb-6">
-                        <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Status</label>
-                            <div className="flex items-center gap-2">
-                                <AlertCircle size={16} className="text-amber-500" />
-                                <span className="text-lg font-bold text-slate-900">Pending</span>
-                            </div>
+                <div className="flex-1 overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 bg-white">
+                                <th className="px-8 py-4">Date</th>
+                                <th className="px-8 py-4">Weekday</th>
+                                <th className="px-8 py-4">Shift</th>
+                                <th className="px-8 py-4">Time In</th>
+                                <th className="px-8 py-4">Time Out</th>
+                                <th className="px-8 py-4">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            <tr className="hover:bg-slate-50/50 transition-colors group">
+                                <td className="px-8 py-5">
+                                    <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 25, 2025</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Friday</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">08:00 AM</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:00 PM</span>
+                                </td>
+                                <td className="px-8 py-5 min-w-[200px]">
+                                    <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"Forgot to clock out due to urgent client meeting off-site."</p>
+                                </td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors group">
+                                <td className="px-8 py-5">
+                                    <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 24, 2025</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Thursday</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">07:55 AM</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:05 PM</span>
+                                </td>
+                                <td className="px-8 py-5 min-w-[200px]">
+                                    <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"Regular daily log entry."</p>
+                                </td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors group">
+                                <td className="px-8 py-5">
+                                    <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 23, 2025</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Wednesday</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">08:01 AM</span>
+                                </td>
+                                <td className="px-8 py-5">
+                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:00 PM</span>
+                                </td>
+                                <td className="px-8 py-5 min-w-[200px]">
+                                    <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"System was lagging, logging in manually."</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {/* Approvers Footer */}
+                <div className="mt-auto px-8 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+                   <div className="flex items-center gap-8">
+                     <div className="flex items-center gap-3">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Manager</label>
+                        <div className="flex items-center gap-2">
+                           <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-700">JD</div>
+                           <span className="text-xs font-bold text-slate-700">John Doe</span>
                         </div>
-                        <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Date Created</label>
-                            <div className="flex items-center gap-2">
-                                <CalendarDays size={16} className="text-slate-400" />
-                                <span className="text-sm font-bold text-slate-700">July 25, 2025</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-8">
-                        <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Department Manager</label>
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700">JD</div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900">John Doe</p>
-                                    <p className="text-[10px] text-slate-500">IT Department Lead</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">HR Approver</label>
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">?</div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-400 italic">Pending Assignment</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                     </div>
+                     <div className="flex items-center gap-3">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">HR</label>
+                        <span className="text-[10px] font-bold text-slate-400 italic">Pending Assignment</span>
+                     </div>
+                   </div>
                 </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Past ODTR Records (History) */}
+      {/* Past ODTR Records (History) Content Refinement */}
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-slate-900">Past Online Daily Tracking Records</h3>
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+        <h3 className="text-lg font-black text-slate-900 tracking-tight">Past Attendance Filing Request</h3>
+        <div className="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm">
             <div className="space-y-4">
                 {PAST_ODTR_RECORDS.map((record) => (
-                    <div key={record.id} className="border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all group">
+                    <div key={record.id} className="border border-slate-200 rounded-3xl overflow-hidden hover:shadow-lg transition-all group bg-white">
                         <button 
                             onClick={() => setExpandedRecord(expandedRecord === record.id ? null : record.id)}
-                            className="w-full flex items-center justify-between p-5 bg-white hover:bg-slate-50/50 transition-colors"
+                            className="w-full flex items-center justify-between p-6 bg-white hover:bg-slate-50/50 transition-colors"
                         >
-                            <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                    record.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                            <div className="flex items-center gap-5">
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${
+                                    record.type === 'ODTR' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
                                 }`}>
-                                    <Clock size={20} />
+                                    {record.type === 'ODTR' ? <Clock size={24} /> : <ClipboardCheck size={24} />}
                                 </div>
                                 <div className="text-left">
-                                    <h4 className="font-bold text-slate-900 text-sm">{record.date}</h4>
-                                    <p className="text-xs text-slate-500 font-medium mt-0.5">Range: {record.range}</p>
+                                    <h4 className="font-black text-slate-900 text-sm tracking-tight">{record.type === 'ODTR' ? 'Online Daily Time Record' : 'Attendance Adjustment'}</h4>
+                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Filed: {record.date} • {record.logCount} Logs Included</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                                    record.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
-                                }`}>
+                            <div className="flex items-center gap-6">
+                                <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                                    record.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-50' : 'bg-amber-50 text-amber-600 border-amber-100 shadow-amber-50'
+                                } shadow-sm`}>
                                     {record.status}
                                 </span>
-                                <div className={`p-1 rounded-full transition-transform duration-300 ${expandedRecord === record.id ? 'rotate-180 bg-slate-200' : ''}`}>
-                                    <ChevronDown size={16} className="text-slate-400" />
+                                <div className={`p-2 rounded-xl transition-all duration-300 ${expandedRecord === record.id ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-300 group-hover:text-slate-500'}`}>
+                                    <ChevronDown size={20} />
                                 </div>
                             </div>
                         </button>
@@ -1235,23 +1418,60 @@ const AttendanceTab: React.FC = () => {
                         <AnimatePresence>
                             {expandedRecord === record.id && (
                                 <MotionDiv 
-                                    initial={{ height: 0 }} 
-                                    animate={{ height: 'auto' }} 
-                                    exit={{ height: 0 }} 
-                                    className="overflow-hidden bg-slate-50/50 border-t border-slate-100"
+                                    initial={{ height: 0, opacity: 0 }} 
+                                    animate={{ height: 'auto', opacity: 1 }} 
+                                    exit={{ height: 0, opacity: 0 }} 
+                                    className="overflow-hidden bg-slate-50/30 border-t border-slate-50"
                                 >
-                                    <div className="p-6 grid grid-cols-2 gap-6 text-sm">
-                                        <div>
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Time In</label>
-                                            <p className="font-mono font-bold text-slate-700">08:00 AM</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Time Out</label>
-                                            <p className="font-mono font-bold text-slate-700">05:00 PM</p>
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Reason</label>
-                                            <p className="text-slate-600 italic">"Forgot to clock out due to urgent client meeting off-site."</p>
+                                    <div className="p-0 overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead className="bg-white/50">
+                                                <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                                    <th className="px-8 py-3">Date</th>
+                                                    <th className="px-8 py-3">Reason</th>
+                                                    <th className="px-8 py-3 text-center">Original Log</th>
+                                                    <th className="px-8 py-3 text-center">Adjusted Log</th>
+                                                    <th className="px-8 py-3">Remarks</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {record.entries.map((entry: any, eIdx: number) => (
+                                                  <tr key={eIdx} className="bg-white/30 hover:bg-white transition-colors border-b border-slate-50 last:border-0">
+                                                      <td className="px-8 py-5">
+                                                          <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                      </td>
+                                                      <td className="px-8 py-5">
+                                                          <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 whitespace-nowrap">
+                                                            {record.type === 'ODTR' ? entry.shift : entry.adjustmentReason}
+                                                          </span>
+                                                      </td>
+                                                      <td className="px-8 py-5">
+                                                          <div className="flex flex-col items-center gap-1">
+                                                              <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">IN: {entry.originalIn || '--:--'}</span>
+                                                              <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">OUT: {entry.originalOut || '--:--'}</span>
+                                                          </div>
+                                                      </td>
+                                                      <td className="px-8 py-5">
+                                                          <div className="flex flex-col items-center gap-1">
+                                                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${record.type === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeIn}</span>
+                                                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${record.type === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeOut}</span>
+                                                          </div>
+                                                      </td>
+                                                      <td className="px-8 py-5 min-w-[200px]">
+                                                          <p className="text-xs text-slate-500 italic">{entry.remarks || "--"}</p>
+                                                      </td>
+                                                  </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="px-8 py-4 bg-white/50 border-t border-slate-50 flex items-center justify-end gap-6">
+                                        <div className="flex items-center gap-3">
+                                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Approver</label>
+                                          <div className="flex items-center gap-2">
+                                             <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700">HR</div>
+                                             <span className="text-xs font-bold text-slate-700">System Approved</span>
+                                          </div>
                                         </div>
                                     </div>
                                 </MotionDiv>
@@ -1319,11 +1539,11 @@ const AttendanceTab: React.FC = () => {
       </Modal>
 
       {/* Main Attendance Filing Builder Modal */}
-      <Modal isOpen={isAttendanceFilingModalOpen} onClose={() => setIsAttendanceFilingModalOpen(false)} className="max-w-5xl">
+      <Modal isOpen={isAttendanceFilingModalOpen} onClose={() => setIsAttendanceFilingModalOpen(false)} className="max-w-7xl">
         <div className="flex h-[700px] bg-white overflow-hidden">
           
           {/* Left Side: Builder */}
-          <div className="w-[45%] bg-slate-50 border-r border-slate-200 p-8 flex flex-col overflow-y-auto">
+          <div className="w-[30%] bg-slate-50 border-r border-slate-200 p-8 flex flex-col overflow-y-auto">
              <div className="mb-8">
                <div className="flex items-center gap-2 mb-1">
                  <div className={`p-1.5 rounded-lg ${filingType === 'ODTR' ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'}`}>
@@ -1333,46 +1553,141 @@ const AttendanceTab: React.FC = () => {
                </div>
                <p className="text-xs text-slate-500">Build your attendance submission by adding dates below.</p>
              </div>
-
              <div className="space-y-6 flex-1">
                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                   <CalendarIcon size={14} /> Entry Details
+                   <CalendarIcon size={14} /> Filing Details
                  </h4>
                  
-                 <div>
-                   <OdtrDatePicker 
-                     value={currentFilingEntry.date}
-                     onChange={(d) => setCurrentFilingEntry({ ...currentFilingEntry, date: d })}
-                     existingOdtrDates={existingFilingDates}
-                     setHoveredDateInfo={setHoveredFilingDateInfo} 
-                   />
-                 </div>
+                 {/* 1. Reason Selection (Conditional) */}
+                 {filingType === 'AAR' && (
+                   <div>
+                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Adjustment Reason</label>
+                     <select
+                       className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-xs font-bold text-slate-700 shadow-sm"
+                       value={currentFilingEntry.adjustmentReason}
+                       onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, adjustmentReason: e.target.value })}
+                     >
+                       <option value="Missing Time In">Missing Time In</option>
+                       <option value="Missing Time Out">Missing Time Out</option>
+                       <option value="Official Business">Official Business</option>
+                       <option value="Device Malfunction">Device Malfunction</option>
+                     </select>
+                   </div>
+                 )}
+                 {/* 2. Biometric Record Selection (AAR only) */}
+                 {filingType === 'AAR' && (
+                   <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Biometric Record</label>
+                       <select
+                         className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-xs font-bold text-slate-700 shadow-sm"
+                         value={currentFilingEntry.selectedBioId}
+                         onChange={(e) => {
+                           const bio = MOCK_BIOMETRIC_RECORDS.find(r => r.id === e.target.value);
+                           if (bio) {
+                             setCurrentFilingEntry({
+                               ...currentFilingEntry,
+                               selectedBioId: bio.id,
+                               date: bio.date,
+                               originalIn: bio.timeIn,
+                               originalOut: bio.timeOut,
+                               timeIn: bio.timeIn === '-' ? '08:00 AM' : bio.timeIn,
+                               timeOut: bio.timeOut === '-' ? '05:00 PM' : bio.timeOut
+                             });
+                           }
+                         }}
+                       >
+                         <option value="">-- Choose Record --</option>
+                         {MOCK_BIOMETRIC_RECORDS.map(r => (
+                           <option key={r.id} value={r.id}>
+                             [{r.id}] {r.date}
+                           </option>
+                         ))}
+                       </select>
+                     </div>
+                     <div>
+                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Log Row Info</label>
+                       <div className="w-full border border-slate-100 p-2 rounded-xl bg-slate-50 text-[10px] font-bold text-slate-500 h-[38px] flex flex-col justify-center">
+                         {currentFilingEntry.selectedBioId ? (
+                           <div className="flex justify-between px-2">
+                             <span>In: {currentFilingEntry.originalIn}</span>
+                             <span>Out: {currentFilingEntry.originalOut}</span>
+                           </div>
+                         ) : (
+                           <span className="text-center italic opacity-50">Select a record first</span>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
+                 {filingType === 'ODTR' && (
+                   <div>
+                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                     <OdtrDatePicker 
+                      value={currentFilingEntry.date}
+                      onChange={(d) => setCurrentFilingEntry({ ...currentFilingEntry, date: d })}
+                      existingOdtrDates={existingFilingDates}
+                      setHoveredDateInfo={setHoveredFilingDateInfo} 
+                    />
+                   </div>
+                 )}
 
                  <div className="grid grid-cols-2 gap-4">
                    <OdtrTimePicker 
                      label="Time In"
                      value={currentFilingEntry.timeIn}
                      onChange={(v) => setCurrentFilingEntry({ ...currentFilingEntry, timeIn: v })}
+                     disabled={!!(filingType === 'AAR' && (currentFilingEntry.adjustmentReason === 'Missing Time Out' || (currentFilingEntry.selectedBioId && MOCK_BIOMETRIC_RECORDS.find(r => r.id === currentFilingEntry.selectedBioId)?.timeIn !== '-')))}
                    />
                    <OdtrTimePicker 
                      label="Time Out"
                      value={currentFilingEntry.timeOut}
                      onChange={(v) => setCurrentFilingEntry({ ...currentFilingEntry, timeOut: v })}
+                     disabled={!!(filingType === 'AAR' && (currentFilingEntry.adjustmentReason === 'Missing Time In' || (currentFilingEntry.selectedBioId && MOCK_BIOMETRIC_RECORDS.find(r => r.id === currentFilingEntry.selectedBioId)?.timeOut !== '-')))}
                    />
                  </div>
 
+                 {filingType === 'ODTR' && (
+                   <div>
+                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Shift</label>
+                     <select
+                       disabled
+                       className="w-full border border-slate-200 p-2.5 rounded-xl bg-slate-50 outline-none text-xs font-bold text-slate-500 shadow-sm cursor-not-allowed appearance-none"
+                       value={currentFilingEntry.shift}
+                       onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, shift: e.target.value })}
+                     >
+                       <option value="08:00 - 17:00">08:00 - 17:00 (Regular)</option>
+                       <option value="06:00 - 15:00">06:00 - 15:00 (Early)</option>
+                       <option value="13:00 - 22:00">13:00 - 22:00 (Late)</option>
+                       <option value="22:00 - 07:00">22:00 - 07:00 (Night)</option>
+                     </select>
+                   </div>
+                 )}
+
+                 <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Remarks</label>
+                    <textarea 
+                      className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-xs font-medium text-slate-900 h-20 resize-none shadow-sm"
+                      placeholder="e.g. Forgot to log out..."
+                      value={currentFilingEntry.remarks}
+                      onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, remarks: e.target.value })}
+                    />
+                 </div>
+
                  <button 
-                   onClick={handleAddFilingEntry}
-                   disabled={!currentFilingEntry.date}
-                   className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50
-                     ${filingType === 'ODTR' ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-amber-600 text-white shadow-amber-100'}
-                   `}
-                 >
-                   <Plus size={14} /> Add to Request
-                 </button>
+                    onClick={handleAddFilingEntry}
+                    disabled={!currentFilingEntry.date}
+                    className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50
+                      ${filingType === 'ODTR' ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-amber-600 text-white shadow-amber-100'}
+                    `}
+                  >
+                    <Plus size={14} /> Add to Request
+                  </button>
                </div>
              </div>
+           
 
              {/* Tooltip Portal for Disabled Dates in Builder */}
              <AnimatePresence>
@@ -1427,55 +1742,77 @@ const AttendanceTab: React.FC = () => {
               </div>
             </div>
 
-            {/* List of Entries */}
-            <div className="flex-1 overflow-y-auto mb-6 pr-2">
+            {/* List of Entries - Tabular Form */}
+            <div className="flex-1 overflow-hidden flex flex-col mb-6 bg-slate-50/50 rounded-2xl border border-slate-100">
               {filingEntries.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50 text-center p-8">
+                <div className="h-full flex flex-col items-center justify-center text-center p-8">
                   <Fingerprint size={48} className="text-slate-200 mb-4" />
                   <p className="text-sm font-bold text-slate-400">No logs added yet</p>
-                  <p className="text-xs text-slate-400 mt-1">Select dates and times on the left to populate this list.</p>
+                  <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">Select dates and times on the left</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                   {filingEntries.map((entry) => (
-                     <div key={entry.id} className="flex justify-between items-center p-4 bg-white border border-slate-100 rounded-xl shadow-sm hover:border-slate-300 transition-all group">
-                       <div className="flex items-center gap-3">
-                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold border ${filingType === 'ODTR' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                           {new Date(entry.date).getDate()}
-                         </div>
-                         <div>
-                           <div className="text-sm font-bold text-slate-800">
-                             {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                           </div>
-                           <div className="text-[10px] font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
-                             <Clock size={10} /> {entry.timeIn} — {entry.timeOut}
-                           </div>
-                         </div>
-                       </div>
-                       <button onClick={() => handleRemoveFilingEntry(entry.id)} className="text-slate-300 hover:text-rose-500 transition-colors p-1.5 hover:bg-rose-50 rounded-lg">
-                         <Trash2 size={16} />
-                       </button>
-                     </div>
-                   ))}
+                <div className="flex-1 overflow-y-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 bg-white shadow-[0_1px_0_rgba(0,0,0,0.05)] z-10">
+                      <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <th className="px-6 py-4">Date</th>
+                        <th className="px-6 py-4">Reason</th>
+                        <th className="px-6 py-4 text-center">Original Log</th>
+                        <th className="px-6 py-4 text-center">Adjusted Log</th>
+                        <th className="px-6 py-4">Remarks</th>
+                        <th className="px-6 py-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filingEntries.map((entry) => (
+                        <tr key={entry.id} className="group hover:bg-white transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="text-sm font-bold text-slate-700">
+                              {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded border border-slate-200">
+                                {filingType === 'ODTR' ? entry.shift : entry.adjustmentReason}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">IN: {entry.originalIn || '--:--'}</span>
+                              <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">OUT: {entry.originalOut || '--:--'}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col items-center gap-1">
+                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${filingType === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeIn}</span>
+                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${filingType === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeOut}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 min-w-[150px]">
+                            <p className="text-xs text-slate-500 italic line-clamp-2">{entry.remarks || "--"}</p>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button 
+                              onClick={() => handleRemoveFilingEntry(entry.id)} 
+                              className="text-slate-300 hover:text-rose-500 transition-colors p-2 hover:bg-rose-50 rounded-xl"
+                              title="Remove Entry"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
 
             {/* Footer Section */}
             <div className="shrink-0 space-y-6 pt-6 border-t border-slate-100">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Justification / Reason</label>
-                <textarea 
-                  className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-sm font-medium text-slate-900 h-24 resize-none"
-                  placeholder="Provide valid reason for this filing..."
-                  value={filingReason}
-                  onChange={(e) => setFilingReason(e.target.value)}
-                />
-              </div>
-
               <div className="flex gap-3">
                 <button 
-                  disabled={filingEntries.length === 0 || !filingReason}
+                  disabled={filingEntries.length === 0}
                   onClick={() => setIsAttendanceFilingModalOpen(false)}
                   className={`flex-1 py-3.5 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2
                     ${filingType === 'ODTR' ? 'bg-slate-900 shadow-slate-200 hover:bg-slate-800' : 'bg-amber-600 shadow-amber-100 hover:bg-amber-700'}
