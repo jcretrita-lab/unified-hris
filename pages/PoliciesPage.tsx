@@ -43,6 +43,7 @@ import {
     TrendingUp,
     ChevronDown,
     ShieldPlus,
+    ShieldAlert,
     Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -189,6 +190,7 @@ interface PolicyState {
     autoRejectDays: number;
     leaveMonetizationTaxFreeLimit: number;
     shiftRequestDeadlineDays: number;
+    minimumNetTakeHomePercentage: number;
 };
 
 const INITIAL_STATE: PolicyState = {
@@ -198,6 +200,7 @@ const INITIAL_STATE: PolicyState = {
 
     // Book III
     normalHours: 8,
+    minimumNetTakeHomePercentage: 20,
     mealBreakMinutes: 60,
     isMealBreakCompensated: false,
     gracePeriod: 15,
@@ -266,6 +269,7 @@ const INITIAL_STATE: PolicyState = {
     maternityLeave: 105,
     paternityLeave: 7,
     soloParentLeave: 7,
+    
     vawcLeave: 10,
     magnaCartaLeave: 60,
     nonCompressedWorkWeek: false,
@@ -1131,6 +1135,37 @@ const PoliciesPage: React.FC = () => {
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* Deduction Safety Net */}
+                                    <div className="p-8 border border-slate-200 rounded-3xl bg-rose-50/50 mb-6">
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <ShieldAlert size={24} className="text-rose-600" />
+                                            <div>
+                                                <h4 className="font-bold text-slate-900">Payroll Safety Net (Max Deduction Cap)</h4>
+                                                <p className="text-xs text-slate-500">Ensure employees retain a minimum percentage of their net pay after non-statutory deductions (e.g., loans).</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-1">Minimum Net Take-Home Pay</label>
+                                                <p className="text-[11px] text-slate-500 leading-relaxed max-w-md">
+                                                    If a scheduled loan deduction causes the employee's net pay to fall below this percentage, the system will automatically partial-deduct or skip the deduction to comply with the safety net.
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl border border-slate-200 shadow-inner group focus-within:border-rose-300 transition-all shrink-0">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    className="w-16 bg-transparent text-2xl font-black text-rose-600 outline-none text-center"
+                                                    value={policies.minimumNetTakeHomePercentage}
+                                                    onChange={(e) => updatePolicy('minimumNetTakeHomePercentage', Number(e.target.value))}
+                                                />
+                                                <div className="h-8 w-px bg-slate-200"></div>
+                                                <span className="text-xl font-black text-slate-400 pr-2">%</span>
+                                            </div>
+                                        </div>
+                                    </div>   
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         {/* Require Attendance Before/After Holiday */}

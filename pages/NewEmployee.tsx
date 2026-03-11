@@ -36,6 +36,7 @@ import {
     ArrowDownCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useSystemSettings } from '../context/SystemSettingsContext';
 
 // --- Types & Interfaces ---
 interface PayComponent {
@@ -181,6 +182,7 @@ const STEPS = [
 
 const NewEmployee: React.FC = () => {
     const navigate = useNavigate();
+    const { rankConfig } = useSystemSettings();
     const [currentStep, setCurrentStep] = useState(1);
     const [viewDate, setViewDate] = useState(new Date());
     const [showAddComponentModal, setShowAddComponentModal] = useState(false);
@@ -767,7 +769,7 @@ const NewEmployee: React.FC = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <InputField label="Section" value={formData.section} field="section" disabled={true} />
-                            <InputField label="Job Level" value={formData.jobLevel} field="jobLevel" disabled={true} />
+                            <InputField label={rankConfig.rankLabel} value={formData.jobLevel} field="jobLevel" disabled={true} />
                             <InputField label="Employment Status" value={formData.employmentStatus} field="employmentStatus" disabled={true} />
                         </div>
 

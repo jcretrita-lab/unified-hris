@@ -3,6 +3,7 @@ import ScheduleOverview from './schedule/ScheduleOverview';
 import ShiftInformation from './schedule/ShiftInformation';
 import LeaveRequests from './schedule/LeaveRequests';
 import { PaySchedule, Employee } from '../../types';
+import { CalendarRange, Clock, AlertCircle } from 'lucide-react';
 
 interface ScheduleTabProps {
   employee: Employee;
@@ -75,61 +76,101 @@ useEffect(() => {
   return (
     <div className="space-y-8">
 
-      {/* PAY SCHEDULE CARD */}
-      <div className="p-6 border border-slate-200 rounded-2xl bg-white">
+      {/* PAY SCHEDULE CARD - REDESIGNED */}
+      <div className="p-6 border border-slate-200 rounded-3xl bg-white shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
+              <CalendarRange size={16} className="text-indigo-600" />
+              Pay Schedule Configuration
+            </h3>
+            <p className="text-[10px] text-slate-500 mt-1">Dictates the payroll generation cycle and attendance cutoff periods.</p>
+          </div>
+          
+          {/* HR / ADMIN VIEW (EDITABLE) */}
+          {!isEmployeeView && (
+             <div className="flex items-center gap-3">
+                <select
+                  className="w-full md:w-64 p-2 border border-slate-200 rounded-xl bg-slate-50 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                  value={empData.payScheduleId || ''}
+                  onChange={(e) => setEmpData({ ...empData, payScheduleId: e.target.value })}
+                >
+                  <option value="" disabled>Select Pay Schedule</option>
+                  {paySchedules.map((ps) => (
+                    <option key={ps.id} value={ps.id}>{ps.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleSave}
+                  className="px-5 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shrink-0"
+                >
+                  Save
+                </button>
+             </div>
+          )}
+        </div>
 
-        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
-          Pay Schedule
-        </label>
-
-        {/* EMPLOYEE VIEW (READ-ONLY) */}
-        {isEmployeeView && selectedSchedule && (
-          <div className="space-y-3">
-            <div className="text-sm font-bold text-slate-800">
-              {selectedSchedule.name}
+        {/* Visual Information Box */}
+        {selectedSchedule && (
+          <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-5 flex flex-col md:flex-row gap-6 items-start md:items-center transition-all">
+            <div className="p-4 bg-white rounded-2xl text-indigo-600 shadow-sm shrink-0 border border-indigo-50">
+                <Clock size={32} />
             </div>
+            
+            <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h4 className="text-lg font-bold text-indigo-950">
+                      {selectedSchedule.name}
+                  </h4>
+                  {/* Hardcoded 'ps1' logic based on your original mock design indicating it's the default */}
+                  {selectedSchedule.id === 'ps1' && (
+                      <span className="text-[9px] bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md uppercase tracking-widest font-bold">
+                        Company Default
+                      </span>
+                  )}
+                  <span className="text-[9px] bg-white border border-indigo-200 text-indigo-600 px-2 py-0.5 rounded-md uppercase tracking-widest font-bold">
+                    {selectedSchedule.frequency}
+                  </span>
+                </div>
 
-            <div className="text-[11px] text-slate-500">
-              Cutoff 1: {selectedSchedule.firstCutoff} • Pay Date: {selectedSchedule.firstPayDate}
+                <div className="flex flex-wrap items-center gap-6 mt-3">
+                  {/* Cutoff 1 Display */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">1st Cutoff Period</span>
+                    <div className="text-sm font-bold text-slate-800">
+                      Day 1 — Day {selectedSchedule.firstCutoff}
+                      <span className="ml-2 text-indigo-600 text-xs font-black bg-white px-2 py-1 rounded-lg shadow-sm border border-indigo-50">
+                        Pay: Day {selectedSchedule.firstPayDate}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Cutoff 2 Display (If Applicable) */}
+                  {selectedSchedule.secondCutoff && (
+                    <>
+                      <div className="w-px h-8 bg-indigo-200 hidden md:block"></div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">2nd Cutoff Period</span>
+                        <div className="text-sm font-bold text-slate-800">
+                          Day 16 — Day {selectedSchedule.secondCutoff}
+                          <span className="ml-2 text-indigo-600 text-xs font-black bg-white px-2 py-1 rounded-lg shadow-sm border border-indigo-50">
+                            Pay: Day {selectedSchedule.secondPayDate}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
             </div>
-
-            {selectedSchedule.secondCutoff && (
-              <div className="text-[11px] text-slate-500">
-                Cutoff 2: {selectedSchedule.secondCutoff} • Pay Date: {selectedSchedule.secondPayDate}
-              </div>
-            )}
-
-            <p className="text-[11px] text-slate-400 mt-2">
-              Your pay schedule is assigned by HR.
-            </p>
           </div>
         )}
-
-        {/* HR / ADMIN VIEW (EDITABLE) */}
-        {!isEmployeeView && (
-          <>
-            <select
-              className="w-full p-3 border border-slate-300 rounded-xl bg-white text-sm font-bold"
-              value={empData.payScheduleId || ''}
-              onChange={(e) =>
-                setEmpData({ ...empData, payScheduleId: e.target.value })
-              }
-            >
-              <option value="">Select Pay Schedule</option>
-              {paySchedules.map((ps) => (
-                <option key={ps.id} value={ps.id}>
-                  {ps.name}
-                </option>
-              ))}
-            </select>
-
-            <button
-              onClick={handleSave}
-              className="mt-4 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all"
-            >
-              Save Changes
-            </button>
-          </>
+        
+        {/* EMPLOYEE VIEW (READ-ONLY WARNING) */}
+        {isEmployeeView && (
+           <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-400 font-bold bg-slate-50 p-2.5 rounded-xl border border-slate-100 w-fit">
+              <AlertCircle size={14} />
+              Your pay schedule is managed by HR. Contact your administrator for discrepancies.
+           </div>
         )}
       </div>
 

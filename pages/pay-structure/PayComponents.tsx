@@ -24,7 +24,9 @@ import {
   Save,
   Gift,
   Lock,
-  Building2
+  Building2,
+  Check,      
+  ChevronDown  
 } from 'lucide-react';
 
 interface PayComponentsProps {
@@ -534,77 +536,90 @@ const PayComponents: React.FC<PayComponentsProps> = ({
                         </div>
                       )}
                       {editor.type === 'deduction' && editor.category === 'loan' && (
-                        <div className="space-y-4 border border-amber-200 bg-amber-50/50 p-4 rounded-2xl">
-                          <div className="text-[11px] font-bold text-amber-700 uppercase tracking-widest">
-                            Loan Configuration
+                          <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/30 overflow-hidden shadow-sm">
+                              {/* Header Area */}
+                              <div className="bg-indigo-100/50 p-4 border-b border-indigo-100 flex items-start gap-3">
+                                  <div className="p-2 bg-indigo-600 text-white rounded-lg shadow-sm shrink-0">
+                                      <Banknote size={16} />
+                                  </div>
+                                  <div>
+                                      <h4 className="text-sm font-bold text-indigo-900">Global Loan Template Rules</h4>
+                                      <p className="text-[10px] text-indigo-700/80 font-medium mt-1 leading-relaxed">
+                                          Do not enter principal amounts here. This establishes the system-wide deduction rules. Actual loan balances and monthly amortizations are assigned individually in the Employee's Profile.
+                                      </p>
+                                  </div>
+                              </div>
+
+                              {/* Configuration Section (Stacked for full alignment) */}
+                              <div className="p-5 space-y-6">
+                                  {/* Provider Dropdown */}
+                                  <div>
+                                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                                          Loan Provider / Type
+                                      </label>
+                                      <div className="relative">
+                                          <select
+                                              className="w-full border border-slate-200 p-3.5 rounded-xl text-sm font-bold bg-white text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all shadow-sm cursor-pointer appearance-none"
+                                              value={editor.loanProvider || ''}
+                                              onChange={(e) => setEditor({ ...editor, loanProvider: e.target.value })}
+                                          >
+                                              <option value="">Select Provider...</option>
+                                              <option value="company_cash_advance">Company Cash Advance</option>
+                                              <option value="sss_salary_loan">SSS Salary Loan</option>
+                                              <option value="pagibig_multi_purpose">Pag-IBIG Multi-Purpose Loan (MPL)</option>
+                                          </select>
+                                          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                                      </div>
+                                  </div>
+
+                                  {/* Visual Cards for Safety Net */}
+                                  <div>
+                                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                                          Max Deduction Cap (Safety Net)
+                                      </label>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          <button
+                                              type="button"
+                                              onClick={() => setEditor({ ...editor, loanDeductionCap: 'none' })}
+                                              className={`p-4 rounded-xl border-2 text-left transition-all ${editor.loanDeductionCap === 'none' ? 'border-indigo-600 bg-indigo-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}`}
+                                          >
+                                              <div className="flex items-center justify-between mb-1">
+                                                  <span className={`text-sm font-black ${editor.loanDeductionCap === 'none' ? 'text-indigo-900' : 'text-slate-700'}`}>No Cap</span>
+                                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editor.loanDeductionCap === 'none' ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
+                                                      {editor.loanDeductionCap === 'none' && <Check size={10} className="text-white" />}
+                                                  </div>
+                                              </div>
+                                              <p className="text-[10px] text-slate-500 font-medium leading-relaxed mt-1.5">Strict Fixed Deduction. The exact amortization is deducted regardless of net pay.</p>
+                                          </button>
+
+                                          <button
+                                              type="button"
+                                              onClick={() => setEditor({ ...editor, loanDeductionCap: 'company_policy' })}
+                                              className={`p-4 rounded-xl border-2 text-left transition-all ${editor.loanDeductionCap === 'company_policy' || !editor.loanDeductionCap ? 'border-indigo-600 bg-indigo-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}`}
+                                          >
+                                              <div className="flex items-center justify-between mb-1">
+                                                  <span className={`text-sm font-black ${editor.loanDeductionCap === 'company_policy' || !editor.loanDeductionCap ? 'text-indigo-900' : 'text-slate-700'}`}>Company Policy</span>
+                                                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editor.loanDeductionCap === 'company_policy' || !editor.loanDeductionCap ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
+                                                      {(editor.loanDeductionCap === 'company_policy' || !editor.loanDeductionCap) && <Check size={10} className="text-white" />}
+                                                  </div>
+                                              </div>
+                                              <p className="text-[10px] text-slate-500 font-medium leading-relaxed mt-1.5">Apply Net Pay Safety Net. Halts deduction if it breaches the minimum take-home pay.</p>
+                                          </button>
+                                      </div>
+                                  </div>
+                              </div>
                           </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">
-                                Loan Principal Amount
-                              </label>
-                              <input
-                                type="number"
-                                className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
-                                value={editor.loanPrincipalAmount ?? ''}
-                                onChange={(e) =>
-                                  setEditor({ ...editor, loanPrincipalAmount: Number(e.target.value) })
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">
-                                Installment per Cutoff
-                              </label>
-                              <input
-                                type="number"
-                                className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
-                                value={editor.loanInstallmentAmount ?? editor.fixedValue ?? ''}
-                                onChange={(e) =>
-                                  setEditor({ ...editor, loanInstallmentAmount: Number(e.target.value) })
-                                }
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">
-                                Start Date
-                              </label>
-                              <input
-                                type="date"
-                                className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
-                                value={editor.loanStartDate || ''}
-                                onChange={(e) =>
-                                  setEditor({ ...editor, loanStartDate: e.target.value })
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1.5">
-                                End Date (optional)
-                              </label>
-                              <input
-                                type="date"
-                                className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
-                                value={editor.loanEndDate || ''}
-                                onChange={(e) =>
-                                  setEditor({ ...editor, loanEndDate: e.target.value })
-                                }
-                              />
-                            </div>
-                          </div>
-                        </div>
                       )}
                     </div>
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-white rounded-lg border border-slate-200 text-slate-500"><Archive size={18} /></div>
-                        <div><h4 className="text-sm font-bold text-slate-900">Auto-Archive Policy</h4><p className="text-[10px] text-slate-500 font-medium">Archive if unused for days (0 to disable).</p></div>
+                        <div><h4 className="text-sm font-bold text-slate-900">Auto-Archive 
+                          
+                          
+                          
+                          
+                          </h4><p className="text-[10px] text-slate-500 font-medium">Archive if unused for days (0 to disable).</p></div>
                       </div>
                       <input type="number" min="0" className="w-16 p-2 text-center text-sm font-bold border border-slate-200 rounded-lg outline-none focus:border-indigo-500 bg-white text-slate-900" value={editor.archiveAfterDays || 0} onChange={(e) => setEditor({ ...editor, archiveAfterDays: Number(e.target.value) })} />
                     </div>

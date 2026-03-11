@@ -134,6 +134,10 @@ export interface PayComponent {
 
   // added to know loans exist
   category?: 'loan' | 'government' | 'other';
+  loanProvider?: string;
+  loanDeductionCap?: string;
+  requiresConsent?: boolean;
+  autoSuspendOnLowPay?: boolean;
   loanPrincipalAmount?: number;
   loanInstallmentAmount?: number;
   loanRemainingBalance?: number;

@@ -135,6 +135,24 @@ const YearEndTaxPrepPage: React.FC = () => {
                                             </div>
                                         </div>
                                     </td>
+
+                                    <td className="px-6 py-5 text-right font-mono text-sm font-black text-slate-600 border-l border-slate-50 bg-slate-50/30">
+                                        {formatCurrency(item.assumedTax)}
+                                    </td>
+                                    <td className="px-6 py-5 text-center border-l border-slate-50 bg-slate-50/30">
+                                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-slate-100 text-slate-500 border-slate-200">
+                                            Projected
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-5 text-center border-l border-slate-50 bg-slate-50/30">
+                                        <button 
+                                            onClick={() => { setSelectedEmpId(item.id); }} 
+                                            className="p-2 text-slate-300 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-all border border-transparent shadow-sm" 
+                                            title="View Projection Logic"
+                                        >
+                                            <Eye size={18} />
+                                        </button>
+                                    </td>
                                     <td className="px-6 py-5 text-right font-mono text-sm font-black text-indigo-600 border-l border-slate-50 bg-indigo-50/5">
                                         {formatCurrency(item.actualTax)}
                                     </td>
@@ -146,10 +164,11 @@ const YearEndTaxPrepPage: React.FC = () => {
                                             {item.actualTaxStatus}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-5 text-center border-l border-slate-50">
+                                    <td className="px-6 py-5 text-center border-l border-slate-50 bg-indigo-50/5">
                                         <button
                                             onClick={() => { setSelectedEmpId(item.id); }}
-                                            className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-indigo-100 shadow-sm"
+                                            className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-emerald-100 shadow-sm"
+                                            title="View Final Ledger"
                                         >
                                             <Eye size={18} />
                                         </button>
