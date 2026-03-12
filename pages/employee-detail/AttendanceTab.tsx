@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Calendar as CalendarIcon, 
-  Table as TableIcon, 
-  LayoutGrid, 
-  ChevronLeft, 
-  ChevronRight, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  XCircle, 
+import {
+  Calendar as CalendarIcon,
+  Table as TableIcon,
+  LayoutGrid,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
   Plus,
   Filter,
   Download,
@@ -25,7 +25,10 @@ import {
   Trash2,
   Fingerprint,
   ArrowRight,
-  X
+  X,
+  Search,
+  MonitorSmartphone,
+  Settings2
 } from 'lucide-react';
 import Modal from '../../components/Modal';
 
@@ -47,98 +50,98 @@ interface DailyRecord {
 }
 
 const ATTENDANCE_DATA: DailyRecord[] = [
-  { 
-    date: '2025-08-01', 
-    status: 'present', 
-    timeIn: '07:55 AM', 
-    timeOut: '05:01 PM', 
-    hours: 8, 
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
-    scheduledHours: 8 
+  {
+    date: '2025-08-01',
+    status: 'present',
+    timeIn: '07:55 AM',
+    timeOut: '05:01 PM',
+    hours: 8,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
+    scheduledHours: 8
   },
-  { 
-    date: '2025-08-04', 
-    status: 'overtime', 
-    timeIn: '08:00 AM', 
-    timeOut: '08:30 PM', 
-    hours: 11.5, 
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
+  {
+    date: '2025-08-04',
+    status: 'overtime',
+    timeIn: '08:00 AM',
+    timeOut: '08:30 PM',
+    hours: 11.5,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
     scheduledHours: 8,
     overtimeHours: 3.5
   },
-  { 
-    date: '2025-08-05', 
-    status: 'late', 
-    timeIn: '09:15 AM', 
-    timeOut: '06:15 PM', 
+  {
+    date: '2025-08-05',
+    status: 'late',
+    timeIn: '09:15 AM',
+    timeOut: '06:15 PM',
     hours: 8, // Worked full hours but late in
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
-    scheduledHours: 8 
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
+    scheduledHours: 8
   },
-  { 
-    date: '2025-08-06', 
-    status: 'present', 
-    timeIn: '07:58 AM', 
-    timeOut: '05:05 PM', 
-    hours: 8, 
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
-    scheduledHours: 8 
+  {
+    date: '2025-08-06',
+    status: 'present',
+    timeIn: '07:58 AM',
+    timeOut: '05:05 PM',
+    hours: 8,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
+    scheduledHours: 8
   },
-  { 
-    date: '2025-08-07', 
-    status: 'leave', 
-    timeIn: '-', 
-    timeOut: '-', 
-    hours: 0, 
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
+  {
+    date: '2025-08-07',
+    status: 'leave',
+    timeIn: '-',
+    timeOut: '-',
+    hours: 0,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
     scheduledHours: 8,
-    note: 'Sick Leave (Approved)' 
+    note: 'Sick Leave (Approved)'
   },
-  { 
-    date: '2025-08-08', 
-    status: 'absent', 
-    timeIn: '-', 
-    timeOut: '-', 
-    hours: 0, 
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
-    scheduledHours: 8 
+  {
+    date: '2025-08-08',
+    status: 'absent',
+    timeIn: '-',
+    timeOut: '-',
+    hours: 0,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
+    scheduledHours: 8
   },
-  { 
-    date: '2025-08-11', 
-    status: 'present', 
-    timeIn: '08:00 AM', 
-    timeOut: '05:00 PM', 
-    hours: 8, 
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
-    scheduledHours: 8 
+  {
+    date: '2025-08-11',
+    status: 'present',
+    timeIn: '08:00 AM',
+    timeOut: '05:00 PM',
+    hours: 8,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
+    scheduledHours: 8
   },
-  { 
-    date: '2025-08-12', 
-    status: 'pending', 
-    timeIn: '-', 
-    timeOut: '-', 
-    hours: 0, 
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
-    scheduledHours: 8 
+  {
+    date: '2025-08-12',
+    status: 'pending',
+    timeIn: '-',
+    timeOut: '-',
+    hours: 0,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
+    scheduledHours: 8
   },
-  { 
-    date: '2025-08-25', 
-    status: 'holiday', 
-    timeIn: '-', 
-    timeOut: '-', 
-    hours: 0, 
-    scheduledIn: '08:00 AM', 
-    scheduledOut: '05:00 PM', 
+  {
+    date: '2025-08-25',
+    status: 'holiday',
+    timeIn: '-',
+    timeOut: '-',
+    hours: 0,
+    scheduledIn: '08:00 AM',
+    scheduledOut: '05:00 PM',
     scheduledHours: 8,
-    note: 'National Heroes Day' 
+    note: 'National Heroes Day'
   },
   {
     date: '2025-10-01',
@@ -194,11 +197,11 @@ const ATTENDANCE_DATA: DailyRecord[] = [
 ];
 
 const PAST_ODTR_RECORDS = [
-  { 
-    id: 1, 
+  {
+    id: 1,
     type: 'ODTR',
-    date: 'Oct 25, 2025', 
-    status: 'Pending', 
+    date: 'Oct 25, 2025',
+    status: 'Pending',
     range: 'Oct 20 - Oct 25, 2025',
     logCount: 3,
     entries: [
@@ -207,22 +210,22 @@ const PAST_ODTR_RECORDS = [
       { date: '2025-10-22', weekday: 'Wednesday', shift: '08:00 - 17:00', timeIn: '07:55 AM', timeOut: '05:00 PM', remarks: 'Regular log' }
     ]
   },
-  { 
-    id: 2, 
+  {
+    id: 2,
     type: 'AAR',
-    date: 'Nov 12, 2025', 
-    status: 'Approved', 
+    date: 'Nov 12, 2025',
+    status: 'Approved',
     range: 'Nov 10, 2025',
     logCount: 1,
     entries: [
       { date: '2025-11-10', shift: '08:00 - 17:00', originalIn: '08:30 AM', originalOut: '--:--', timeIn: '08:30 AM', timeOut: '05:30 PM', remarks: 'Official Business', adjustmentReason: 'Official Business' }
     ]
   },
-  { 
-    id: 3, 
+  {
+    id: 3,
     type: 'ODTR',
-    date: 'Dec 05, 2025', 
-    status: 'Approved', 
+    date: 'Dec 05, 2025',
+    status: 'Approved',
     range: 'Dec 01 - Dec 03, 2025',
     logCount: 2,
     entries: [
@@ -230,11 +233,11 @@ const PAST_ODTR_RECORDS = [
       { date: '2025-12-03', weekday: 'Wednesday', shift: '08:00 - 17:00', timeIn: '08:10 AM', timeOut: '05:15 PM', remarks: 'Power outage' }
     ]
   },
-  { 
-    id: 4, 
+  {
+    id: 4,
     type: 'ODTR',
-    date: 'Jan 15, 2026', 
-    status: 'Approved', 
+    date: 'Jan 15, 2026',
+    status: 'Approved',
     range: 'Jan 12 - Jan 14, 2026',
     logCount: 3,
     entries: [
@@ -243,11 +246,11 @@ const PAST_ODTR_RECORDS = [
       { date: '2026-01-14', weekday: 'Wednesday', shift: '08:00 - 17:00', timeIn: '07:55 AM', timeOut: '05:10 PM', remarks: 'Regular log' }
     ]
   },
-  { 
-    id: 5, 
+  {
+    id: 5,
     type: 'AAR',
-    date: 'Feb 10, 2026', 
-    status: 'Pending', 
+    date: 'Feb 10, 2026',
+    status: 'Pending',
     range: 'Feb 05, 2026',
     logCount: 1,
     entries: [
@@ -486,13 +489,13 @@ const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; l
         let h = parseInt(match[1], 10);
         const m = parseInt(match[2], 10);
         let p: 'AM' | 'PM' = match[3] ? (match[3].toUpperCase() as 'AM' | 'PM') : (h >= 12 ? 'PM' : 'AM');
-        
+
         let h12 = h;
         if (!match[3]) {
           if (h === 0) h12 = 12;
           else if (h > 12) h12 = h - 12;
         }
-        
+
         setSelHour(h12);
         setSelMin(m);
         setSelPeriod(p);
@@ -549,19 +552,19 @@ const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; l
     setIsOpen(o => !o);
   };
 
-  const displayValue = value && value !== '-' 
+  const displayValue = value && value !== '-'
     ? (() => {
-        const match = value.match(/(\d+):(\d+)(?:\s*(AM|PM))?/i);
-        if (!match) return value;
-        let h = parseInt(match[1], 10);
-        const m = parseInt(match[2], 10);
-        let p = match[3] ? match[3].toUpperCase() : (h >= 12 ? 'PM' : 'AM');
-        if (!match[3]) {
-          if (h === 0) h = 12;
-          else if (h > 12) h -= 12;
-        }
-        return `${h}:${m.toString().padStart(2, '0')} ${p}`;
-      })()
+      const match = value.match(/(\d+):(\d+)(?:\s*(AM|PM))?/i);
+      if (!match) return value;
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      let p = match[3] ? match[3].toUpperCase() : (h >= 12 ? 'PM' : 'AM');
+      if (!match[3]) {
+        if (h === 0) h = 12;
+        else if (h > 12) h -= 12;
+      }
+      return `${h}:${m.toString().padStart(2, '0')} ${p}`;
+    })()
     : 'Select time';
 
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -660,6 +663,117 @@ const OdtrTimePicker: React.FC<{ value: string; onChange: (v: string) => void; l
     </div>
   );
 };
+// --- DTR SOURCE MOCK DATA ---
+const MOCK_TCD = [
+  { date: 'Aug 06, 2025', weekday: 'Wednesday', shift: '8:00 AM - 5:00 PM', in: '07:55 AM', out: '05:05 PM', remarks: 'Regular Tap in/out' },
+  { date: 'Aug 07, 2025', weekday: 'Thursday', shift: '8:00 AM - 5:00 PM', in: '07:58 AM', out: '05:10 PM', remarks: 'Regular Tap in/out' },
+  { date: 'Aug 08, 2025', weekday: 'Friday', shift: '8:00 AM - 5:00 PM', in: '08:05 AM', out: '05:01 PM', remarks: 'Late Arrival' },
+  { date: 'Aug 13, 2025', weekday: 'Wednesday', shift: '8:00 AM - 5:00 PM', in: '07:59 AM', out: '--:--', remarks: 'Physical biometric device error' },
+  { date: 'Aug 14, 2025', weekday: 'Thursday', shift: '8:00 AM - 5:00 PM', in: '07:50 AM', out: '05:00 PM', remarks: '' },
+  { date: 'Aug 15, 2025', weekday: 'Friday', shift: '8:00 AM - 5:00 PM', in: '07:45 AM', out: '05:30 PM', remarks: '' },
+];
+
+const MOCK_ODTR = [
+  { date: 'Aug 11, 2025', weekday: 'Monday', shift: '8:00 AM - 5:00 PM', in: '08:00 AM', out: '05:00 PM', remarks: 'Work from Home' },
+  { date: 'Aug 12, 2025', weekday: 'Tuesday', shift: '8:00 AM - 5:00 PM', in: '08:00 AM', out: '05:00 PM', remarks: 'Work from Home' },
+  { date: 'Aug 18, 2025', weekday: 'Monday', shift: '8:00 AM - 5:00 PM', in: '08:00 AM', out: '05:10 PM', remarks: 'Field work' },
+  { date: 'Aug 19, 2025', weekday: 'Tuesday', shift: '8:00 AM - 5:00 PM', in: '07:55 AM', out: '05:05 PM', remarks: 'Work from Home' },
+  { date: 'Aug 20, 2025', weekday: 'Wednesday', shift: '8:00 AM - 5:00 PM', in: '07:58 AM', out: '05:02 PM', remarks: 'Client meeting' },
+];
+
+const MOCK_ADJ = [
+  {
+    date: 'Aug 13, 2025',
+    weekday: 'Wednesday',
+    shift: '8:00 AM - 5:00 PM',
+    type: 'Missing Bio Out',
+    original: { in: '07:59 AM', out: '--:--' },
+    adjusted: { in: '07:59 AM', out: '05:05 PM' },
+    remarks: 'Forgot to tap out; adjusted by manager'
+  }
+];
+
+const MOCK_CONSOLIDATED = [
+  { id: 'c1', date: 'Aug 06, 2025', weekday: 'Wednesday', shift: '8:00 AM - 5:00 PM', in: '07:55 AM', out: '05:05 PM', remarks: 'Regular Tap in/out', source: 'Time Collection Device' },
+  { id: 'c2', date: 'Aug 07, 2025', weekday: 'Thursday', shift: '8:00 AM - 5:00 PM', in: '07:58 AM', out: '05:10 PM', remarks: 'Regular Tap in/out', source: 'Time Collection Device' },
+  { id: 'c3', date: 'Aug 08, 2025', weekday: 'Friday', shift: '8:00 AM - 5:00 PM', in: '08:05 AM', out: '05:01 PM', remarks: 'Late Arrival', source: 'Time Collection Device' },
+  { id: 'c-rest-1', date: 'Aug 09, 2025', weekday: 'Saturday', shift: 'Rest Day', in: '--:--', out: '--:--', remarks: '', source: '' },
+  { id: 'c-rest-2', date: 'Aug 10, 2025', weekday: 'Sunday', shift: 'Rest Day', in: '--:--', out: '--:--', remarks: '', source: '' },
+  { id: 'c4', date: 'Aug 11, 2025', weekday: 'Monday', shift: '8:00 AM - 5:00 PM', in: '08:00 AM', out: '05:00 PM', remarks: 'Work from Home ODTR', source: 'Online Daily Time Record' },
+  { id: 'c5', date: 'Aug 12, 2025', weekday: 'Tuesday', shift: '8:00 AM - 5:00 PM', in: '08:00 AM', out: '05:00 PM', remarks: 'Work from Home ODTR', source: 'Online Daily Time Record' },
+  {
+    id: 'c6',
+    date: 'Aug 13, 2025',
+    weekday: 'Wednesday',
+    shift: '8:00 AM - 5:00 PM',
+    in: '07:59 AM',
+    out: '--:--',
+    remarks: 'No tap out recorded',
+    source: 'Time Collection Device',
+    adjustment: {
+      id: 'c6-adj',
+      in: '07:59 AM',
+      out: '05:05 PM',
+      remarks: 'Forgot to tap out; adjusted by manager',
+      source: 'Attendance Adjustment Record'
+    }
+  },
+  { id: 'c7', date: 'Aug 14, 2025', weekday: 'Thursday', shift: '8:00 AM - 5:00 PM', in: '07:50 AM', out: '05:00 PM', remarks: '', source: 'Time Collection Device' },
+  { id: 'c8', date: 'Aug 15, 2025', weekday: 'Friday', shift: '8:00 AM - 5:00 PM', in: '07:45 AM', out: '05:30 PM', remarks: '', source: 'Time Collection Device' },
+  { id: 'c-rest-3', date: 'Aug 16, 2025', weekday: 'Saturday', shift: 'Rest Day', in: '--:--', out: '--:--', remarks: '', source: '' },
+  { id: 'c-rest-4', date: 'Aug 17, 2025', weekday: 'Sunday', shift: 'Rest Day', in: '--:--', out: '--:--', remarks: '', source: '' },
+  { id: 'c9', date: 'Aug 18, 2025', weekday: 'Monday', shift: '8:00 AM - 5:00 PM', in: '08:00 AM', out: '05:00 PM', remarks: '', source: 'Online Daily Time Record' },
+  { id: 'c10', date: 'Aug 19, 2025', weekday: 'Tuesday', shift: '8:00 AM - 5:00 PM', in: '07:55 AM', out: '05:05 PM', remarks: '', source: 'Online Daily Time Record' },
+  { id: 'c11', date: 'Aug 20, 2025', weekday: 'Wednesday', shift: '8:00 AM - 5:00 PM', in: '07:58 AM', out: '05:02 PM', remarks: '', source: 'Online Daily Time Record' },
+];
+
+const SourceBadge = ({ source }: { source: string }) => {
+  switch (source) {
+    case 'Time Collection Device': return <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 text-[9px] font-bold uppercase tracking-tight"><Fingerprint size={10} /> Biometrics</span>;
+    case 'Online Daily Time Record': return <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-purple-50 text-purple-600 text-[9px] font-bold uppercase tracking-tight"><MonitorSmartphone size={10} /> ODTR</span>;
+    case 'Attendance Adjustment Record': return <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[9px] font-bold uppercase tracking-tight"><Settings2 size={10} /> Adjustment</span>;
+    default: return null;
+  }
+};
+
+const SimpleStepper = ({ steps }: { steps: { title: string; subtitle: string; status: 'completed' | 'current' | 'pending'; date?: string }[] }) => {
+  return (
+    <div className="flex items-center justify-between w-full max-w-2xl mx-auto mb-10 mt-2 px-4">
+      {steps.map((step, idx) => (
+        <React.Fragment key={idx}>
+          <div className="flex flex-col items-center relative min-w-[100px]">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: idx * 0.05 }}
+              className={`w-6 h-6 rounded-full flex items-center justify-center z-10 transition-all duration-300 ${step.status === 'completed' ? 'bg-emerald-500 text-white shadow-sm' :
+                step.status === 'current' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 ring-4 ring-indigo-50' :
+                  'bg-white text-slate-300 border border-slate-200'
+                }`}>
+              {step.status === 'completed' ? <Check size={14} strokeWidth={3} /> : <span className="text-[9px] font-bold">{idx + 1}</span>}
+            </motion.div>
+            <div className="mt-2.5 flex flex-col items-center text-center">
+              <span className={`text-[9px] font-bold uppercase tracking-widest ${step.status === 'pending' ? 'text-slate-300' : 'text-slate-900'}`}>{step.title}</span>
+              <span className="text-[9px] text-slate-500 font-bold mt-0.5">{step.subtitle}</span>
+              {step.date && <span className="text-[8px] text-slate-400 font-mono mt-0.5">{step.date}</span>}
+            </div>
+          </div>
+          {idx < steps.length - 1 && (
+            <div className="flex-1 h-[2px] bg-slate-100 mx-[-1px] relative -mt-11 z-0 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: step.status === 'completed' ? '100%' : '0%' }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+                className="h-full bg-emerald-500"
+              />
+            </div>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+};
+
 
 const AttendanceTab: React.FC = () => {
   const [viewMode, setViewMode] = useState<'year' | 'month' | 'list'>('year');
@@ -686,6 +800,8 @@ const AttendanceTab: React.FC = () => {
     originalIn: '',
     originalOut: ''
   });
+
+  const [expandedSource, setExpandedSource] = useState<string | null>('tcd');
 
   const handleOpenFilingChoice = () => {
     setIsFilingTypeModalOpen(true);
@@ -714,6 +830,8 @@ const AttendanceTab: React.FC = () => {
 
   // Hover Card State
   const [hoveredData, setHoveredData] = useState<{ record: DailyRecord; x: number; y: number } | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{ title: string; date: string; source: string } | null>(null);
+  const [expandedConsolidatedCutoff, setExpandedConsolidatedCutoff] = useState<string | null>('current');
 
   // Helper to get status color
   const getStatusColor = (status: AttendanceStatus) => {
@@ -748,7 +866,7 @@ const AttendanceTab: React.FC = () => {
     // NOTE: For fixed positioning, we use the viewport coordinates (rect.left, rect.top) directly.
     // We do NOT add window.scrollY, as 'fixed' is relative to the viewport window, not the document.
     const x = rect.left + rect.width / 2;
-    const y = rect.top; 
+    const y = rect.top;
     setHoveredData({ record, x, y });
   };
 
@@ -759,7 +877,7 @@ const AttendanceTab: React.FC = () => {
   // --- HOVER CARD COMPONENT ---
   const AttendanceHoverCard = ({ data, x, y }: { data: DailyRecord, x: number, y: number }) => {
     const formattedDate = new Date(data.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    
+
     let badgeStyle = 'bg-slate-100 text-slate-600';
     let label = 'Unknown';
     let accentColor = 'text-slate-900';
@@ -803,7 +921,7 @@ const AttendanceTab: React.FC = () => {
     }
 
     return (
-      <div 
+      <div
         className="fixed z-50 w-72 bg-white rounded-xl shadow-2xl border border-slate-100 pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-12px]"
         style={{ left: x, top: y }}
       >
@@ -823,7 +941,7 @@ const AttendanceTab: React.FC = () => {
 
         {/* Content */}
         <div className="p-4 space-y-4">
-          
+
           {data.note && (
             <div className="bg-slate-50 p-2.5 rounded-lg text-xs text-slate-600 italic border border-slate-100 mb-2">
               "{data.note}"
@@ -882,16 +1000,16 @@ const AttendanceTab: React.FC = () => {
 
           {/* Overtime Extra */}
           {data.overtimeHours && data.overtimeHours > 0 && (
-             <div className="bg-indigo-50 rounded-lg p-2.5 flex justify-between items-center border border-indigo-100">
-                <div className="flex items-center gap-2">
-                   <div className="p-1 bg-white rounded text-indigo-600 shadow-sm"><Timer size={10} /></div>
-                   <span className="text-xs font-bold text-indigo-900">Overtime Hours</span>
-                </div>
-                <span className="text-sm font-mono font-bold text-indigo-700">{data.overtimeHours.toFixed(2)}</span>
-             </div>
+            <div className="bg-indigo-50 rounded-lg p-2.5 flex justify-between items-center border border-indigo-100">
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-white rounded text-indigo-600 shadow-sm"><Timer size={10} /></div>
+                <span className="text-xs font-bold text-indigo-900">Overtime Hours</span>
+              </div>
+              <span className="text-sm font-mono font-bold text-indigo-700">{data.overtimeHours.toFixed(2)}</span>
+            </div>
           )}
         </div>
-        
+
         {/* Arrow at bottom */}
         <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-3 h-3 bg-white border-r border-b border-slate-100"></div>
       </div>
@@ -915,16 +1033,16 @@ const AttendanceTab: React.FC = () => {
     const year = 2025;
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31);
-    
+
     // Helper to format date key
     const getDateKey = (date: Date) => {
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
     };
 
     // Generate weeks array
     const weeks: Date[][] = [];
     let currentWeek: Date[] = [];
-    
+
     // Align start to the preceding Sunday if Jan 1 is not Sunday
     const startOffset = startDate.getDay();
     let currentDateIterator = new Date(startDate);
@@ -934,105 +1052,105 @@ const AttendanceTab: React.FC = () => {
     // We add a safety break to prevent infinite loops if something goes wrong
     let safety = 0;
     while ((currentDateIterator <= endDate || currentWeek.length > 0) && safety < 400) {
-        currentWeek.push(new Date(currentDateIterator));
-        
-        if (currentWeek.length === 7) {
-            weeks.push(currentWeek);
-            currentWeek = [];
-            if (currentDateIterator > endDate) break;
-        }
-        currentDateIterator.setDate(currentDateIterator.getDate() + 1);
-        safety++;
+      currentWeek.push(new Date(currentDateIterator));
+
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+        if (currentDateIterator > endDate) break;
+      }
+      currentDateIterator.setDate(currentDateIterator.getDate() + 1);
+      safety++;
     }
 
     return (
-        <div className="w-full overflow-x-auto mt-6 pb-2">
-            <div className="min-w-[800px] select-none">
-                {/* Headers */}
-                <div className="flex pl-8 mb-4 h-4 relative">
-                    {weeks.map((week, wIdx) => {
-                        const firstDay = week.find(d => d.getDate() === 1);
-                        if (firstDay && firstDay.getFullYear() === year) {
-                            return (
-                                <div key={wIdx} className="absolute text-xs font-bold text-slate-400 uppercase" style={{ left: `calc(${wIdx * 16}px + ${wIdx * 4}px)` }}>
-                                    {firstDay.toLocaleString('default', { month: 'short' })}
-                                </div>
-                            );
-                        }
-                        return null;
-                    })}
-                </div>
-                
-                <div className="flex">
-                    {/* Y-Axis Labels */}
-                    <div className="flex flex-col justify-between pr-2 py-[2px] text-[10px] font-bold text-slate-300 h-[110px] w-8 text-right">
-                        <span></span>
-                        <span>Mon</span>
-                        <span></span>
-                        <span>Wed</span>
-                        <span></span>
-                        <span>Fri</span>
-                        <span></span>
-                    </div>
+      <div className="w-full overflow-x-auto mt-6 pb-2">
+        <div className="min-w-[800px] select-none">
+          {/* Headers */}
+          <div className="flex pl-8 mb-4 h-4 relative">
+            {weeks.map((week, wIdx) => {
+              const firstDay = week.find(d => d.getDate() === 1);
+              if (firstDay && firstDay.getFullYear() === year) {
+                return (
+                  <div key={wIdx} className="absolute text-xs font-bold text-slate-400 uppercase" style={{ left: `calc(${wIdx * 16}px + ${wIdx * 4}px)` }}>
+                    {firstDay.toLocaleString('default', { month: 'short' })}
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
 
-                    {/* Heatmap Grid */}
-                    <div className="flex gap-1">
-                        {weeks.map((week, wIdx) => (
-                            <div key={wIdx} className="flex flex-col gap-1">
-                                {week.map((day, dIdx) => {
-                                    const dateKey = getDateKey(day);
-                                    const isCurrentYear = day.getFullYear() === year;
-                                    
-                                    // Find record or mock
-                                    let record = ATTENDANCE_DATA.find(r => r.date === dateKey);
-                                    
-                                    // Mock Generator to populate the view for demo
-                                    if (!record && isCurrentYear && day < new Date('2025-10-15')) {
-                                        const isWeekend = dIdx === 0 || dIdx === 6;
-                                        if (!isWeekend) {
-                                            // Seeded randomish based on date for consistency during re-renders
-                                            const seed = day.getDate() + day.getMonth(); 
-                                            const rand = (seed % 100) / 100;
-                                            
-                                            let mockStatus: AttendanceStatus = 'present';
-                                            if (rand > 0.85) mockStatus = 'late';
-                                            if (rand > 0.95) mockStatus = 'leave';
-                                            if (rand > 0.98) mockStatus = 'absent';
-                                            
-                                            // Specific holidays mock
-                                            if ((day.getMonth() === 0 && day.getDate() === 1) || (day.getMonth() === 11 && day.getDate() === 25)) {
-                                                mockStatus = 'holiday';
-                                            }
-
-                                            record = { 
-                                                date: dateKey, 
-                                                status: mockStatus, 
-                                                timeIn: '08:00 AM', 
-                                                timeOut: '05:00 PM', 
-                                                hours: 8 
-                                            };
-                                        }
-                                    }
-
-                                    if (!isCurrentYear) {
-                                        return <div key={dIdx} className="w-4 h-4 rounded-sm bg-transparent" />;
-                                    }
-
-                                    return (
-                                        <div 
-                                            key={dIdx}
-                                            className={`w-4 h-4 rounded-sm transition-all relative cursor-pointer ${record ? getStatusColor(record.status) : 'bg-slate-100 hover:bg-slate-200'}`}
-                                            onMouseEnter={(e) => record && handleMouseEnterNode(e, record)}
-                                            onMouseLeave={handleMouseLeaveNode}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        ))}
-                    </div>
-                </div>
+          <div className="flex">
+            {/* Y-Axis Labels */}
+            <div className="flex flex-col justify-between pr-2 py-[2px] text-[10px] font-bold text-slate-300 h-[110px] w-8 text-right">
+              <span></span>
+              <span>Mon</span>
+              <span></span>
+              <span>Wed</span>
+              <span></span>
+              <span>Fri</span>
+              <span></span>
             </div>
+
+            {/* Heatmap Grid */}
+            <div className="flex gap-1">
+              {weeks.map((week, wIdx) => (
+                <div key={wIdx} className="flex flex-col gap-1">
+                  {week.map((day, dIdx) => {
+                    const dateKey = getDateKey(day);
+                    const isCurrentYear = day.getFullYear() === year;
+
+                    // Find record or mock
+                    let record = ATTENDANCE_DATA.find(r => r.date === dateKey);
+
+                    // Mock Generator to populate the view for demo
+                    if (!record && isCurrentYear && day < new Date('2025-10-15')) {
+                      const isWeekend = dIdx === 0 || dIdx === 6;
+                      if (!isWeekend) {
+                        // Seeded randomish based on date for consistency during re-renders
+                        const seed = day.getDate() + day.getMonth();
+                        const rand = (seed % 100) / 100;
+
+                        let mockStatus: AttendanceStatus = 'present';
+                        if (rand > 0.85) mockStatus = 'late';
+                        if (rand > 0.95) mockStatus = 'leave';
+                        if (rand > 0.98) mockStatus = 'absent';
+
+                        // Specific holidays mock
+                        if ((day.getMonth() === 0 && day.getDate() === 1) || (day.getMonth() === 11 && day.getDate() === 25)) {
+                          mockStatus = 'holiday';
+                        }
+
+                        record = {
+                          date: dateKey,
+                          status: mockStatus,
+                          timeIn: '08:00 AM',
+                          timeOut: '05:00 PM',
+                          hours: 8
+                        };
+                      }
+                    }
+
+                    if (!isCurrentYear) {
+                      return <div key={dIdx} className="w-4 h-4 rounded-sm bg-transparent" />;
+                    }
+
+                    return (
+                      <div
+                        key={dIdx}
+                        className={`w-4 h-4 rounded-sm transition-all relative cursor-pointer ${record ? getStatusColor(record.status) : 'bg-slate-100 hover:bg-slate-200'}`}
+                        onMouseEnter={(e) => record && handleMouseEnterNode(e, record)}
+                        onMouseLeave={handleMouseLeaveNode}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+      </div>
     );
   };
 
@@ -1040,7 +1158,7 @@ const AttendanceTab: React.FC = () => {
     const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
     const startDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    
+
     return (
       <div className="w-full">
         <div className="grid grid-cols-7 mb-2">
@@ -1056,11 +1174,10 @@ const AttendanceTab: React.FC = () => {
             const isToday = d === 25; // Mock today
 
             return (
-              <div 
-                key={d} 
-                className={`min-h-[100px] border rounded-xl p-2 relative group transition-all hover:shadow-md cursor-pointer ${
-                  record ? 'bg-white border-slate-200' : 'bg-slate-50/50 border-slate-100'
-                } ${isToday ? 'ring-2 ring-indigo-500 ring-offset-1' : ''}`}
+              <div
+                key={d}
+                className={`min-h-[100px] border rounded-xl p-2 relative group transition-all hover:shadow-md cursor-pointer ${record ? 'bg-white border-slate-200' : 'bg-slate-50/50 border-slate-100'
+                  } ${isToday ? 'ring-2 ring-indigo-500 ring-offset-1' : ''}`}
                 onMouseEnter={(e) => record && handleMouseEnterNode(e, record)}
                 onMouseLeave={handleMouseLeaveNode}
               >
@@ -1070,7 +1187,7 @@ const AttendanceTab: React.FC = () => {
                     <div className={`w-2.5 h-2.5 rounded-full ${getStatusColor(record.status)}`}></div>
                   )}
                 </div>
-                
+
                 {record ? (
                   <div className="mt-4 space-y-1">
                     {record.status === 'present' || record.status === 'late' || record.status === 'overtime' ? (
@@ -1079,20 +1196,19 @@ const AttendanceTab: React.FC = () => {
                         <div className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded w-fit">OUT: {record.timeOut}</div>
                       </>
                     ) : (
-                      <div className={`text-[10px] font-bold uppercase tracking-wider mt-2 px-2 py-1 rounded w-fit ${
-                        record.status === 'holiday' ? 'bg-pink-50 text-pink-600' : 
-                        record.status === 'absent' ? 'bg-rose-50 text-rose-600' : 
-                        record.status === 'leave' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'
-                      }`}>
+                      <div className={`text-[10px] font-bold uppercase tracking-wider mt-2 px-2 py-1 rounded w-fit ${record.status === 'holiday' ? 'bg-pink-50 text-pink-600' :
+                          record.status === 'absent' ? 'bg-rose-50 text-rose-600' :
+                            record.status === 'leave' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'
+                        }`}>
                         {record.status}
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100 transition-colors w-full">
-                       + Add Log
-                     </button>
+                    <button className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100 transition-colors w-full">
+                      + Add Log
+                    </button>
                   </div>
                 )}
               </div>
@@ -1104,396 +1220,897 @@ const AttendanceTab: React.FC = () => {
   };
 
   const renderListView = () => (
-    <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/30">
-      <table className="w-full text-sm text-left border-collapse">
-        <thead className="bg-white border-b border-slate-100">
-          <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            <th className="px-6 py-4">Date</th>
-            <th className="px-6 py-4">Status</th>
-            <th className="px-6 py-4">Time In</th>
-            <th className="px-6 py-4">Time Out</th>
-            <th className="px-6 py-4 text-right">Hours</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 bg-white/50">
-          {ATTENDANCE_DATA.map((record, i) => (
-            <tr key={i} className="hover:bg-white transition-colors group">
-              <td className="px-6 py-4">
-                <span className="text-sm font-bold text-slate-700">{record.date}</span>
-              </td>
-              <td className="px-6 py-4">
-                <span className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider ${
-                  record.status === 'present' ? 'text-emerald-600' : 
-                  record.status === 'late' ? 'text-amber-600' : 
-                  record.status === 'absent' ? 'text-rose-600' : 
-                  'text-slate-500'
-                }`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(record.status)}`}></div>
-                  {record.status}
-                </span>
-              </td>
-              <td className="px-6 py-4">
-                <span className="text-xs font-mono font-bold text-slate-600 bg-white px-2 py-1 rounded-md border border-slate-100 shadow-sm">{record.timeIn}</span>
-              </td>
-              <td className="px-6 py-4">
-                <span className="text-xs font-mono font-bold text-slate-600 bg-white px-2 py-1 rounded-md border border-slate-100 shadow-sm">{record.timeOut}</span>
-              </td>
-              <td className="px-6 py-4 text-right">
-                <span className="text-xs font-black text-slate-900">{record.hours?.toFixed(2)}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-6">
+      <div className="px-2 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Consolidated Logs</h3>
+          <p className="text-[10px] text-slate-500 font-bold mt-1 uppercase tracking-tight">Unified view of all approved attendance records</p>
+        </div>
+        <div className="relative w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+          <input type="text" placeholder="Search logs..." className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-100 outline-none transition-all placeholder:text-slate-400" />
+        </div>
+      </div>
+
+      <div className="space-y-8">
+        {/* Current Cutoff */}
+        <div className="group/cutoff">
+          <button 
+            onClick={() => setExpandedConsolidatedCutoff(expandedConsolidatedCutoff === 'current' ? null : 'current')}
+            className="w-full flex items-center gap-4 mb-4 pl-2 opacity-100 transition-opacity focus:outline-none"
+          >
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 whitespace-nowrap">
+              <CalendarIcon size={12} className="text-indigo-500" />
+              August 06, 2025 - August 20, 2025
+            </h4>
+            <div className={`p-1 rounded-full transition-transform duration-300 ${expandedConsolidatedCutoff === 'current' ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400 group-hover/cutoff:bg-slate-50'}`}>
+              <ChevronDown size={14} />
+            </div>
+            <div className="h-px flex-1 bg-slate-100"></div>
+          </button>
+
+          <AnimatePresence>
+            {expandedConsolidatedCutoff === 'current' && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="border border-slate-200 rounded-3xl overflow-hidden bg-white shadow-sm mt-2">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-50/50">
+                        <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-6 py-4 border-b border-slate-100">Date</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center">Weekday</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center">Shift</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center">In</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center">Out</th>
+                          <th className="px-4 py-4 border-b border-slate-100">Remarks</th>
+                          <th className="px-6 py-4 border-b border-slate-100 text-center">Data Source</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center w-16">Form</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {MOCK_CONSOLIDATED.map((row) => (
+                          <React.Fragment key={row.id}>
+                            <tr className={`hover:bg-slate-50/30 transition-colors ${row.adjustment ? 'bg-slate-50/50' : ''} ${row.shift === 'Rest Day' ? 'opacity-50' : ''}`}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">{row.date}</td>
+                              <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-500 font-bold text-center">{row.weekday}</td>
+                              <td className={`px-4 py-4 whitespace-nowrap text-[10px] font-black uppercase tracking-tight text-center ${row.shift === 'Rest Day' ? 'text-amber-600' : 'text-slate-600'}`}>{row.shift}</td>
+                              <td className={`px-4 py-4 whitespace-nowrap font-mono text-xs font-bold text-center ${row.adjustment ? 'text-slate-400 line-through decoration-rose-500/50 decoration-2' : 'text-slate-700'}`}>{row.in}</td>
+                              <td className={`px-4 py-4 whitespace-nowrap font-mono text-xs font-bold text-center ${row.adjustment ? 'text-slate-400 line-through decoration-rose-500/50 decoration-2' : 'text-slate-700'}`}>{row.out}</td>
+                              <td className="px-4 py-4"><div className={`text-xs font-medium ${row.adjustment ? 'text-slate-400 italic' : 'text-slate-600'}`}>{row.remarks || '-'}</div></td>
+                              <td className="px-6 py-4 text-center items-center justify-center flex"><SourceBadge source={row.source} /></td>
+                              <td className="px-4 py-4 text-center">
+                                {row.source && row.shift !== 'Rest Day' && (
+                                  <button
+                                    onClick={() => setSelectedDocument({ title: row.source === 'Time Collection Device' ? 'Biometrics Log' : row.source === 'Online Daily Time Record' ? 'ODTR Form' : 'Adjustment Form', date: row.date, source: row.source })}
+                                    className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors inline-flex"
+                                    title={`View ${row.source} Document`}
+                                  >
+                                    <FileText size={16} />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                            {row.adjustment && (
+                              <tr className="bg-indigo-50/30 border-t-0 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] hover:bg-indigo-50/50 transition-colors relative">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-700 relative">
+                                  <div className="absolute top-0 left-8 w-px h-full bg-indigo-200/50 -translate-y-full"></div>
+                                  <div className="flex items-center gap-2 pl-4"><div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div><span className="text-[9px] uppercase font-black text-indigo-400 tracking-widest">Adjusted</span></div>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-xs text-indigo-400 font-medium"></td>
+                                <td className="px-4 py-4 whitespace-nowrap text-[11px] text-indigo-400 font-medium"></td>
+                                <td className="px-4 py-4 whitespace-nowrap text-center">
+                                  <span className="font-mono text-[10px] font-black text-indigo-700 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.02)] px-2 py-1 rounded-md border border-indigo-100">{row.adjustment.in}</span>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-center">
+                                  <span className="font-mono text-[10px] font-black text-indigo-700 bg-white shadow-[0_2px_4px_rgba(0,0,0,0.02)] px-2 py-1 rounded-md border border-indigo-100">{row.adjustment.out}</span>
+                                </td>
+                                <td className="px-4 py-4"><div className="text-xs font-bold text-indigo-600 flex items-center gap-1.5 "><AlertCircle size={14} className="text-indigo-400" /> {row.adjustment.remarks}</div></td>
+                                <td className="px-6 py-4 text-center items-center justify-center flex"><SourceBadge source={row.adjustment.source} /></td>
+                                <td className="px-4 py-4 text-center">
+                                  <button
+                                    onClick={() => setSelectedDocument({ title: 'Attendance Adjustment Form', date: row.date, source: row.adjustment.source })}
+                                    className="p-1.5 text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100/50 rounded-lg transition-colors inline-flex"
+                                    title="View Adjustment Document"
+                                  >
+                                    <FileText size={16} />
+                                  </button>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Previous Cutoff Group */}
+        <div className="group/cutoff">
+          <button 
+            onClick={() => setExpandedConsolidatedCutoff(expandedConsolidatedCutoff === 'previous' ? null : 'previous')}
+            className="w-full flex items-center gap-4 mb-4 pl-2 opacity-60 hover:opacity-100 transition-opacity focus:outline-none"
+          >
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 whitespace-nowrap">
+              <CalendarIcon size={12} className="text-slate-300" />
+              August 24, 2025 - September 05, 2025
+            </h4>
+            <div className={`p-1 rounded-full transition-transform duration-300 ${expandedConsolidatedCutoff === 'previous' ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-400 group-hover/cutoff:bg-slate-50'}`}>
+              <ChevronDown size={14} />
+            </div>
+            <div className="h-px flex-1 bg-slate-100"></div>
+          </button>
+
+          <AnimatePresence>
+            {expandedConsolidatedCutoff === 'previous' && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="border border-slate-200 rounded-3xl overflow-hidden bg-white shadow-sm mt-2 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-50/50">
+                        <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-6 py-4 border-b border-slate-100">Date</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center">Weekday</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center">Shift</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center">In</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center">Out</th>
+                          <th className="px-4 py-4 border-b border-slate-100">Remarks</th>
+                          <th className="px-6 py-4 border-b border-slate-100 text-center">Data Source</th>
+                          <th className="px-4 py-4 border-b border-slate-100 text-center w-16">Form</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td colSpan={8} className="px-8 py-12 text-center text-slate-300">
+                            <div className="flex flex-col items-center gap-2">
+                              <FileText size={32} className="opacity-20" />
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em]">No unified logs for this period</p>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
+
+  const [activeSubTab, setActiveSubTab] = useState('Attendance Overview');
+  const attendanceSubTabs = ['Attendance Overview', 'Daily Time Records', 'Attendance Filing Request'];
 
   return (
     <div className="space-y-8 animate-in fade-in relative">
       
-      {/* Attendance Overview Card */}
-      <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm relative z-0">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">Attendance Overview</h3>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-extrabold text-indigo-600 tracking-tight">117.5</span>
-              <span className="text-xl font-bold text-slate-400">/ 120 Days</span>
-            </div>
-            <p className="text-xs text-slate-500 font-bold mt-2 uppercase tracking-wide">Assigned as <span className="text-indigo-600">Shift 8</span></p>
-          </div>
-
-          <div className="flex flex-col items-end gap-4">
-            <div className="flex bg-slate-100 p-1 rounded-xl">
-              <button onClick={() => setViewMode('year')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 ${viewMode === 'year' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                <LayoutGrid size={14} /> Year
-              </button>
-              <button onClick={() => setViewMode('month')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 ${viewMode === 'month' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                <CalendarIcon size={14} /> Month
-              </button>
-              <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 ${viewMode === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                <TableIcon size={14} /> List
-              </button>
-            </div>
-            {viewMode === 'month' && (
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1">
-                <button className="p-1 hover:bg-slate-100 rounded text-slate-500"><ChevronLeft size={16} /></button>
-                <span className="text-xs font-bold text-slate-700 w-24 text-center">August 2025</span>
-                <button className="p-1 hover:bg-slate-100 rounded text-slate-500"><ChevronRight size={16} /></button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Attendance Legend</div>
-          {renderLegend()}
-        </div>
-
-        {/* Dynamic View Content */}
-        <div className="min-h-[300px]">
-          {viewMode === 'year' && renderYearHeatmap()}
-          {viewMode === 'month' && renderMonthView()}
-          {viewMode === 'list' && renderListView()}
-        </div>
-      </div>
-
-      {/* Online Daily Tracking Record (ODTR) Section */}
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-black text-slate-900 tracking-tight underline underline-offset-8 decoration-indigo-500/20">Current Attendance Filing Request</h3>
-          <button onClick={handleOpenFilingChoice} className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all hover:-translate-y-0.5 active:scale-95 group">
-            <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" /> File Attendance Record
+      {/* SUB TABS - Replicated from ScheduleTab */}
+      <div className="flex border-b border-slate-200">
+        {attendanceSubTabs.map((sub) => (
+          <button
+            key={sub}
+            onClick={() => setActiveSubTab(sub)}
+            className={`px-8 py-4 text-sm font-bold transition-all relative
+              ${activeSubTab === sub
+                ? 'text-indigo-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-indigo-600'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+          >
+            {sub}
           </button>
-        </div>
+        ))}
+      </div>
 
-        {/* Progress Stepper Card */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-10 shadow-sm">
-          <div className="relative max-w-3xl mx-auto mb-12">
-            {/* Connecting Lines */}
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 rounded-full"></div>
-            <div className="absolute top-1/2 left-0 w-1/2 h-1 bg-indigo-600 -translate-y-1/2 rounded-full transition-all duration-1000 ease-out"></div>
-            
-            {/* Steps */}
-            <div className="relative flex justify-between">
-              {/* Step 1: Submission */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center z-10 shadow-lg shadow-slate-200 ring-4 ring-white">
-                  <Check size={18} strokeWidth={3} />
-                </div>
-                <span className="text-xs font-bold text-slate-900">Submission</span>
-              </div>
-
-              {/* Step 2: Approval */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white border-[3px] border-indigo-600 text-indigo-600 flex items-center justify-center z-10 shadow-lg shadow-indigo-100 ring-4 ring-white">
-                  <div className="w-3 h-3 bg-indigo-600 rounded-full animate-pulse"></div>
-                </div>
-                <span className="text-xs font-bold text-indigo-600">Approval</span>
-              </div>
-
-              {/* Step 3: Acceptance */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center z-10 ring-4 ring-white">
-                  <div className="w-2 h-2 bg-slate-300 rounded-full"></div>
-                </div>
-                <span className="text-xs font-bold text-slate-300">Acceptance</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Acceptance Status Box */}
-            <div className="lg:col-span-1 bg-slate-50 rounded-3xl p-8 border border-slate-100 flex flex-col justify-center shadow-sm">
-               <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3 bg-white border border-slate-200 rounded-2xl text-indigo-600 shadow-sm">
-                    <CheckCircle2 size={24} />
-                  </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeSubTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeSubTab === 'Attendance Overview' && (
+            <div className="space-y-8">
+              {/* Attendance Overview Card */}
+              <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm relative z-0">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
                   <div>
-                    <h4 className="text-base font-bold text-slate-900">Pending Approval</h4>
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Stage 2 of 3</p>
+                    <h3 className="text-lg font-bold text-slate-900 mb-1">Attendance Overview</h3>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-extrabold text-indigo-600 tracking-tight">117.5</span>
+                      <span className="text-xl font-bold text-slate-400">/ 120 Days</span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-bold mt-2 uppercase tracking-wide">Assigned as <span className="text-indigo-600">Shift 8</span></p>
                   </div>
-               </div>
-               <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-xs text-slate-500">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
-                    <span className="font-medium">Submitted by You</span>
+
+                  <div className="flex flex-col items-end gap-4">
+                    <div className="flex bg-slate-100 p-1 rounded-xl">
+                      <button onClick={() => setViewMode('year')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 ${viewMode === 'year' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                        <LayoutGrid size={14} /> Year
+                      </button>
+                      <button onClick={() => setViewMode('month')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 ${viewMode === 'month' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                        <CalendarIcon size={14} /> Month
+                      </button>
+                      <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 ${viewMode === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                        <TableIcon size={14} /> List
+                      </button>
+                    </div>
+                    {viewMode === 'month' && (
+                      <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1">
+                        <button className="p-1 hover:bg-slate-100 rounded text-slate-500"><ChevronLeft size={16} /></button>
+                        <span className="text-xs font-bold text-slate-700 w-24 text-center">August 2025</span>
+                        <button className="p-1 hover:bg-slate-100 rounded text-slate-500"><ChevronRight size={16} /></button>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-slate-900 font-bold">
-                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.6)]"></div>
-                    <span>Waiting for HR Manager</span>
+                </div>
+
+                <div className="mb-6">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Attendance Legend</div>
+                  {renderLegend()}
+                </div>
+
+                {/* Dynamic View Content */}
+                <div className="min-h-[300px]">
+                  {viewMode === 'year' && renderYearHeatmap()}
+                  {viewMode === 'month' && renderMonthView()}
+                  {viewMode === 'list' && renderListView()}
+                </div>
+              </div>
+            </div>
+          )}
+
+
+          {activeSubTab === 'Daily Time Records' && (
+            <div className="animate-in fade-in space-y-10 pb-20">
+              <div>
+                <div className="flex items-center justify-between mb-6 px-2">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Attendance Sources</h3>
+                    <p className="text-sm text-slate-500 font-medium mt-1">Detailed logs and processing steps from all integrated attendance sources.</p>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-slate-300">
-                    <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-                    <span className="font-medium">Waiting for IT Manager</span>
+                  <div className="flex items-center gap-3">
+                    <button className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
+                      <Download size={14} /> Export DTR
+                    </button>
                   </div>
-               </div>
+                </div>
+
+                <div className="space-y-12">
+                  {/* Current Cutoff Group */}
+                  <div>
+                    <div className="flex items-center gap-4 mb-4 pl-2">
+                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 whitespace-nowrap">
+                        <CalendarIcon size={12} className="text-indigo-500" />
+                        August 06, 2025 - August 20, 2025
+                      </h4>
+                      <div className="h-px flex-1 bg-slate-100"></div>
+                    </div>
+
+                    <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col">
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-100">
+                          <thead className="bg-slate-50/50 text-left">
+                            <tr>
+                              <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-48 border-b border-slate-100">Name</th>
+                              <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Document Type</th>
+                              <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Status</th>
+                              <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Cutoff Date</th>
+                              <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Approver Step</th>
+                              <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Last Approved By</th>
+                              <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">View</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                      {/* TCD Source */}
+                      <React.Fragment>
+                        <tr
+                          onClick={() => setExpandedSource(expandedSource === 'tcd' ? null : 'tcd')}
+                          className={`hover:bg-slate-50/50 cursor-pointer transition-colors group ${expandedSource === 'tcd' ? 'bg-blue-50/30' : ''}`}
+                        >
+                          <td className="px-8 py-5 whitespace-nowrap">
+                            <div className="text-sm font-black text-slate-700 tracking-tight">Daily Time Record # 1</div>
+                            <div className="text-[10px] text-slate-400 font-bold mt-0.5">Reference: DTR-2025-001</div>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 font-black text-[10px] uppercase tracking-tight border border-blue-100">
+                              <Fingerprint size={12} /> Biometrics
+                            </span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap">
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 font-black text-[10px] border border-emerald-100">Verified</span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap text-xs text-slate-600 font-bold tracking-tight">Aug 06 - Aug 20, 2025</td>
+                          <td className="px-4 py-5 whitespace-nowrap text-xs text-center">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-mono font-black border border-emerald-100 shadow-sm">1 / 1</span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap">
+                            <div className="text-xs text-slate-600 font-bold">System</div>
+                            <div className="text-[10px] text-slate-400 font-medium tracking-tight">Aug 20, 2025</div>
+                          </td>
+                          <td className="px-4 py-5 text-center">
+                            <div className={`p-2 rounded-xl transition-all duration-300 ${expandedSource === 'tcd' ? 'rotate-180 bg-blue-100 text-blue-600' : 'text-slate-300 group-hover:text-slate-500'}`}>
+                              <ChevronDown size={18} />
+                            </div>
+                          </td>
+                        </tr>
+                        <AnimatePresence>
+                          {expandedSource === 'tcd' && (
+                            <tr>
+                              <td colSpan={7} className="p-0 bg-slate-50/20">
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="overflow-hidden border-t border-slate-100"
+                                >
+                                  <div className="p-10">
+                                    <SimpleStepper steps={[
+                                      { title: 'Submitted', subtitle: 'Auto-Record', status: 'completed', date: 'Aug 20, 2025' },
+                                      { title: 'System Approval', subtitle: 'Step 1/1', status: 'completed', date: 'Aug 20, 2025' },
+                                      { title: 'HR Verified', subtitle: 'HR Specialist', status: 'completed', date: 'Aug 20, 2025' }
+                                    ]} />
+                                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm mt-8">
+                                      <table className="min-w-full divide-y divide-slate-100">
+                                        <thead className="bg-slate-50/50">
+                                          <tr>
+                                            <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Date</th>
+                                            <th className="px-4 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Shift</th>
+                                            <th className="px-4 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">In</th>
+                                            <th className="px-4 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Out</th>
+                                            <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Remarks</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 font-medium">
+                                          {MOCK_TCD.map((row, i) => (
+                                            <tr key={i} className="hover:bg-slate-50/50 transition-colors text-xs">
+                                              <td className="px-8 py-4 text-slate-700 font-black tracking-tight">{row.date}</td>
+                                              <td className="px-4 py-4 text-slate-500 font-bold">{row.shift}</td>
+                                              <td className="px-4 py-4 font-mono font-black text-slate-900 text-center">{row.in}</td>
+                                              <td className="px-4 py-4 font-mono font-black text-slate-900 text-center">{row.out}</td>
+                                              <td className="px-8 py-4 text-slate-500 italic">{row.remarks || '-'}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              </td>
+                            </tr>
+                          )}
+                        </AnimatePresence>
+                      </React.Fragment>
+
+                      {/* ODTR Source */}
+                      <React.Fragment>
+                        <tr
+                          onClick={() => setExpandedSource(expandedSource === 'odtr' ? null : 'odtr')}
+                          className={`hover:bg-slate-50/50 cursor-pointer transition-colors group ${expandedSource === 'odtr' ? 'bg-purple-50/30' : ''}`}
+                        >
+                          <td className="px-8 py-5 whitespace-nowrap">
+                            <div className="text-sm font-black text-slate-700 tracking-tight">Daily Time Record # 2</div>
+                            <div className="text-[10px] text-slate-400 font-bold mt-0.5">Reference: ODTR-2025-042</div>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-600 font-black text-[10px] uppercase tracking-tight border border-purple-100">
+                              <MonitorSmartphone size={12} /> ODTR
+                            </span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap">
+                            <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-600 font-black text-[10px] border border-amber-100">Pending Approval</span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap text-xs text-slate-600 font-bold tracking-tight">Aug 06 - Aug 20, 2025</td>
+                          <td className="px-4 py-5 whitespace-nowrap text-xs text-center">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 font-mono font-black border border-amber-100 shadow-sm">1 / 2</span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap text-xs text-slate-600 font-bold">Juan Dela Cruz</td>
+                          <td className="px-4 py-5 text-center">
+                            <div className={`p-2 rounded-xl transition-all duration-300 ${expandedSource === 'odtr' ? 'rotate-180 bg-purple-100 text-purple-600' : 'text-slate-300 group-hover:text-slate-500'}`}>
+                              <ChevronDown size={18} />
+                            </div>
+                          </td>
+                        </tr>
+                        <AnimatePresence>
+                          {expandedSource === 'odtr' && (
+                            <tr>
+                              <td colSpan={7} className="p-0 bg-slate-50/20">
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="overflow-hidden border-t border-slate-100"
+                                >
+                                  <div className="p-10">
+                                    <SimpleStepper steps={[
+                                      { title: 'Submitted', subtitle: 'Employee Log', status: 'completed', date: 'Aug 20, 2025' },
+                                      { title: 'Supervisor', subtitle: 'Step 1/2', status: 'completed', date: 'Aug 20, 2025' },
+                                      { title: 'Dept Head', subtitle: 'Step 2/2', status: 'current' },
+                                      { title: 'HR Verified', subtitle: 'Pending', status: 'pending' }
+                                    ]} />
+                                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm mt-8">
+                                      <table className="min-w-full divide-y divide-slate-100">
+                                        <thead className="bg-slate-50/50">
+                                          <tr>
+                                            <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Date</th>
+                                            <th className="px-4 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Shift</th>
+                                            <th className="px-4 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">In</th>
+                                            <th className="px-4 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Out</th>
+                                            <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Remarks</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 font-medium">
+                                          {MOCK_ODTR.map((row, i) => (
+                                            <tr key={i} className="hover:bg-slate-50/50 transition-colors text-xs">
+                                              <td className="px-8 py-4 text-slate-700 font-black tracking-tight">{row.date}</td>
+                                              <td className="px-4 py-4 text-slate-500 font-bold">{row.shift}</td>
+                                              <td className="px-4 py-4 font-mono font-black text-slate-900 text-center">{row.in}</td>
+                                              <td className="px-4 py-4 font-mono font-black text-slate-900 text-center">{row.out}</td>
+                                              <td className="px-8 py-4 text-slate-500 italic">{row.remarks || '-'}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              </td>
+                            </tr>
+                          )}
+                        </AnimatePresence>
+                      </React.Fragment>
+
+                      {/* Adjustment Source */}
+                      <React.Fragment>
+                        <tr
+                          onClick={() => setExpandedSource(expandedSource === 'adj' ? null : 'adj')}
+                          className={`hover:bg-slate-50/50 cursor-pointer transition-colors group ${expandedSource === 'adj' ? 'bg-indigo-50/30' : ''}`}
+                        >
+                          <td className="px-8 py-5 whitespace-nowrap">
+                            <div className="text-sm font-black text-slate-700 tracking-tight">Daily Time Record # 3</div>
+                            <div className="text-[10px] text-slate-400 font-bold mt-0.5">Reference: ADJ-2025-015</div>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-black text-[10px] uppercase tracking-tight border border-indigo-100">
+                              <Settings2 size={12} /> Adjustment Record
+                            </span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap">
+                            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-black text-[10px] border border-slate-200">Submitted</span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap text-xs text-slate-600 font-bold tracking-tight">Aug 06 - Aug 20, 2025</td>
+                          <td className="px-4 py-5 whitespace-nowrap text-xs text-center">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 font-mono font-bold border border-slate-200">0 / 2</span>
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap text-xs text-slate-400 font-medium">--</td>
+                          <td className="px-4 py-5 text-center">
+                            <div className={`p-2 rounded-xl transition-all duration-300 ${expandedSource === 'adj' ? 'rotate-180 bg-indigo-100 text-indigo-600' : 'text-slate-300 group-hover:text-slate-500'}`}>
+                              <ChevronDown size={18} />
+                            </div>
+                          </td>
+                        </tr>
+                        <AnimatePresence>
+                          {expandedSource === 'adj' && (
+                            <tr>
+                              <td colSpan={7} className="p-0 bg-slate-50/20">
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  className="overflow-hidden border-t border-slate-100"
+                                >
+                                  <div className="p-10">
+                                    <SimpleStepper steps={[
+                                      { title: 'Submitted', subtitle: 'Adjustment Form', status: 'completed', date: 'Aug 20, 2025' },
+                                      { title: 'Superior', subtitle: 'Step 1/2', status: 'current' },
+                                      { title: 'Dept Head', subtitle: 'Step 2/2', status: 'pending' },
+                                      { title: 'HR Verified', subtitle: 'Pending', status: 'pending' }
+                                    ]} />
+                                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm mt-8">
+                                      <table className="min-w-full divide-y divide-slate-100">
+                                        <thead className="bg-slate-50/50">
+                                          <tr>
+                                            <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Date & Type</th>
+                                            <th className="px-4 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Original Log</th>
+                                            <th className="px-4 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Adjustment</th>
+                                            <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-left">Remarks</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 font-medium">
+                                          {MOCK_ADJ.map((row, i) => (
+                                            <tr key={i} className="hover:bg-slate-50/50 transition-colors text-xs">
+                                              <td className="px-8 py-4">
+                                                <div className="text-slate-700 font-black tracking-tight mb-1">{row.date}</div>
+                                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-600 text-[9px] font-black uppercase tracking-tight border border-amber-100"><AlertCircle size={10} /> {row.type}</span>
+                                              </td>
+                                              <td className="px-4 py-4 text-center">
+                                                <div className="flex gap-2 justify-center">
+                                                  <span className="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg font-mono text-[10px] font-bold decoration-slate-300 line-through">IN: {row.original.in}</span>
+                                                  <span className="px-2 py-1 bg-slate-100 text-slate-400 rounded-lg font-mono text-[10px] font-bold decoration-slate-300 line-through">OUT: {row.original.out}</span>
+                                                </div>
+                                              </td>
+                                              <td className="px-4 py-4 text-center">
+                                                <div className="flex gap-2 justify-center">
+                                                  <span className="px-2 py-1.5 bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm rounded-lg font-mono text-[10px] font-black text-center w-20">{row.adjusted.in}</span>
+                                                  <span className="px-2 py-1.5 bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm rounded-lg font-mono text-[10px] font-black text-center w-20">{row.adjusted.out}</span>
+                                                </div>
+                                              </td>
+                                              <td className="px-8 py-4 text-slate-600 max-w-[200px] italic">{row.remarks}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              </td>
+                            </tr>
+                          )}
+                        </AnimatePresence>
+                      </React.Fragment>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
-            {/* ODTR Details Box - Tabular Form */}
-            <div className="lg:col-span-3 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-                <div className="px-8 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                        <CalendarDays size={16} />
-                      </div>
-                      <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">ODTR Records</h4>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] font-bold text-slate-400">Created: July 25, 2025</span>
-                      <span className="bg-amber-50 text-amber-600 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border border-amber-100 shadow-sm">In Review</span>
-                    </div>
+            {/* Previous Cutoff Group */}
+            <div className="group/cutoff">
+              <div className="flex items-center gap-4 mb-4 pl-2 opacity-60 group-hover/cutoff:opacity-100 transition-opacity">
+                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 whitespace-nowrap">
+                  <CalendarIcon size={12} className="text-slate-300" />
+                  August 24, 2025 - September 05, 2025
+                </h4>
+                <div className="h-px flex-1 bg-slate-100"></div>
+              </div>
+
+              <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-100">
+                    <thead className="bg-slate-50/50 text-left">
+                      <tr>
+                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-48 border-b border-slate-100">Name</th>
+                        <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Type</th>
+                        <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Status</th>
+                        <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Cutoff Date</th>
+                        <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Step</th>
+                        <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Approver</th>
+                        <th className="px-4 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">View</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan={7} className="px-8 py-12 text-center text-slate-300">
+                          <div className="flex flex-col items-center gap-2">
+                            <FileText size={32} className="opacity-20" />
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">No unified logs for this period</p>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-                <div className="flex-1 overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 bg-white">
-                                <th className="px-8 py-4">Date</th>
-                                <th className="px-8 py-4">Weekday</th>
-                                <th className="px-8 py-4">Shift</th>
-                                <th className="px-8 py-4">Time In</th>
-                                <th className="px-8 py-4">Time Out</th>
-                                <th className="px-8 py-4">Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            <tr className="hover:bg-slate-50/50 transition-colors group">
-                                <td className="px-8 py-5">
-                                    <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 25, 2025</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Friday</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">08:00 AM</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:00 PM</span>
-                                </td>
-                                <td className="px-8 py-5 min-w-[200px]">
-                                    <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"Forgot to clock out due to urgent client meeting off-site."</p>
-                                </td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50 transition-colors group">
-                                <td className="px-8 py-5">
-                                    <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 24, 2025</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Thursday</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">07:55 AM</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:05 PM</span>
-                                </td>
-                                <td className="px-8 py-5 min-w-[200px]">
-                                    <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"Regular daily log entry."</p>
-                                </td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50 transition-colors group">
-                                <td className="px-8 py-5">
-                                    <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 23, 2025</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Wednesday</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">08:01 AM</span>
-                                </td>
-                                <td className="px-8 py-5">
-                                    <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:00 PM</span>
-                                </td>
-                                <td className="px-8 py-5 min-w-[200px]">
-                                    <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"System was lagging, logging in manually."</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                {/* Approvers Footer */}
-                <div className="mt-auto px-8 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-                   <div className="flex items-center gap-8">
-                     <div className="flex items-center gap-3">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Manager</label>
-                        <div className="flex items-center gap-2">
-                           <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-700">JD</div>
-                           <span className="text-xs font-bold text-slate-700">John Doe</span>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-3">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">HR</label>
-                        <span className="text-[10px] font-bold text-slate-400 italic">Pending Assignment</span>
-                     </div>
-                   </div>
-                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+    )}
 
-      {/* Past ODTR Records (History) Content Refinement */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-black text-slate-900 tracking-tight">Past Attendance Filing Request</h3>
-        <div className="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm">
-            <div className="space-y-4">
-                {PAST_ODTR_RECORDS.map((record) => (
-                    <div key={record.id} className="border border-slate-200 rounded-3xl overflow-hidden hover:shadow-lg transition-all group bg-white">
-                        <button 
-                            onClick={() => setExpandedRecord(expandedRecord === record.id ? null : record.id)}
-                            className="w-full flex items-center justify-between p-6 bg-white hover:bg-slate-50/50 transition-colors"
-                        >
-                            <div className="flex items-center gap-5">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${
-                                    record.type === 'ODTR' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
-                                }`}>
-                                    {record.type === 'ODTR' ? <Clock size={24} /> : <ClipboardCheck size={24} />}
-                                </div>
-                                <div className="text-left">
-                                    <h4 className="font-black text-slate-900 text-sm tracking-tight">{record.type === 'ODTR' ? 'Online Daily Time Record' : 'Attendance Adjustment'}</h4>
-                                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Filed: {record.date} • {record.logCount} Logs Included</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-6">
-                                <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
-                                    record.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-50' : 'bg-amber-50 text-amber-600 border-amber-100 shadow-amber-50'
-                                } shadow-sm`}>
-                                    {record.status}
-                                </span>
-                                <div className={`p-2 rounded-xl transition-all duration-300 ${expandedRecord === record.id ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-300 group-hover:text-slate-500'}`}>
-                                    <ChevronDown size={20} />
-                                </div>
-                            </div>
-                        </button>
-                        
-                        <AnimatePresence>
-                            {expandedRecord === record.id && (
-                                <MotionDiv 
-                                    initial={{ height: 0, opacity: 0 }} 
-                                    animate={{ height: 'auto', opacity: 1 }} 
-                                    exit={{ height: 0, opacity: 0 }} 
-                                    className="overflow-hidden bg-slate-50/30 border-t border-slate-50"
-                                >
-                                    <div className="p-0 overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead className="bg-white/50">
-                                                <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                                                    <th className="px-8 py-3">Date</th>
-                                                    <th className="px-8 py-3">Reason</th>
-                                                    <th className="px-8 py-3 text-center">Original Log</th>
-                                                    <th className="px-8 py-3 text-center">Adjusted Log</th>
-                                                    <th className="px-8 py-3">Remarks</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {record.entries.map((entry: any, eIdx: number) => (
-                                                  <tr key={eIdx} className="bg-white/30 hover:bg-white transition-colors border-b border-slate-50 last:border-0">
-                                                      <td className="px-8 py-5">
-                                                          <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                                      </td>
-                                                      <td className="px-8 py-5">
-                                                          <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 whitespace-nowrap">
-                                                            {record.type === 'ODTR' ? entry.shift : entry.adjustmentReason}
-                                                          </span>
-                                                      </td>
-                                                      <td className="px-8 py-5">
-                                                          <div className="flex flex-col items-center gap-1">
-                                                              <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">IN: {entry.originalIn || '--:--'}</span>
-                                                              <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">OUT: {entry.originalOut || '--:--'}</span>
-                                                          </div>
-                                                      </td>
-                                                      <td className="px-8 py-5">
-                                                          <div className="flex flex-col items-center gap-1">
-                                                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${record.type === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeIn}</span>
-                                                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${record.type === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeOut}</span>
-                                                          </div>
-                                                      </td>
-                                                      <td className="px-8 py-5 min-w-[200px]">
-                                                          <p className="text-xs text-slate-500 italic">{entry.remarks || "--"}</p>
-                                                      </td>
-                                                  </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div className="px-8 py-4 bg-white/50 border-t border-slate-50 flex items-center justify-end gap-6">
-                                        <div className="flex items-center gap-3">
-                                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Approver</label>
-                                          <div className="flex items-center gap-2">
-                                             <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700">HR</div>
-                                             <span className="text-xs font-bold text-slate-700">System Approved</span>
-                                          </div>
-                                        </div>
-                                    </div>
-                                </MotionDiv>
-                            )}
-                        </AnimatePresence>
+          {activeSubTab === 'Attendance Filing Request' && (
+            <div className="space-y-8">
+              {/* Online Daily Tracking Record (ODTR) Section */}
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight underline underline-offset-8 decoration-indigo-500/20">Current Attendance Filing Request</h3>
+                  <button onClick={handleOpenFilingChoice} className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all hover:-translate-y-0.5 active:scale-95 group">
+                    <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" /> File Attendance Record
+                  </button>
+                </div>
+
+                {/* Progress Stepper Card */}
+                <div className="bg-white border border-slate-100 rounded-3xl p-10 shadow-sm">
+                  <div className="relative max-w-3xl mx-auto mb-12">
+                    {/* Connecting Lines */}
+                    <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 rounded-full"></div>
+                    <div className="absolute top-1/2 left-0 w-1/2 h-1 bg-indigo-600 -translate-y-1/2 rounded-full transition-all duration-1000 ease-out"></div>
+
+                    {/* Steps */}
+                    <div className="relative flex justify-between">
+                      {/* Step 1: Submission */}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center z-10 shadow-lg shadow-slate-200 ring-4 ring-white">
+                          <Check size={18} strokeWidth={3} />
+                        </div>
+                        <span className="text-xs font-bold text-slate-900">Submission</span>
+                      </div>
+
+                      {/* Step 2: Approval */}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-white border-[3px] border-indigo-600 text-indigo-600 flex items-center justify-center z-10 shadow-lg shadow-indigo-100 ring-4 ring-white">
+                          <div className="w-3 h-3 bg-indigo-600 rounded-full animate-pulse"></div>
+                        </div>
+                        <span className="text-xs font-bold text-indigo-600">Approval</span>
+                      </div>
+
+                      {/* Step 3: Acceptance */}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center z-10 ring-4 ring-white">
+                          <div className="w-2 h-2 bg-slate-300 rounded-full"></div>
+                        </div>
+                        <span className="text-xs font-bold text-slate-300">Acceptance</span>
+                      </div>
                     </div>
-                ))}
-            </div>
-        </div>
-      </div>
+                  </div>
 
-      {/* Render Portal/Floating Tooltip if Hovered */}
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    {/* Acceptance Status Box */}
+                    <div className="lg:col-span-1 bg-slate-50 rounded-3xl p-8 border border-slate-100 flex flex-col justify-center shadow-sm">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="p-3 bg-white border border-slate-200 rounded-2xl text-indigo-600 shadow-sm">
+                          <CheckCircle2 size={24} />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-slate-900">Pending Approval</h4>
+                          <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Stage 2 of 3</p>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+                          <span className="font-medium">Submitted by You</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-slate-900 font-bold">
+                          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.6)]"></div>
+                          <span>Waiting for HR Manager</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-slate-300">
+                          <div className="w-2 h-2 rounded-full bg-slate-200"></div>
+                          <span className="font-medium">Waiting for IT Manager</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ODTR Details Box - Tabular Form */}
+                    <div className="lg:col-span-3 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                      <div className="px-8 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                            <CalendarDays size={16} />
+                          </div>
+                          <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">ODTR Records</h4>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-bold text-slate-400">Created: July 25, 2025</span>
+                          <span className="bg-amber-50 text-amber-600 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border border-amber-100 shadow-sm">In Review</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 bg-white">
+                              <th className="px-8 py-4">Date</th>
+                              <th className="px-8 py-4">Weekday</th>
+                              <th className="px-8 py-4">Shift</th>
+                              <th className="px-8 py-4">Time In</th>
+                              <th className="px-8 py-4">Time Out</th>
+                              <th className="px-8 py-4">Remarks</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            <tr className="hover:bg-slate-50/50 transition-colors group">
+                              <td className="px-8 py-5">
+                                <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 25, 2025</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Friday</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">08:00 AM</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:00 PM</span>
+                              </td>
+                              <td className="px-8 py-5 min-w-[200px]">
+                                <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"Forgot to clock out due to urgent client meeting off-site."</p>
+                              </td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors group">
+                              <td className="px-8 py-5">
+                                <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 24, 2025</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Thursday</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">07:55 AM</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:05 PM</span>
+                              </td>
+                              <td className="px-8 py-5 min-w-[200px]">
+                                <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"Regular daily log entry."</p>
+                              </td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50 transition-colors group">
+                              <td className="px-8 py-5">
+                                <span className="text-sm font-black text-slate-800 whitespace-nowrap tracking-tight">July 23, 2025</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Wednesday</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-[10px] font-black px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 whitespace-nowrap tracking-widest uppercase">08:00 - 17:00</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">08:01 AM</span>
+                              </td>
+                              <td className="px-8 py-5">
+                                <span className="text-xs font-mono font-black text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">05:00 PM</span>
+                              </td>
+                              <td className="px-8 py-5 min-w-[200px]">
+                                <p className="text-xs text-slate-500 font-medium italic line-clamp-2">"System was lagging, logging in manually."</p>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      {/* Approvers Footer */}
+                      <div className="mt-auto px-8 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-8">
+                          <div className="flex items-center gap-3">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Manager</label>
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-700">JD</div>
+                              <span className="text-xs font-bold text-slate-700">John Doe</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">HR</label>
+                            <span className="text-[10px] font-bold text-slate-400 italic">Pending Assignment</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Past Attendance Filing Request (History) Section */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">Past Attendance Filing Request</h3>
+                <div className="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm">
+                  <div className="space-y-4">
+                    {PAST_ODTR_RECORDS.map((record) => (
+                      <div key={record.id} className="border border-slate-200 rounded-3xl overflow-hidden hover:shadow-lg transition-all group bg-white">
+                        <button
+                          onClick={() => setExpandedRecord(expandedRecord === record.id ? null : record.id)}
+                          className="w-full flex items-center justify-between p-6 bg-white hover:bg-slate-50/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-5">
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${record.type === 'ODTR' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
+                              }`}>
+                              {record.type === 'ODTR' ? <Clock size={24} /> : <ClipboardCheck size={24} />}
+                            </div>
+                            <div className="text-left">
+                              <h4 className="font-black text-slate-900 text-sm tracking-tight">{record.type === 'ODTR' ? 'Online Daily Time Record' : 'Attendance Adjustment'}</h4>
+                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Filed: {record.date} • {record.logCount} Logs Included</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${record.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-50' : 'bg-amber-50 text-amber-600 border-amber-100 shadow-amber-50'
+                              } shadow-sm`}>
+                              {record.status}
+                            </span>
+                            <div className={`p-2 rounded-xl transition-all duration-300 ${expandedRecord === record.id ? 'rotate-180 bg-slate-100 text-slate-900' : 'text-slate-300 group-hover:text-slate-500'}`}>
+                              <ChevronDown size={20} />
+                            </div>
+                          </div>
+                        </button>
+
+                        <AnimatePresence>
+                          {expandedRecord === record.id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden bg-slate-50/30 border-t border-slate-50"
+                            >
+                              <div className="p-0 overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                  <thead className="bg-white/50">
+                                    <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                      <th className="px-8 py-3">Date</th>
+                                      <th className="px-8 py-3">Reason</th>
+                                      <th className="px-8 py-3 text-center">Original Log</th>
+                                      <th className="px-8 py-3 text-center">Adjusted Log</th>
+                                      <th className="px-8 py-3">Remarks</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {record.entries.map((entry: any, eIdx: number) => (
+                                      <tr key={eIdx} className="bg-white/30 hover:bg-white transition-colors border-b border-slate-50 last:border-0">
+                                        <td className="px-8 py-5">
+                                          <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                        </td>
+                                        <td className="px-8 py-5">
+                                          <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-lg border border-slate-200 whitespace-nowrap">
+                                            {record.type === 'ODTR' ? entry.shift : entry.adjustmentReason}
+                                          </span>
+                                        </td>
+                                        <td className="px-8 py-5">
+                                          <div className="flex flex-col items-center gap-1">
+                                            <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">IN: {entry.originalIn || '--:--'}</span>
+                                            <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">OUT: {entry.originalOut || '--:--'}</span>
+                                          </div>
+                                        </td>
+                                        <td className="px-8 py-5">
+                                          <div className="flex flex-col items-center gap-1">
+                                            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${record.type === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeIn}</span>
+                                            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${record.type === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeOut}</span>
+                                          </div>
+                                        </td>
+                                        <td className="px-8 py-5 min-w-[200px]">
+                                          <p className="text-xs text-slate-500 italic">{entry.remarks || "--"}</p>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                              <div className="px-8 py-4 bg-white/50 border-t border-slate-50 flex items-center justify-end gap-6">
+                                <div className="flex items-center gap-3">
+                                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Approver</label>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-black text-emerald-700">HR</div>
+                                    <span className="text-xs font-bold text-slate-700">System Approved</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Render Global Tooltip Portal (Works for all tabs) */}
       <AnimatePresence>
         {hoveredData && (
-          <MotionDiv
+          <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
           >
             <AttendanceHoverCard data={hoveredData.record} x={hoveredData.x} y={hoveredData.y} />
-          </MotionDiv>
+          </motion.div>
         )}
       </AnimatePresence>
       {/* Filing Type Selection Modal */}
@@ -1505,8 +2122,8 @@ const AttendanceTab: React.FC = () => {
           </div>
           <div className="space-y-3">
             <button
-               onClick={() => handleSelectFilingType('ODTR')}
-               className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group flex items-center gap-4 text-left"
+              onClick={() => handleSelectFilingType('ODTR')}
+              className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group flex items-center gap-4 text-left"
             >
               <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                 <Clock size={24} />
@@ -1519,8 +2136,8 @@ const AttendanceTab: React.FC = () => {
             </button>
 
             <button
-               onClick={() => handleSelectFilingType('AAR')}
-               className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group flex items-center gap-4 text-left"
+              onClick={() => handleSelectFilingType('AAR')}
+              className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all group flex items-center gap-4 text-left"
             >
               <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-colors">
                 <ClipboardCheck size={24} />
@@ -1541,192 +2158,191 @@ const AttendanceTab: React.FC = () => {
       {/* Main Attendance Filing Builder Modal */}
       <Modal isOpen={isAttendanceFilingModalOpen} onClose={() => setIsAttendanceFilingModalOpen(false)} className="max-w-7xl">
         <div className="flex h-[700px] bg-white overflow-hidden">
-          
+
           {/* Left Side: Builder */}
           <div className="w-[30%] bg-slate-50 border-r border-slate-200 p-8 flex flex-col overflow-y-auto">
-             <div className="mb-8">
-               <div className="flex items-center gap-2 mb-1">
-                 <div className={`p-1.5 rounded-lg ${filingType === 'ODTR' ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'}`}>
-                   {filingType === 'ODTR' ? <Clock size={16} /> : <ClipboardCheck size={16} />}
-                 </div>
-                 <h3 className="text-xl font-bold text-slate-900">File {filingType === 'ODTR' ? 'ODTR' : 'Adjustment'}</h3>
-               </div>
-               <p className="text-xs text-slate-500">Build your attendance submission by adding dates below.</p>
-             </div>
-             <div className="space-y-6 flex-1">
-               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                   <CalendarIcon size={14} /> Filing Details
-                 </h4>
-                 
-                 {/* 1. Reason Selection (Conditional) */}
-                 {filingType === 'AAR' && (
-                   <div>
-                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Adjustment Reason</label>
-                     <select
-                       className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-xs font-bold text-slate-700 shadow-sm"
-                       value={currentFilingEntry.adjustmentReason}
-                       onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, adjustmentReason: e.target.value })}
-                     >
-                       <option value="Missing Time In">Missing Time In</option>
-                       <option value="Missing Time Out">Missing Time Out</option>
-                       <option value="Official Business">Official Business</option>
-                       <option value="Device Malfunction">Device Malfunction</option>
-                     </select>
-                   </div>
-                 )}
-                 {/* 2. Biometric Record Selection (AAR only) */}
-                 {filingType === 'AAR' && (
-                   <div className="grid grid-cols-2 gap-4">
-                     <div>
-                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Biometric Record</label>
-                       <select
-                         className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-xs font-bold text-slate-700 shadow-sm"
-                         value={currentFilingEntry.selectedBioId}
-                         onChange={(e) => {
-                           const bio = MOCK_BIOMETRIC_RECORDS.find(r => r.id === e.target.value);
-                           if (bio) {
-                             setCurrentFilingEntry({
-                               ...currentFilingEntry,
-                               selectedBioId: bio.id,
-                               date: bio.date,
-                               originalIn: bio.timeIn,
-                               originalOut: bio.timeOut,
-                               timeIn: bio.timeIn === '-' ? '08:00 AM' : bio.timeIn,
-                               timeOut: bio.timeOut === '-' ? '05:00 PM' : bio.timeOut
-                             });
-                           }
-                         }}
-                       >
-                         <option value="">-- Choose Record --</option>
-                         {MOCK_BIOMETRIC_RECORDS.map(r => (
-                           <option key={r.id} value={r.id}>
-                             [{r.id}] {r.date}
-                           </option>
-                         ))}
-                       </select>
-                     </div>
-                     <div>
-                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Log Row Info</label>
-                       <div className="w-full border border-slate-100 p-2 rounded-xl bg-slate-50 text-[10px] font-bold text-slate-500 h-[38px] flex flex-col justify-center">
-                         {currentFilingEntry.selectedBioId ? (
-                           <div className="flex justify-between px-2">
-                             <span>In: {currentFilingEntry.originalIn}</span>
-                             <span>Out: {currentFilingEntry.originalOut}</span>
-                           </div>
-                         ) : (
-                           <span className="text-center italic opacity-50">Select a record first</span>
-                         )}
-                       </div>
-                     </div>
-                   </div>
-                 )}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-1">
+                <div className={`p-1.5 rounded-lg ${filingType === 'ODTR' ? 'bg-indigo-100 text-indigo-600' : 'bg-amber-100 text-amber-600'}`}>
+                  {filingType === 'ODTR' ? <Clock size={16} /> : <ClipboardCheck size={16} />}
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">File {filingType === 'ODTR' ? 'ODTR' : 'Adjustment'}</h3>
+              </div>
+              <p className="text-xs text-slate-500">Build your attendance submission by adding dates below.</p>
+            </div>
+            <div className="space-y-6 flex-1">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <CalendarIcon size={14} /> Filing Details
+                </h4>
 
-                 {filingType === 'ODTR' && (
-                   <div>
-                     <OdtrDatePicker 
+                {/* 1. Reason Selection (Conditional) */}
+                {filingType === 'AAR' && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Adjustment Reason</label>
+                    <select
+                      className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-xs font-bold text-slate-700 shadow-sm"
+                      value={currentFilingEntry.adjustmentReason}
+                      onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, adjustmentReason: e.target.value })}
+                    >
+                      <option value="Missing Time In">Missing Time In</option>
+                      <option value="Missing Time Out">Missing Time Out</option>
+                      <option value="Official Business">Official Business</option>
+                      <option value="Device Malfunction">Device Malfunction</option>
+                    </select>
+                  </div>
+                )}
+                {/* 2. Biometric Record Selection (AAR only) */}
+                {filingType === 'AAR' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Biometric Record</label>
+                      <select
+                        className="w-full border border-slate-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-amber-100 text-xs font-bold text-slate-700 shadow-sm"
+                        value={currentFilingEntry.selectedBioId}
+                        onChange={(e) => {
+                          const bio = MOCK_BIOMETRIC_RECORDS.find(r => r.id === e.target.value);
+                          if (bio) {
+                            setCurrentFilingEntry({
+                              ...currentFilingEntry,
+                              selectedBioId: bio.id,
+                              date: bio.date,
+                              originalIn: bio.timeIn,
+                              originalOut: bio.timeOut,
+                              timeIn: bio.timeIn === '-' ? '08:00 AM' : bio.timeIn,
+                              timeOut: bio.timeOut === '-' ? '05:00 PM' : bio.timeOut
+                            });
+                          }
+                        }}
+                      >
+                        <option value="">-- Choose Record --</option>
+                        {MOCK_BIOMETRIC_RECORDS.map(r => (
+                          <option key={r.id} value={r.id}>
+                            [{r.id}] {r.date}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Log Row Info</label>
+                      <div className="w-full border border-slate-100 p-2 rounded-xl bg-slate-50 text-[10px] font-bold text-slate-500 h-[38px] flex flex-col justify-center">
+                        {currentFilingEntry.selectedBioId ? (
+                          <div className="flex justify-between px-2">
+                            <span>In: {currentFilingEntry.originalIn}</span>
+                            <span>Out: {currentFilingEntry.originalOut}</span>
+                          </div>
+                        ) : (
+                          <span className="text-center italic opacity-50">Select a record first</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {filingType === 'ODTR' && (
+                  <div>
+                    <OdtrDatePicker
                       value={currentFilingEntry.date}
                       onChange={(d) => setCurrentFilingEntry({ ...currentFilingEntry, date: d })}
                       existingOdtrDates={existingFilingDates}
-                      setHoveredDateInfo={setHoveredFilingDateInfo} 
+                      setHoveredDateInfo={setHoveredFilingDateInfo}
                     />
-                   </div>
-                 )}
+                  </div>
+                )}
 
-                 <div className="grid grid-cols-2 gap-4">
-                   <OdtrTimePicker 
-                     label="Time In"
-                     value={currentFilingEntry.timeIn}
-                     onChange={(v) => setCurrentFilingEntry({ ...currentFilingEntry, timeIn: v })}
-                     disabled={!!(filingType === 'AAR' && (currentFilingEntry.adjustmentReason === 'Missing Time Out' || (currentFilingEntry.selectedBioId && MOCK_BIOMETRIC_RECORDS.find(r => r.id === currentFilingEntry.selectedBioId)?.timeIn !== '-')))}
-                   />
-                   <OdtrTimePicker 
-                     label="Time Out"
-                     value={currentFilingEntry.timeOut}
-                     onChange={(v) => setCurrentFilingEntry({ ...currentFilingEntry, timeOut: v })}
-                     disabled={!!(filingType === 'AAR' && (currentFilingEntry.adjustmentReason === 'Missing Time In' || (currentFilingEntry.selectedBioId && MOCK_BIOMETRIC_RECORDS.find(r => r.id === currentFilingEntry.selectedBioId)?.timeOut !== '-')))}
-                   />
-                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <OdtrTimePicker
+                    label="Time In"
+                    value={currentFilingEntry.timeIn}
+                    onChange={(v) => setCurrentFilingEntry({ ...currentFilingEntry, timeIn: v })}
+                    disabled={!!(filingType === 'AAR' && (currentFilingEntry.adjustmentReason === 'Missing Time Out' || (currentFilingEntry.selectedBioId && MOCK_BIOMETRIC_RECORDS.find(r => r.id === currentFilingEntry.selectedBioId)?.timeIn !== '-')))}
+                  />
+                  <OdtrTimePicker
+                    label="Time Out"
+                    value={currentFilingEntry.timeOut}
+                    onChange={(v) => setCurrentFilingEntry({ ...currentFilingEntry, timeOut: v })}
+                    disabled={!!(filingType === 'AAR' && (currentFilingEntry.adjustmentReason === 'Missing Time In' || (currentFilingEntry.selectedBioId && MOCK_BIOMETRIC_RECORDS.find(r => r.id === currentFilingEntry.selectedBioId)?.timeOut !== '-')))}
+                  />
+                </div>
 
-                 {filingType === 'ODTR' && (
-                   <div>
-                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Shift</label>
-                     <select
-                       disabled
-                       className="w-full border border-slate-200 p-2.5 rounded-xl bg-slate-50 outline-none text-xs font-bold text-slate-500 shadow-sm cursor-not-allowed appearance-none"
-                       value={currentFilingEntry.shift}
-                       onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, shift: e.target.value })}
-                     >
-                       <option value="08:00 - 17:00">08:00 - 17:00 (Regular)</option>
-                       <option value="06:00 - 15:00">06:00 - 15:00 (Early)</option>
-                       <option value="13:00 - 22:00">13:00 - 22:00 (Late)</option>
-                       <option value="22:00 - 07:00">22:00 - 07:00 (Night)</option>
-                     </select>
-                   </div>
-                 )}
+                {filingType === 'ODTR' && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Shift</label>
+                    <select
+                      disabled
+                      className="w-full border border-slate-200 p-2.5 rounded-xl bg-slate-50 outline-none text-xs font-bold text-slate-500 shadow-sm cursor-not-allowed appearance-none"
+                      value={currentFilingEntry.shift}
+                      onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, shift: e.target.value })}
+                    >
+                      <option value="08:00 - 17:00">08:00 - 17:00 (Regular)</option>
+                      <option value="06:00 - 15:00">06:00 - 15:00 (Early)</option>
+                      <option value="13:00 - 22:00">13:00 - 22:00 (Late)</option>
+                      <option value="22:00 - 07:00">22:00 - 07:00 (Night)</option>
+                    </select>
+                  </div>
+                )}
 
-                 <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Remarks</label>
-                    <textarea 
-                      className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-xs font-medium text-slate-900 h-20 resize-none shadow-sm"
-                      placeholder="e.g. Forgot to log out..."
-                      value={currentFilingEntry.remarks}
-                      onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, remarks: e.target.value })}
-                    />
-                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Remarks</label>
+                  <textarea
+                    className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-100 text-xs font-medium text-slate-900 h-20 resize-none shadow-sm"
+                    placeholder="e.g. Forgot to log out..."
+                    value={currentFilingEntry.remarks}
+                    onChange={(e) => setCurrentFilingEntry({ ...currentFilingEntry, remarks: e.target.value })}
+                  />
+                </div>
 
-                 <button 
-                    onClick={handleAddFilingEntry}
-                    disabled={!currentFilingEntry.date}
-                    className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50
+                <button
+                  onClick={handleAddFilingEntry}
+                  disabled={!currentFilingEntry.date}
+                  className={`w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50
                       ${filingType === 'ODTR' ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-amber-600 text-white shadow-amber-100'}
                     `}
-                  >
-                    <Plus size={14} /> Add to Request
-                  </button>
-               </div>
-             </div>
-           
+                >
+                  <Plus size={14} /> Add to Request
+                </button>
+              </div>
+            </div>
 
-             {/* Tooltip Portal for Disabled Dates in Builder */}
-             <AnimatePresence>
-               {hoveredFilingDateInfo && (
-                 <MotionDiv
-                   initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                   exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                   transition={{ duration: 0.15 }}
-                   className="fixed z-[250] bg-white rounded-xl shadow-2xl border border-slate-100 p-4 w-56 pointer-events-none"
-                   style={{ left: hoveredFilingDateInfo.x, top: hoveredFilingDateInfo.y, transform: 'translate(-50%, -100%)' }}
-                 >
-                   <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-50">
-                     <span className="text-xs font-bold text-slate-500">
-                       {new Date(hoveredFilingDateInfo.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                     </span>
-                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                       hoveredFilingDateInfo.info.type === 'RestDay' ? 'bg-amber-50 text-amber-600' :
-                       hoveredFilingDateInfo.info.type === 'FiledOdtr' ? 'bg-purple-50 text-purple-600' :
-                       hoveredFilingDateInfo.info.type === 'Holiday' ? 'bg-rose-50 text-rose-600' :
-                       'bg-emerald-50 text-emerald-600'
-                     }`}>
-                       {hoveredFilingDateInfo.info.label}
-                     </span>
-                   </div>
-                   <div className="space-y-1.5">
-                     {hoveredFilingDateInfo.info.type === 'RestDay' && (
-                       <div className="text-xs font-medium text-amber-700 italic">Scheduled Rest Day (Weekend)</div>
-                     )}
-                     {hoveredFilingDateInfo.info.type === 'FiledOdtr' && (
-                       <div className="text-xs font-medium text-purple-700 italic">An ODTR has already been filed for this date.</div>
-                     )}
-                     {hoveredFilingDateInfo.info.type === 'Holiday' && (
-                       <div className="text-xs font-bold text-rose-700">🏳 {hoveredFilingDateInfo.info.details}</div>
-                     )}
-                   </div>
-                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white border-r border-b border-slate-100 rotate-45"></div>
-                 </MotionDiv>
-               )}
-             </AnimatePresence>
+
+            {/* Tooltip Portal for Disabled Dates in Builder */}
+            <AnimatePresence>
+              {hoveredFilingDateInfo && (
+                <MotionDiv
+                  initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="fixed z-[250] bg-white rounded-xl shadow-2xl border border-slate-100 p-4 w-56 pointer-events-none"
+                  style={{ left: hoveredFilingDateInfo.x, top: hoveredFilingDateInfo.y, transform: 'translate(-50%, -100%)' }}
+                >
+                  <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-50">
+                    <span className="text-xs font-bold text-slate-500">
+                      {new Date(hoveredFilingDateInfo.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${hoveredFilingDateInfo.info.type === 'RestDay' ? 'bg-amber-50 text-amber-600' :
+                        hoveredFilingDateInfo.info.type === 'FiledOdtr' ? 'bg-purple-50 text-purple-600' :
+                          hoveredFilingDateInfo.info.type === 'Holiday' ? 'bg-rose-50 text-rose-600' :
+                            'bg-emerald-50 text-emerald-600'
+                      }`}>
+                      {hoveredFilingDateInfo.info.label}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {hoveredFilingDateInfo.info.type === 'RestDay' && (
+                      <div className="text-xs font-medium text-amber-700 italic">Scheduled Rest Day (Weekend)</div>
+                    )}
+                    {hoveredFilingDateInfo.info.type === 'FiledOdtr' && (
+                      <div className="text-xs font-medium text-purple-700 italic">An ODTR has already been filed for this date.</div>
+                    )}
+                    {hoveredFilingDateInfo.info.type === 'Holiday' && (
+                      <div className="text-xs font-bold text-rose-700">🏳 {hoveredFilingDateInfo.info.details}</div>
+                    )}
+                  </div>
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-white border-r border-b border-slate-100 rotate-45"></div>
+                </MotionDiv>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Right Side: Summary & Submit */}
@@ -1819,8 +2435,8 @@ const AttendanceTab: React.FC = () => {
                             <p className="text-xs text-slate-500 italic line-clamp-2">{entry.remarks || "--"}</p>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button 
-                              onClick={() => handleRemoveFilingEntry(entry.id)} 
+                            <button
+                              onClick={() => handleRemoveFilingEntry(entry.id)}
                               className="text-slate-300 hover:text-rose-500 transition-colors p-2 hover:bg-rose-50 rounded-xl"
                               title="Remove Entry"
                             >
@@ -1838,7 +2454,7 @@ const AttendanceTab: React.FC = () => {
             {/* Footer Section */}
             <div className="shrink-0 space-y-6 pt-6 border-t border-slate-100">
               <div className="flex gap-3">
-                <button 
+                <button
                   disabled={filingEntries.length === 0}
                   onClick={() => setIsAttendanceFilingModalOpen(false)}
                   className={`flex-1 py-3.5 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2
@@ -1847,7 +2463,7 @@ const AttendanceTab: React.FC = () => {
                 >
                   Submit {filingType} Request
                 </button>
-                <button 
+                <button
                   onClick={() => setIsAttendanceFilingModalOpen(false)}
                   className="px-6 py-3.5 bg-white border border-slate-200 text-slate-500 rounded-xl font-bold hover:bg-slate-50 transition-all text-sm"
                 >
@@ -1858,6 +2474,142 @@ const AttendanceTab: React.FC = () => {
           </div>
         </div>
       </Modal>
+      {/* Document Viewer Modal from Consolidated View */}
+      <AnimatePresence>
+        {selectedDocument && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden border border-slate-100 flex flex-col"
+            >
+              <div className="flex items-center justify-between p-8 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight">{selectedDocument.title}</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{selectedDocument.date} • Reference Document</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedDocument(null)}
+                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto bg-white p-8">
+                {/* Stepper Section */}
+                <div className="mb-12">
+                  {selectedDocument.source === 'Time Collection Device' && (
+                    <SimpleStepper steps={[
+                      { title: 'Submitted', subtitle: 'Auto-Record', status: 'completed', date: selectedDocument.date },
+                      { title: 'System Approval', subtitle: 'Step 1/1', status: 'completed', date: selectedDocument.date },
+                      { title: 'HR Verified', subtitle: 'HR Specialist', status: 'completed', date: selectedDocument.date }
+                    ]} />
+                  )}
+                  {selectedDocument.source === 'Online Daily Time Record' && (
+                    <SimpleStepper steps={[
+                      { title: 'Submitted', subtitle: 'Employee Log', status: 'completed', date: selectedDocument.date },
+                      { title: 'Supervisor', subtitle: 'Step 1/2', status: 'completed', date: selectedDocument.date },
+                      { title: 'Dept Head', subtitle: 'Step 2/2', status: 'current' },
+                      { title: 'HR Verified', subtitle: 'Pending', status: 'pending' }
+                    ]} />
+                  )}
+                  {selectedDocument.source === 'Attendance Adjustment Record' && (
+                    <SimpleStepper steps={[
+                      { title: 'Submitted', subtitle: 'Adjustment Form', status: 'completed', date: selectedDocument.date },
+                      { title: 'Superior', subtitle: 'Step 1/2', status: 'current' },
+                      { title: 'Dept Head', subtitle: 'Step 2/2', status: 'pending' },
+                      { title: 'HR Verified', subtitle: 'Pending', status: 'pending' }
+                    ]} />
+                  )}
+                </div>
+
+                {/* Data Table Section */}
+                <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                  {selectedDocument.source === 'Attendance Adjustment Record' ? (
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-50/50">
+                        <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-8 py-4 border-b border-slate-100">Date & Type</th>
+                          <th className="px-6 py-4 border-b border-slate-100 text-center">Original Log</th>
+                          <th className="px-6 py-4 border-b border-slate-100 text-center">Adjustment</th>
+                          <th className="px-8 py-4 border-b border-slate-100">Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {MOCK_ADJ.map((row, i) => (
+                          <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-8 py-5">
+                              <div className="text-sm font-bold text-slate-700 mb-1.5">{row.date}</div>
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-600 text-[9px] font-black uppercase tracking-tight border border-amber-100"><AlertCircle size={10} /> {row.type}</span>
+                            </td>
+                            <td className="px-6 py-5 text-center">
+                              <div className="flex gap-2 justify-center">
+                                <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-lg font-mono text-[10px] font-bold decoration-slate-300 line-through border border-slate-100">IN: {row.original.in}</span>
+                                <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-lg font-mono text-[10px] font-bold decoration-slate-300 line-through border border-slate-100">OUT: {row.original.out}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-5 text-center">
+                              <div className="flex gap-2 justify-center">
+                                <span className="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm rounded-lg font-mono text-[10px] font-black w-20">{row.adjusted.in}</span>
+                                <span className="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm rounded-lg font-mono text-[10px] font-black w-20">{row.adjusted.out}</span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-5 text-xs text-slate-500 font-medium italic max-w-[250px] leading-relaxed">{row.remarks}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-50/50">
+                        <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <th className="px-8 py-4 border-b border-slate-100">Date</th>
+                          <th className="px-6 py-4 border-b border-slate-100">Shift</th>
+                          <th className="px-6 py-4 border-b border-slate-100 text-center">In</th>
+                          <th className="px-6 py-4 border-b border-slate-100 text-center">Out</th>
+                          <th className="px-8 py-4 border-b border-slate-100">Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {(selectedDocument.source === 'Time Collection Device' ? MOCK_TCD : MOCK_ODTR).map((row: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-8 py-4 text-sm font-bold text-slate-700">{row.date}</td>
+                            <td className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">{row.shift}</td>
+                            <td className="px-6 py-4 font-mono text-xs font-black text-slate-700 text-center">
+                              <span className="bg-white border border-slate-100 px-2 py-1 rounded-md shadow-[0_2px_4px_rgba(0,0,0,0.02)]">{row.in}</span>
+                            </td>
+                            <td className="px-6 py-4 font-mono text-xs font-black text-slate-700 text-center">
+                              <span className="bg-white border border-slate-100 px-2 py-1 rounded-md shadow-[0_2px_4px_rgba(0,0,0,0.02)]">{row.out}</span>
+                            </td>
+                            <td className="px-8 py-4 text-xs text-slate-500 font-medium italic">{row.remarks || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-end shrink-0">
+                <button
+                  onClick={() => setSelectedDocument(null)}
+                  className="px-8 py-3 bg-slate-900 text-white text-sm font-black rounded-2xl hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
+                >
+                  Close Viewer
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
