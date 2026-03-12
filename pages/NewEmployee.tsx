@@ -29,30 +29,258 @@ import {
     ChevronLeft,
     ChevronRight,
     Network,
-    Zap,
     Info,
     X,
     ArrowUpCircle,
     ArrowDownCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { PayComponent as GlobalPayComponent, PayTemplate as GlobalPayTemplate } from '../types';
 
-// --- Types & Interfaces ---
-interface PayComponent {
-    id: string;
-    name: string;
-    type: 'Earning' | 'Deduction';
+// --- Local Types & Interfaces ---
+interface LocalPayComponent extends GlobalPayComponent {
     value: number;
     isFixed: boolean;
+    isEnabled?: boolean;
 }
 
-interface PayTemplate {
+interface LocalPayTemplate {
     id: string;
     name: string;
     basePay: number;
-    components: PayComponent[];
-    linkedPosition?: string; // New field for autofill logic
+    components: LocalPayComponent[];
+    linkedPosition?: string;
 }
+
+// --- Mock Pay Components & Templates (from Pay Structure) ---
+const AVAILABLE_PAY_COMPONENTS: GlobalPayComponent[] = [
+    // --- SYSTEM COMPONENT ---
+    {
+        id: 'pc-basic',
+        name: 'Basic Pay',
+        type: 'earning',
+        isTaxable: true,
+        valueType: 'fixed',
+        fixedValue: 0,
+        includeIn13thMonth: true,
+        isSystem: true,
+        isArchived: false,
+        currentVersion: '1.0.0'
+    },
+    // --- EARNINGS ---
+    {
+        id: 'pc-rice',
+        name: 'Rice Subsidy',
+        type: 'earning',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 2000,
+        includeIn13thMonth: false,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0',
+        frequency: 'Monthly'
+    },
+    {
+        id: 'pc-transport',
+        name: 'Transportation Allowance',
+        type: 'earning',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 3000,
+        includeIn13thMonth: false,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0',
+        frequency: 'Semi-Monthly'
+    },
+    {
+        id: 'pc-meal',
+        name: 'Meal Allowance',
+        type: 'earning',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 3000,
+        includeIn13thMonth: false,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0'
+    },
+    {
+        id: 'pc-clothing',
+        name: 'Clothing Allowance',
+        type: 'earning',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 400,
+        includeIn13thMonth: false,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0',
+        frequency: 'Monthly'
+    },
+    {
+        id: 'pc-medical',
+        name: 'Medical / HMO Allowance',
+        type: 'earning',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 1500,
+        includeIn13thMonth: false,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0'
+    },
+    {
+        id: 'pc-phone',
+        name: 'Mobile Phone Allowance',
+        type: 'earning',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 1200,
+        includeIn13thMonth: false,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0'
+    },
+    // --- DEDUCTIONS ---
+    {
+        id: 'pc-sss',
+        name: 'SSS Contribution',
+        type: 'deduction',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 1350,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0'
+    },
+    {
+        id: 'pc-phic',
+        name: 'PhilHealth Premium',
+        type: 'deduction',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 900,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0'
+    },
+    {
+        id: 'pc-hdmf',
+        name: 'Pag-IBIG (HDMF)',
+        type: 'deduction',
+        isTaxable: false,
+        valueType: 'fixed',
+        fixedValue: 200,
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0'
+    },
+    {
+        id: 'pc-wtax',
+        name: 'Withholding Tax',
+        type: 'deduction',
+        isTaxable: false,
+        valueType: 'formula',
+        archiveAfterDays: 0,
+        isArchived: false,
+        currentVersion: '1.0.0'
+    }
+];
+
+const PAY_TEMPLATES: (GlobalPayTemplate & { basePay: number })[] = [
+    {
+        id: 'pt-001',
+        name: 'Standard Rank-and-File Package',
+        targetType: 'Global',
+        targetId: null,
+        isTaxExempt: false,
+        basePay: 25000,
+        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-002',
+        name: 'Probationary Employee Package',
+        targetType: 'Global',
+        targetId: null,
+        isTaxExempt: false,
+        basePay: 22000,
+        components: ['pc-basic', 'pc-rice', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-003',
+        name: 'IT Department Professional',
+        targetType: 'Department',
+        targetId: 'dept-1',
+        isTaxExempt: false,
+        basePay: 45000,
+        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-004',
+        name: 'HR Department Standard',
+        targetType: 'Department',
+        targetId: 'dept-2',
+        isTaxExempt: false,
+        basePay: 35000,
+        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-005',
+        name: 'Junior Associate Bundle',
+        targetType: 'Rank',
+        targetId: 'rank-1',
+        isTaxExempt: false,
+        basePay: 20000,
+        components: ['pc-basic', 'pc-rice', 'pc-transport', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-006',
+        name: 'Senior Professional Bundle',
+        targetType: 'Rank',
+        targetId: 'rank-2',
+        isTaxExempt: false,
+        basePay: 55000,
+        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-007',
+        name: 'Manager Executive Package',
+        targetType: 'Rank',
+        targetId: 'rank-3',
+        isTaxExempt: false,
+        basePay: 75000,
+        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-008',
+        name: 'Senior Developer Compensation',
+        targetType: 'Position',
+        targetId: 'pos-2',
+        isTaxExempt: false,
+        basePay: 65000,
+        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-009',
+        name: 'Minimum Wage Compliant Package',
+        targetType: 'Global',
+        targetId: null,
+        isTaxExempt: true,
+        basePay: 18000,
+        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-sss', 'pc-phic', 'pc-hdmf']
+    },
+    {
+        id: 'pt-010',
+        name: 'Full Allowance Corporate Package',
+        targetType: 'Global',
+        targetId: null,
+        isTaxExempt: false,
+        basePay: 40000,
+        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    }
+];
 
 interface Education { id: string; attainment: string; course: string; school: string; dateGraduated: string; }
 interface Exam { id: string; dateTaken: string; name: string; rating: string; description: string; }
@@ -113,59 +341,6 @@ const MOCK_PAY_SCHEDULES = [
         divisorId: 'div-2',
         description: '25th Cutoff | 30th Payout'
     },
-];
-
-const MOCK_PAY_TEMPLATES: PayTemplate[] = [
-    {
-        id: 'pt-1',
-        name: 'Standard Regular Employee',
-        basePay: 25000,
-        linkedPosition: 'Junior Developer',
-        components: [
-            { id: 'pc-1', name: 'Rice Subsidy', type: 'Earning', value: 2000, isFixed: true },
-            { id: 'pc-2', name: 'Clothing Allowance', type: 'Earning', value: 1000, isFixed: true },
-            { id: 'pc-3', name: 'SSS Contribution', type: 'Deduction', value: 1350, isFixed: true },
-            { id: 'pc-4', name: 'PhilHealth', type: 'Deduction', value: 450, isFixed: true }
-        ]
-    },
-    {
-        id: 'pt-2',
-        name: 'Senior Management',
-        basePay: 65000,
-        linkedPosition: 'Senior Developer',
-        components: [
-            { id: 'pc-1', name: 'Rice Subsidy', type: 'Earning', value: 2500, isFixed: true },
-            { id: 'pc-5', name: 'Car Allowance', type: 'Earning', value: 5000, isFixed: true },
-            { id: 'pc-3', name: 'SSS Contribution', type: 'Deduction', value: 1350, isFixed: true },
-            { id: 'pc-4', name: 'PhilHealth', type: 'Deduction', value: 900, isFixed: true }
-        ]
-    },
-    {
-        id: 'pt-3',
-        name: 'Contractual / Project Based',
-        basePay: 30000,
-        linkedPosition: 'Payroll Officer',
-        components: [
-            { id: 'pc-6', name: 'Project Allowance', type: 'Earning', value: 3000, isFixed: true },
-            { id: 'pc-7', name: 'Withholding Tax', type: 'Deduction', value: 1500, isFixed: true } // Simplified
-        ]
-    }
-];
-
-// Added Mock compensation components that can be added to a template
-const MOCK_PAY_COMPONENTS: PayComponent[] = [
-    { id: 'pc-1', name: 'Rice Subsidy', type: 'Earning', value: 2000, isFixed: true },
-    { id: 'pc-2', name: 'Clothing Allowance', type: 'Earning', value: 1000, isFixed: true },
-    { id: 'pc-3', name: 'SSS Contribution', type: 'Deduction', value: 1350, isFixed: true },
-    { id: 'pc-4', name: 'PhilHealth', type: 'Deduction', value: 450, isFixed: true },
-    { id: 'pc-5', name: 'Car Allowance', type: 'Earning', value: 5000, isFixed: true },
-    { id: 'pc-6', name: 'Project Allowance', type: 'Earning', value: 3000, isFixed: true },
-    { id: 'pc-7', name: 'Withholding Tax', type: 'Deduction', value: 1500, isFixed: true },
-    { id: 'pc-8', name: 'Transportation Allowance', type: 'Earning', value: 1500, isFixed: true },
-    { id: 'pc-9', name: 'Communication Allowance', type: 'Earning', value: 500, isFixed: true },
-    { id: 'pc-10', name: 'Pag-IBIG Contribution', type: 'Deduction', value: 200, isFixed: true },
-    { id: 'pc-11', name: 'Performance Bonus', type: 'Earning', value: 2000, isFixed: false },
-    { id: 'pc-12', name: 'Night Differential', type: 'Earning', value: 500, isFixed: false },
 ];
 
 const STEPS = [
@@ -267,7 +442,7 @@ const NewEmployee: React.FC = () => {
         payTemplateId: '',
         customizePay: false,
         customBasePay: 0,
-        customComponents: [] as PayComponent[]
+        customComponents: [] as LocalPayComponent[]
     });
 
     // --- Calendar Helpers ---
@@ -328,13 +503,30 @@ const NewEmployee: React.FC = () => {
         }, 1000);
     };
 
+    /** Builds the earnings-only component list for default (non-customized) display. */
+    const buildDefaultComponents = (template: GlobalPayTemplate & { basePay: number }): LocalPayComponent[] =>
+        template.components
+            .map(compId => {
+                const fullComp = AVAILABLE_PAY_COMPONENTS.find(c => c.id === compId);
+                if (!fullComp) return null;
+                if (fullComp.isSystem) return null;          // Basic Pay shown separately
+                if (fullComp.type === 'deduction') return null; // Default view: earnings only
+                return {
+                    ...fullComp,
+                    value: fullComp.fixedValue || 0,
+                    isFixed: fullComp.valueType === 'fixed',
+                    isEnabled: true
+                } as LocalPayComponent;
+            })
+            .filter(Boolean) as LocalPayComponent[];
+
     const handleTemplateChange = (templateId: string) => {
-        const template = MOCK_PAY_TEMPLATES.find(t => t.id === templateId);
+        const template = PAY_TEMPLATES.find(t => t.id === templateId);
         if (template) {
             // Prepare autofill for org structure if linked position exists
             let orgUpdates = {};
-            if (template.linkedPosition) {
-                const linkedPos = ORGANIZATIONAL_POSITIONS.find(p => p.title === template.linkedPosition);
+            if (template.targetType === 'Position' && template.targetId) {
+                const linkedPos = ORGANIZATIONAL_POSITIONS.find(p => p.title === template.targetId);
                 if (linkedPos) {
                     orgUpdates = {
                         position: linkedPos.title,
@@ -348,11 +540,14 @@ const NewEmployee: React.FC = () => {
                 }
             }
 
+            const templateComponents = buildDefaultComponents(template);
+
             setFormData({
                 ...formData,
                 payTemplateId: templateId,
-                customBasePay: template.basePay,
-                customComponents: [...template.components], // Clone
+                customBasePay: template.basePay || 0,
+                // In customized mode keep a clean slate; in default mode load earnings
+                customComponents: formData.customizePay ? [] : templateComponents,
                 ...orgUpdates
             });
         } else {
@@ -370,16 +565,23 @@ const NewEmployee: React.FC = () => {
         setFormData({ ...formData, customComponents: updated });
     };
 
-    const handleAddComponents = () => {
-        const toAdd = MOCK_PAY_COMPONENTS
-            .filter(c => pendingComponentIds.includes(c.id) && !formData.customComponents.some(e => e.id === c.id));
-        setFormData({ ...formData, customComponents: [...formData.customComponents, ...toAdd.map(c => ({ ...c }))] });
-        setPendingComponentIds([]);
-        setShowAddComponentModal(false);
+    const handleToggleComponent = (id: string) => {
+        const updated = formData.customComponents.map(c => c.id === id ? { ...c, isEnabled: !c.isEnabled } : c);
+        setFormData({ ...formData, customComponents: updated });
     };
 
-    const handleRemoveComponent = (id: string) => {
-        setFormData({ ...formData, customComponents: formData.customComponents.filter(c => c.id !== id) });
+    const handleAddComponents = () => {
+        const toAdd = AVAILABLE_PAY_COMPONENTS
+            .filter(c => pendingComponentIds.includes(c.id) && !formData.customComponents.some(e => e.id === c.id))
+            .map(c => ({
+                ...c,
+                value: c.fixedValue || 0,
+                isFixed: c.valueType === 'fixed',
+                isEnabled: true
+            } as LocalPayComponent));
+        setFormData({ ...formData, customComponents: [...formData.customComponents, ...toAdd] });
+        setPendingComponentIds([]);
+        setShowAddComponentModal(false);
     };
 
     const handlePositionChange = (title: string) => {
@@ -627,7 +829,7 @@ const NewEmployee: React.FC = () => {
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Select Pay Template</label>
                                 <div className="space-y-3">
-                                    {MOCK_PAY_TEMPLATES.map(template => (
+                                    {PAY_TEMPLATES.map(template => (
                                         <div
                                             key={template.id}
                                             onClick={() => handleTemplateChange(template.id)}
@@ -638,12 +840,10 @@ const NewEmployee: React.FC = () => {
                                                 {formData.payTemplateId === template.id && <Check size={16} className="text-indigo-600" strokeWidth={3} />}
                                             </div>
                                             <span className="text-xs font-mono font-bold text-slate-500">Base: ₱{template.basePay.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                            {template.linkedPosition && (
-                                                <div className="mt-2 text-[10px] text-indigo-600 bg-indigo-100/50 px-2 py-1 rounded inline-flex items-center gap-1 font-bold border border-indigo-100">
-                                                    <Zap size={10} />
-                                                    Auto-assigns: {template.linkedPosition}
-                                                </div>
-                                            )}
+                                            <div className="mt-2 text-[10px] text-slate-500 bg-slate-100 px-2 py-1 rounded inline-flex items-center gap-1 font-bold border border-slate-200">
+                                                <Users size={10} />
+                                                {template.targetType === 'Global' ? 'All Employees' : template.targetType === 'Department' ? 'Department' : template.targetType === 'Rank' ? 'Rank' : 'Position'}: {template.targetId || 'All'}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -654,7 +854,17 @@ const NewEmployee: React.FC = () => {
                                     <div className="flex justify-between items-center mb-6">
                                         <h4 className="text-sm font-bold text-slate-900">Compensation Breakdown</h4>
                                         <button
-                                            onClick={() => setFormData({ ...formData, customizePay: !formData.customizePay })}
+                                            onClick={() => {
+                                                if (!formData.customizePay) {
+                                                    // Switching to customized: clear components for a clean slate
+                                                    setFormData({ ...formData, customizePay: true, customComponents: [] });
+                                                } else {
+                                                    // Switching back to default: reload the template's default earnings
+                                                    const template = PAY_TEMPLATES.find(t => t.id === formData.payTemplateId);
+                                                    const defaultComponents = template ? buildDefaultComponents(template) : [];
+                                                    setFormData({ ...formData, customizePay: false, customComponents: defaultComponents });
+                                                }
+                                            }}
                                             className="flex items-center gap-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                                         >
                                             {formData.customizePay ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
@@ -666,7 +876,7 @@ const NewEmployee: React.FC = () => {
                                         <div className="mb-6 p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 items-start">
                                             <Info size={16} className="text-amber-600 mt-0.5 shrink-0" />
                                             <p className="text-xs text-amber-700 leading-relaxed">
-                                                <strong>Note:</strong> Customizing values here will create a new employee-specific pay template configuration reflected in the Pay Structure setup.
+                                                <strong>Note:</strong> Click "Add" to add earnings/allowances and deductions. Toggle ON/OFF to enable or disable components.
                                             </p>
                                         </div>
                                     )}
@@ -703,8 +913,8 @@ const NewEmployee: React.FC = () => {
                                                 <p className="text-xs text-slate-400 italic py-2">No components added.</p>
                                             )}
                                             {formData.customComponents.map(comp => (
-                                                <div key={comp.id} className="flex items-center gap-2 text-sm py-2 border-b border-dashed border-slate-100">
-                                                    <span className={`flex-1 ${comp.type === 'Earning' ? 'text-emerald-700' : 'text-rose-700'}`}>{comp.name}</span>
+                                                <div key={comp.id} className={`flex items-center gap-2 text-sm py-2 border-b border-dashed border-slate-100 ${!comp.isEnabled ? 'opacity-40' : ''}`}>
+                                                    <span className={`flex-1 ${comp.type === 'earning' ? 'text-emerald-700' : 'text-rose-700'}`}>{comp.name}</span>
                                                     {formData.customizePay ? (
                                                         <div className="flex items-center gap-2">
                                                             <input
@@ -714,11 +924,11 @@ const NewEmployee: React.FC = () => {
                                                                 onChange={e => handleComponentChange(comp.id, parseFloat(e.target.value) || 0)}
                                                             />
                                                             <button
-                                                                onClick={() => handleRemoveComponent(comp.id)}
-                                                                className="text-rose-400 hover:text-rose-600 transition-colors shrink-0"
-                                                                title="Remove component"
+                                                                onClick={() => handleToggleComponent(comp.id)}
+                                                                title={comp.isEnabled ? 'Disable' : 'Enable'}
+                                                                className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none ${comp.isEnabled ? (comp.type === 'earning' ? 'bg-emerald-500' : 'bg-rose-500') : 'bg-slate-200'}`}
                                                             >
-                                                                <Trash2 size={14} />
+                                                                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${comp.isEnabled ? 'translate-x-4' : 'translate-x-1'}`} />
                                                             </button>
                                                         </div>
                                                     ) : (
@@ -731,7 +941,7 @@ const NewEmployee: React.FC = () => {
                                         <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
                                             <span className="text-xs font-bold text-slate-900 uppercase">Gross Estimate</span>
                                             <span className="text-lg font-mono font-bold text-indigo-600">
-                                                ₱{(formData.customBasePay + formData.customComponents.filter(c => c.type === 'Earning').reduce((acc, c) => acc + c.value, 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                ₱{(formData.customBasePay + formData.customComponents.filter(c => c.type === 'earning' && (formData.customizePay ? c.isEnabled : true)).reduce((acc, c) => acc + c.value, 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                         </div>
                                     </div>
@@ -1126,23 +1336,23 @@ const NewEmployee: React.FC = () => {
                                         </div>
                                         <div className="space-y-2">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Allowances</p>
-                                            {formData.customComponents.filter(c => c.type === 'Earning').map(c => (
+                                            {formData.customComponents.filter(c => c.type === 'earning' && c.isEnabled).map(c => (
                                                 <div key={c.id} className="flex justify-between text-sm">
                                                     <span className="text-slate-600">{c.name}</span>
                                                     <span className="font-mono font-bold text-emerald-600">+₱{c.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
                                             ))}
-                                            {formData.customComponents.filter(c => c.type === 'Earning').length === 0 && <p className="text-xs text-slate-400 italic">None</p>}
+                                            {formData.customComponents.filter(c => c.type === 'earning' && c.isEnabled).length === 0 && <p className="text-xs text-slate-400 italic">None</p>}
                                         </div>
                                         <div className="space-y-2 border-t border-slate-100 pt-2">
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fixed Deductions</p>
-                                            {formData.customComponents.filter(c => c.type === 'Deduction').map(c => (
+                                            {formData.customComponents.filter(c => c.type === 'deduction' && c.isEnabled).map(c => (
                                                 <div key={c.id} className="flex justify-between text-sm">
                                                     <span className="text-slate-600">{c.name}</span>
                                                     <span className="font-mono font-bold text-rose-600">-₱{c.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
                                             ))}
-                                            {formData.customComponents.filter(c => c.type === 'Deduction').length === 0 && <p className="text-xs text-slate-400 italic">None</p>}
+                                            {formData.customComponents.filter(c => c.type === 'deduction' && c.isEnabled).length === 0 && <p className="text-xs text-slate-400 italic">None</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -1224,15 +1434,15 @@ const NewEmployee: React.FC = () => {
                         <div className="max-h-[420px] overflow-y-auto">
 
                             {/* Earnings Group */}
-                            {MOCK_PAY_COMPONENTS.filter(c => c.type === 'Earning' && !formData.customComponents.some(e => e.id === c.id)).length > 0 && (
+                            {AVAILABLE_PAY_COMPONENTS.filter(c => c.type === 'earning' && !c.isSystem && !formData.customComponents.some(e => e.id === c.id)).length > 0 && (
                                 <div>
                                     <div className="px-6 py-2 bg-emerald-50/60 border-y border-emerald-100/80 flex items-center gap-2">
                                         <ArrowUpCircle size={13} className="text-emerald-600" />
                                         <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Earnings & Allowances</span>
                                     </div>
                                     <div className="px-5 py-3 space-y-2">
-                                        {MOCK_PAY_COMPONENTS
-                                            .filter(c => c.type === 'Earning' && !formData.customComponents.some(e => e.id === c.id))
+                                        {AVAILABLE_PAY_COMPONENTS
+                                            .filter(c => c.type === 'earning' && !c.isSystem && !formData.customComponents.some(e => e.id === c.id))
                                             .map(c => {
                                                 const isChecked = pendingComponentIds.includes(c.id);
                                                 return (
@@ -1256,11 +1466,11 @@ const NewEmployee: React.FC = () => {
                                                         <div className="flex-1 min-w-0">
                                                             <div className="font-bold text-sm text-slate-700">{c.name}</div>
                                                             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                                                {c.isFixed ? 'Fixed Amount' : 'Variable'}
+                                                                {c.valueType === 'fixed' ? 'Fixed Amount' : 'Variable'}
                                                             </div>
                                                         </div>
                                                         <span className={`font-mono text-sm font-bold tabular-nums ${isChecked ? 'text-emerald-600' : 'text-slate-500'}`}>
-                                                            +₱{c.value.toLocaleString()}
+                                                            +₱{c.fixedValue?.toLocaleString() || '0'}
                                                         </span>
                                                         <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded uppercase tracking-wide shrink-0">
                                                             Earning
@@ -1274,15 +1484,15 @@ const NewEmployee: React.FC = () => {
                             )}
 
                             {/* Deductions Group */}
-                            {MOCK_PAY_COMPONENTS.filter(c => c.type === 'Deduction' && !formData.customComponents.some(e => e.id === c.id)).length > 0 && (
+                            {AVAILABLE_PAY_COMPONENTS.filter(c => c.type === 'deduction' && !formData.customComponents.some(e => e.id === c.id)).length > 0 && (
                                 <div>
                                     <div className="px-6 py-2 bg-rose-50/60 border-y border-rose-100/80 flex items-center gap-2">
                                         <ArrowDownCircle size={13} className="text-rose-600" />
                                         <span className="text-[10px] font-bold text-rose-700 uppercase tracking-widest">Deductions</span>
                                     </div>
                                     <div className="px-5 py-3 space-y-2">
-                                        {MOCK_PAY_COMPONENTS
-                                            .filter(c => c.type === 'Deduction' && !formData.customComponents.some(e => e.id === c.id))
+                                        {AVAILABLE_PAY_COMPONENTS
+                                            .filter(c => c.type === 'deduction' && !formData.customComponents.some(e => e.id === c.id))
                                             .map(c => {
                                                 const isChecked = pendingComponentIds.includes(c.id);
                                                 return (
@@ -1306,11 +1516,11 @@ const NewEmployee: React.FC = () => {
                                                         <div className="flex-1 min-w-0">
                                                             <div className="font-bold text-sm text-slate-700">{c.name}</div>
                                                             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                                                {c.isFixed ? 'Fixed Amount' : 'Variable'}
+                                                                {c.valueType === 'fixed' ? 'Fixed Amount' : 'Variable'}
                                                             </div>
                                                         </div>
                                                         <span className={`font-mono text-sm font-bold tabular-nums ${isChecked ? 'text-rose-600' : 'text-slate-500'}`}>
-                                                            -₱{c.value.toLocaleString()}
+                                                            -₱{c.fixedValue?.toLocaleString() || '0'}
                                                         </span>
                                                         <span className="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded uppercase tracking-wide shrink-0">
                                                             Deduction
@@ -1324,7 +1534,7 @@ const NewEmployee: React.FC = () => {
                             )}
 
                             {/* All components already added — empty state */}
-                            {MOCK_PAY_COMPONENTS.filter(c => !formData.customComponents.some(e => e.id === c.id)).length === 0 && (
+                            {AVAILABLE_PAY_COMPONENTS.filter(c => !c.isSystem && !formData.customComponents.some(e => e.id === c.id)).length === 0 && (
                                 <div className="px-6 py-12 flex flex-col items-center justify-center gap-2 text-center">
                                     <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center mb-1">
                                         <Check size={18} className="text-emerald-500" strokeWidth={3} />
