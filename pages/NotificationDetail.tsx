@@ -598,6 +598,723 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
       { label: 'Risk Level', value: 'High' },
       { label: 'Account Status', value: 'Secure' }
     ]
+  },
+  'ta-11': {
+    id: 'ta-11',
+    type: 'Error',
+    category: 'Timekeeping',
+    title: 'Absence Detected: David Miller',
+    timestamp: 'August 23, 2025 • 5:00 PM',
+    sender: { name: 'Timekeeping Bot', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          <strong>David Miller</strong> has no attendance record for <strong>August 23, 2025</strong>. No leave application or excused absence was found for this date.
+        </p>
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-rose-800 uppercase tracking-wide">Employee</p>
+              <p className="text-sm font-bold text-slate-800">David Miller</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-rose-800 uppercase tracking-wide">Status</p>
+              <p className="text-sm font-bold text-rose-600">Unexcused Absence</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Department: <strong>Finance Department</strong>
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Attendance Record', url: '/monitor/attendance' },
+    metadata: [
+      { label: 'Date', value: 'Aug 23, 2025' },
+      { label: 'Department', value: 'Finance Department' }
+    ]
+  },
+  'pay-5': {
+    id: 'pay-5',
+    type: 'Info',
+    category: 'Payroll',
+    title: 'Salary Updated',
+    timestamp: 'August 24, 2025 • 10:00 AM',
+    sender: { name: 'Payroll System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your base salary has been updated effective <strong>September 01, 2025</strong>.
+        </p>
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Previous Salary</p>
+              <p className="text-sm font-bold text-slate-800">₱ 35,000.00</p>
+            </div>
+            <div className="text-2xl text-slate-300">→</div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">New Salary</p>
+              <p className="text-sm font-bold text-emerald-600">₱ 45,000.00</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          This adjustment reflects your annual performance increase per company policy. Please contact HR if you have any questions.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Pay Structure', url: '/manage/payroll' },
+    metadata: [
+      { label: 'Effective Date', value: 'Sep 01, 2025' },
+      { label: 'Adjustment Type', value: 'Annual Increase' }
+    ]
+  },
+  // Leave-related notification details
+  'leave-1': {
+    id: 'leave-1',
+    type: 'Success',
+    category: 'Timekeeping',
+    title: 'Leave Request Approved',
+    timestamp: 'January 10, 2026 • 9:00 AM',
+    sender: { name: 'Maria Santos', role: 'Department Head', avatar: 'MS', isSystem: false },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your sick leave request has been <strong>approved</strong> by <strong>Maria Santos</strong>.
+        </p>
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Leave Type</p>
+              <p className="text-sm font-bold text-slate-800">Sick Leave</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Duration</p>
+              <p className="text-sm font-bold text-emerald-600">2 days</p>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-emerald-200/50 flex items-center gap-2">
+            <CalendarCheck className="text-emerald-600" size={16} />
+            <span className="text-sm font-bold text-emerald-900">January 15-16, 2026</span>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Your leave has been deducted from your sick leave balance. Please ensure proper handover of responsibilities during your absence.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Leave History', url: '/monitor/approvals' },
+    metadata: [
+      { label: 'Request ID', value: 'LR-2026-012' },
+      { label: 'Approver', value: 'Maria Santos' }
+    ]
+  },
+  'leave-2': {
+    id: 'leave-2',
+    type: 'Error',
+    category: 'Timekeeping',
+    title: 'Leave Request Rejected',
+    timestamp: 'January 10, 2026 • 2:30 PM',
+    sender: { name: 'John Rivera', role: 'Project Manager', avatar: 'JR', isSystem: false },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your vacation leave request has been <strong>rejected</strong> by <strong>John Rivera</strong>.
+        </p>
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-rose-800 uppercase tracking-wide">Leave Type</p>
+              <p className="text-sm font-bold text-slate-800">Vacation Leave</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-rose-800 uppercase tracking-wide">Duration</p>
+              <p className="text-sm font-bold text-rose-600">5 days</p>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-rose-200/50 flex items-center gap-2">
+            <Calendar className="text-rose-600" size={16} />
+            <span className="text-sm font-bold text-rose-900">February 10-14, 2026</span>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Reason for Rejection</p>
+          <p className="text-sm text-slate-700 italic">
+            "The requested dates conflict with the Q1 Project deadline on February 12. Please reschedule to a later date."
+          </p>
+        </div>
+      </div>
+    ),
+    actionLink: { label: 'Submit New Request', url: '/monitor/approvals' },
+    metadata: [
+      { label: 'Request ID', value: 'LR-2026-015' },
+      { label: 'Rejected By', value: 'John Rivera' }
+    ]
+  },
+  'leave-3': {
+    id: 'leave-3',
+    type: 'Warning',
+    category: 'Timekeeping',
+    title: 'Leave Balance Low Warning',
+    timestamp: 'January 10, 2026 • 8:00 AM',
+    sender: { name: 'HR System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          This is a reminder that your <strong>sick leave balance</strong> is running low. Please plan your leave usage accordingly for the remainder of the year.
+        </p>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <p className="text-xs font-bold text-amber-800 uppercase tracking-wide mb-3">Sick Leave Balance</p>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-amber-500 w-[25%]"></div>
+              </div>
+            </div>
+            <span className="text-lg font-black text-amber-600">2.5 days</span>
+          </div>
+          <p className="text-xs text-amber-700 mt-2">Annual entitlement: 10 days | Used: 7.5 days</p>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Should you need to request additional leave beyond your balance, please coordinate with your HR representative for special considerations.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Leave Balances', url: '/manage/leave-balances' },
+    metadata: [
+      { label: 'Leave Type', value: 'Sick Leave' },
+      { label: 'Year', value: '2026' }
+    ]
+  },
+  // Attendance notification details
+  'att-1': {
+    id: 'att-1',
+    type: 'Success',
+    category: 'Timekeeping',
+    title: 'Overtime Request Approved',
+    timestamp: 'January 9, 2026 • 4:00 PM',
+    sender: { name: 'Maria Santos', role: 'Department Head', avatar: 'MS', isSystem: false },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your overtime request has been <strong>approved</strong> by <strong>Maria Santos</strong>.
+        </p>
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Date</p>
+              <p className="text-sm font-bold text-slate-800">January 8, 2026</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Hours</p>
+              <p className="text-sm font-bold text-emerald-600">4 hours</p>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-emerald-200/50">
+            <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Time</p>
+            <p className="text-sm font-bold text-slate-800">6:00 PM - 10:00 PM</p>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Overtime will be included in your next payroll computation. For concerns regarding overtime rates, please refer to the company overtime policy.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Attendance Record', url: '/monitor/attendance' },
+    metadata: [
+      { label: 'Request ID', value: 'OT-2026-008' },
+      { label: 'Status', value: 'Approved' }
+    ]
+  },
+  'att-2': {
+    id: 'att-2',
+    type: 'Warning',
+    category: 'Timekeeping',
+    title: 'Missed Clock-Out',
+    timestamp: 'January 9, 2026 • 11:30 PM',
+    sender: { name: 'Timekeeping Bot', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          We noticed you <strong>clocked in</strong> but did not <strong>clock out</strong> on <strong>January 9, 2026</strong>. This may affect your attendance record and payroll computation.
+        </p>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Clock In</p>
+              <p className="text-sm font-bold text-slate-800">9:00 AM</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Clock Out</p>
+              <p className="text-sm font-bold text-rose-600">Not Recorded</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Please submit a <strong>Time Adjustment Request</strong> to correct this record. Without proper documentation, this may be marked as an unexcused absence.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Request Time Adjustment', url: '/monitor/attendance' },
+    metadata: [
+      { label: 'Date', value: 'January 9, 2026' },
+      { label: 'Status', value: 'Pending Adjustment' }
+    ]
+  },
+  'att-3': {
+    id: 'att-3',
+    type: 'Warning',
+    category: 'Timekeeping',
+    title: 'Biometric Device Offline',
+    timestamp: 'January 8, 2026 • 7:30 AM',
+    sender: { name: 'IT Support', role: 'System Services', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          The biometric attendance device located in <strong>Building A, 1st Floor</strong> is currently experiencing connectivity issues and is offline.
+        </p>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="text-amber-600" size={24} />
+            <div>
+              <p className="text-sm font-bold text-amber-900">Manual Attendance Logging in Effect</p>
+              <p className="text-xs text-amber-700">Please sign the manual logbook at the security guard station</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Device Details</p>
+          <ul className="text-xs text-slate-600 space-y-1">
+            <li>• Location: Building A, 1st Floor Lobby</li>
+            <li>• Device ID: BIO-ATT-001</li>
+            <li>• Status: Offline - Network Error</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Our IT team is working to restore connectivity. For immediate attendance concerns, please contact HR.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Attendance Devices', url: '/monitor/attendance' },
+    metadata: [
+      { label: 'Device', value: 'BIO-ATT-001' },
+      { label: 'Location', value: 'Building A, 1st Floor' }
+    ]
+  },
+  // Payroll notification details
+  'pay-1': {
+    id: 'pay-1',
+    type: 'Info',
+    category: 'Payroll',
+    title: 'Payslip Available',
+    timestamp: 'January 15, 2026 • 9:00 AM',
+    sender: { name: 'Payroll System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your payslip for the pay period <strong>January 1-15, 2026</strong> is now available for review and download.
+        </p>
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+          <p className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-3">Pay Period Summary</p>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <p className="text-blue-600/70">Basic Salary</p>
+              <p className="font-bold text-slate-900">₱ 22,500.00</p>
+            </div>
+            <div>
+              <p className="text-blue-600/70">Overtime Pay</p>
+              <p className="font-bold text-slate-900">₱ 1,500.00</p>
+            </div>
+            <div>
+              <p className="text-blue-600/70">Gross Pay</p>
+              <p className="font-bold text-slate-900">₱ 24,000.00</p>
+            </div>
+            <div>
+              <p className="text-blue-600/70">Net Pay</p>
+              <p className="font-bold text-emerald-600">₱ 20,450.00</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Please review your payslip carefully. For questions regarding deductions or earnings, contact the Payroll department.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Payslip', url: '/manage/payroll' },
+    metadata: [
+      { label: 'Pay Period', value: 'Jan 1-15, 2026' },
+      { label: 'Pay Date', value: 'January 15, 2026' }
+    ]
+  },
+  'pay-2': {
+    id: 'pay-2',
+    type: 'Info',
+    category: 'Payroll',
+    title: 'Tax Certificate Ready',
+    timestamp: 'January 14, 2026 • 10:00 AM',
+    sender: { name: 'Payroll Department', role: 'HR Operations', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your <strong>BIR Form 2316</strong> (Certificate of Compensation Payment/Tax Withholding) for the taxable year <strong>2025</strong> is now available for download.
+        </p>
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="text-emerald-600" size={24} />
+            <div>
+              <p className="text-sm font-bold text-emerald-900">Year 2025 Tax Certificate Available</p>
+              <p className="text-xs text-emerald-700">Ready for download and filing</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          This document is required for your annual income tax filing. Please download and keep a copy for your records. You may also need this when applying for loans or visas.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Download Form 2316', url: '/manage/payroll' },
+    metadata: [
+      { label: 'Document', value: 'BIR Form 2316' },
+      { label: 'Tax Year', value: '2025' }
+    ]
+  },
+  'pay-3': {
+    id: 'pay-3',
+    type: 'Info',
+    category: 'Payroll',
+    title: 'Deduction Adjustment',
+    timestamp: 'January 13, 2026 • 8:00 AM',
+    sender: { name: 'Payroll System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          As per the updated <strong>Social Security System (SSS) contribution schedule</strong> for 2026, your monthly SSS contribution has been adjusted accordingly.
+        </p>
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">Previous (2025)</p>
+              <p className="text-sm font-bold text-slate-800">₱ 1,125.00</p>
+            </div>
+            <div className="text-2xl text-slate-300">→</div>
+            <div className="text-right">
+              <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">New (2026)</p>
+              <p className="text-sm font-bold text-blue-600">₱ 1,350.00</p>
+            </div>
+          </div>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          This adjustment is mandated by SSS and ensures your contributions remain aligned with your salary bracket. For questions, contact the Payroll department.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Deductions', url: '/manage/payroll' },
+    metadata: [
+      { label: 'Deduction Type', value: 'SSS Contribution' },
+      { label: 'Effective', value: 'January 2026' }
+    ]
+  },
+  // Employee profile notification details
+  'profile-1': {
+    id: 'profile-1',
+    type: 'Info',
+    category: 'HR Core',
+    title: 'Profile Update Request',
+    timestamp: 'January 10, 2026 • 11:00 AM',
+    sender: { name: 'James Rodriguez', role: 'Software Engineer', avatar: 'JR', isSystem: false },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          <strong>James Rodriguez</strong> has submitted a request to update their employee profile information.
+        </p>
+        <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Requested Changes</p>
+          <ul className="text-sm text-slate-700 space-y-2">
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+              <span>Emergency Contact: +63 912 345 6789</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+              <span>Relationship: Spouse (was: Parent)</span>
+            </li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Please review this request and approve or reject accordingly. Supporting documents may be required for verification.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Review Request', url: '/manage/employee' },
+    metadata: [
+      { label: 'Employee', value: 'James Rodriguez' },
+      { label: 'Request ID', value: 'PU-2026-034' }
+    ]
+  },
+  'profile-2': {
+    id: 'profile-2',
+    type: 'Warning',
+    category: 'HR Core',
+    title: 'Document Expiring Soon',
+    timestamp: 'January 9, 2026 • 9:00 AM',
+    sender: { name: 'HR System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          Your <strong>NBI Clearance</strong> is set to expire on <strong>February 28, 2026</strong>. Please renew this document to maintain your active employment status.
+        </p>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="text-amber-600" size={24} />
+            <div>
+              <p className="text-sm font-bold text-amber-900">Action Required</p>
+              <p className="text-xs text-amber-700">Document expires in 49 days</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Document Details</p>
+          <ul className="text-xs text-slate-600 space-y-1">
+            <li>• Document Type: NBI Clearance</li>
+            <li>• Expiration Date: February 28, 2026</li>
+            <li>• Current Status: Valid (Expiring Soon)</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Please submit your renewed document to HR at least one week before the expiration date to avoid any interruptions to your employment.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Upload Document', url: '/my-profile' },
+    metadata: [
+      { label: 'Document', value: 'NBI Clearance' },
+      { label: 'Expires', value: 'Feb 28, 2026' }
+    ]
+  },
+  // HR task notification details
+  'hr-task-1': {
+    id: 'hr-task-1',
+    type: 'Warning',
+    category: 'HR Core',
+    title: 'Performance Review Due',
+    timestamp: 'January 8, 2026 • 10:00 AM',
+    sender: { name: 'HR System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          The performance evaluation for <strong>Marcus Villanueva</strong> is due in <strong>5 days</strong>. Please complete the review to meet the deadline.
+        </p>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600">MV</div>
+            <div>
+              <p className="text-sm font-bold text-slate-900">Marcus Villanueva</p>
+              <p className="text-xs text-slate-500">Engineering Department • Software Engineer</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Review Details</p>
+          <ul className="text-xs text-slate-600 space-y-1">
+            <li>• Review Period: July 2025 - December 2025</li>
+            <li>• Due Date: January 13, 2026</li>
+            <li>• Status: Pending</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Late submissions may affect the employee's regularization decision. Please prioritize this task.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Start Evaluation', url: '/manage/employee' },
+    metadata: [
+      { label: 'Employee', value: 'Marcus Villanueva' },
+      { label: 'Due', value: 'Jan 13, 2026' }
+    ]
+  },
+  'hr-task-2': {
+    id: 'hr-task-2',
+    type: 'Warning',
+    category: 'HR Core',
+    title: 'Contract Renewal Reminder',
+    timestamp: 'January 7, 2026 • 9:00 AM',
+    sender: { name: 'HR System', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          This is a reminder that <strong>3 employee contracts</strong> are expiring within the next <strong>30 days</strong>. Please review and initiate renewal processes.
+        </p>
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider">Employee</th>
+                <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider">Department</th>
+                <th className="px-4 py-3 font-bold text-slate-500 uppercase tracking-wider">Expiry Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              <tr className="hover:bg-slate-50/50 transition-colors">
+                <td className="px-4 py-3 font-bold text-slate-900">Anna Lopez</td>
+                <td className="px-4 py-3 text-slate-600">Marketing</td>
+                <td className="px-4 py-3 text-amber-600 font-bold">Feb 05, 2026</td>
+              </tr>
+              <tr className="hover:bg-slate-50/50 transition-colors">
+                <td className="px-4 py-3 font-bold text-slate-900">Brian Tan</td>
+                <td className="px-4 py-3 text-slate-600">Sales</td>
+                <td className="px-4 py-3 text-amber-600 font-bold">Feb 12, 2026</td>
+              </tr>
+              <tr className="hover:bg-slate-50/50 transition-colors">
+                <td className="px-4 py-3 font-bold text-slate-900">Carla Cruz</td>
+                <td className="px-4 py-3 text-slate-600">Operations</td>
+                <td className="px-4 py-3 text-amber-600 font-bold">Feb 20, 2026</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          Please coordinate with department heads for performance assessments and prepare renewal documents accordingly.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Contracts', url: '/manage/employee' },
+    metadata: [
+      { label: 'Total Expiring', value: '3 contracts' },
+      { label: 'Window', value: '30 days' }
+    ]
+  },
+  'hr-task-3': {
+    id: 'hr-task-3',
+    type: 'Info',
+    category: 'HR Core',
+    title: 'New Employee Onboarding',
+    timestamp: 'January 6, 2026 • 2:00 PM',
+    sender: { name: 'HR Recruiter', role: 'Talent Acquisition', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          A new employee is scheduled to join on <strong>January 20, 2026</strong>. Please ensure all onboarding tasks are completed before their start date.
+        </p>
+        <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-indigo-200">EW</div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Emily Watson</h3>
+              <p className="text-sm font-medium text-indigo-600">Business Analyst</p>
+              <p className="text-xs text-slate-500">Operations • Full-time • On-site</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-indigo-600/70">Start Date</p>
+              <p className="font-bold text-slate-900">Jan 20, 2026</p>
+            </div>
+            <div className="p-2 bg-white/50 rounded-lg">
+              <p className="text-indigo-600/70">Reporting To</p>
+              <p className="font-bold text-slate-900">Sarah Johnson</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
+          <p className="text-xs font-bold text-amber-800 uppercase tracking-wide mb-2">Pending Tasks</p>
+          <ul className="text-xs text-slate-600 space-y-1">
+            <li>• Prepare workstation and equipment</li>
+            <li>• Create system credentials</li>
+            <li>• Assign onboarding buddy</li>
+            <li>• Schedule orientation</li>
+          </ul>
+        </div>
+      </div>
+    ),
+    actionLink: { label: 'View Onboarding Tasks', url: '/manage/employee/onboarding' },
+    metadata: [
+      { label: 'Onboarding ID', value: 'OB-2026-001' },
+      { label: 'Start Date', value: 'Jan 20, 2026' }
+    ]
+  },
+  // System notification details
+  'sys-2': {
+    id: 'sys-2',
+    type: 'Info',
+    category: 'System',
+    title: 'System Maintenance Scheduled',
+    timestamp: 'January 5, 2026 • 9:00 AM',
+    sender: { name: 'IT Operations', role: 'System Services', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          The Human Resources Information System will undergo <strong>scheduled maintenance</strong> to upgrade system infrastructure and apply security patches.
+        </p>
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+          <div className="flex items-center gap-3">
+            <Clock className="text-blue-600" size={24} />
+            <div>
+              <p className="text-sm font-bold text-slate-900">Maintenance Window</p>
+              <p className="text-xs text-blue-700">Sunday, January 15, 2026</p>
+              <p className="text-xs font-bold text-blue-600">2:00 AM - 6:00 AM</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Expected Impact</p>
+          <ul className="text-xs text-slate-600 space-y-1">
+            <li>• System will be unavailable during maintenance window</li>
+            <li>• Employee self-service portal may be affected</li>
+            <li>• Payroll processing will be paused</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          We apologize for any inconvenience. This maintenance is essential to ensure system stability and security.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Schedule', url: '/settings/overview' },
+    metadata: [
+      { label: 'Duration', value: '4 hours' },
+      { label: 'Type', value: 'Planned Maintenance' }
+    ]
+  },
+  'sys-3': {
+    id: 'sys-3',
+    type: 'Success',
+    category: 'System',
+    title: 'Data Backup Complete',
+    timestamp: 'January 4, 2026 • 3:00 AM',
+    sender: { name: 'System Services', role: 'Automated', isSystem: true },
+    body: (
+      <div className="space-y-4">
+        <p className="text-slate-600 leading-relaxed">
+          The weekly automated backup of all employee data has been completed successfully.
+        </p>
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="text-emerald-600" size={24} />
+            <div>
+              <p className="text-sm font-bold text-emerald-900">Backup Successful</p>
+              <p className="text-xs text-emerald-700">All data secured</p>
+            </div>
+          </div>
+        </div>
+        <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Backup Details</p>
+          <ul className="text-xs text-slate-600 space-y-1">
+            <li>• Completion Time: January 4, 2026 3:00 AM</li>
+            <li>• Data Size: 2.4 GB</li>
+            <li>• Records: 15,420 employee files</li>
+            <li>• Storage: Secure Cloud (AWS S3)</li>
+          </ul>
+        </div>
+        <p className="text-slate-600 leading-relaxed">
+          All employee records, documents, and system configurations have been backed up. In case of data loss, recovery is available from this backup.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'View Backup Logs', url: '/settings/overview' },
+    metadata: [
+      { label: 'Backup ID', value: 'BK-2026-W01' },
+      { label: 'Status', value: 'Complete' }
+    ]
   }
 };
 
@@ -606,8 +1323,18 @@ const NotificationDetail: React.FC = () => {
   const navigate = useNavigate();
   const [isArchived, setIsArchived] = useState(false);
 
-  // Fallback if ID not found (simulate generic)
-  const data = (id && MOCK_DETAILS[id]) ? MOCK_DETAILS[id] : MOCK_DETAILS['n0'];
+  const DEFAULT_DETAIL: NotificationDetailData = {
+    id: 'unknown',
+    type: 'Info',
+    category: 'System',
+    title: 'Notification',
+    timestamp: '',
+    sender: { name: 'System', role: 'Automated', isSystem: true },
+    body: <p className="text-slate-600">No details available for this notification.</p>
+  };
+
+  // Fallback if ID not found (show generic)
+  const data = (id && MOCK_DETAILS[id]) ? MOCK_DETAILS[id] : DEFAULT_DETAIL;
 
   const getTypeStyles = (type: NotificationType) => {
     switch (type) {
