@@ -1624,7 +1624,6 @@ const AttendanceTab: React.FC = () => {
 
                  {filingType === 'ODTR' && (
                    <div>
-                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Date</label>
                      <OdtrDatePicker 
                       value={currentFilingEntry.date}
                       onChange={(d) => setCurrentFilingEntry({ ...currentFilingEntry, date: d })}
@@ -1756,9 +1755,19 @@ const AttendanceTab: React.FC = () => {
                     <thead className="sticky top-0 bg-white shadow-[0_1px_0_rgba(0,0,0,0.05)] z-10">
                       <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <th className="px-6 py-4">Date</th>
-                        <th className="px-6 py-4">Reason</th>
-                        <th className="px-6 py-4 text-center">Original Log</th>
-                        <th className="px-6 py-4 text-center">Adjusted Log</th>
+                        {filingType === 'ODTR' ? (
+                          <>
+                            <th className="px-6 py-4">Shift</th>
+                            <th className="px-6 py-4 text-center">In</th>
+                            <th className="px-6 py-4 text-center">Out</th>
+                          </>
+                        ) : (
+                          <>
+                            <th className="px-6 py-4">Reason</th>
+                            <th className="px-6 py-4 text-center">Original Log</th>
+                            <th className="px-6 py-4 text-center">Adjusted Log</th>
+                          </>
+                        )}
                         <th className="px-6 py-4">Remarks</th>
                         <th className="px-6 py-4 text-right">Action</th>
                       </tr>
@@ -1771,23 +1780,41 @@ const AttendanceTab: React.FC = () => {
                               {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded border border-slate-200">
-                                {filingType === 'ODTR' ? entry.shift : entry.adjustmentReason}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col items-center gap-1">
-                              <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">IN: {entry.originalIn || '--:--'}</span>
-                              <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">OUT: {entry.originalOut || '--:--'}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col items-center gap-1">
-                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${filingType === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeIn}</span>
-                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${filingType === 'AAR' ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}>{entry.timeOut}</span>
-                            </div>
-                          </td>
+                          {filingType === 'ODTR' ? (
+                            <>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 tracking-widest uppercase">
+                                  {entry.shift}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className="text-xs font-mono font-bold text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">{entry.timeIn}</span>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className="text-xs font-mono font-bold text-slate-700 bg-white px-3 py-2 rounded-xl border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">{entry.timeOut}</span>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded border border-slate-200">
+                                  {entry.adjustmentReason}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">IN: {entry.originalIn || '--:--'}</span>
+                                  <span className="text-[9px] font-mono font-bold text-slate-400 line-through decoration-slate-300">OUT: {entry.originalOut || '--:--'}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">{entry.timeIn}</span>
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">{entry.timeOut}</span>
+                                </div>
+                              </td>
+                            </>
+                          )}
                           <td className="px-6 py-4 min-w-[150px]">
                             <p className="text-xs text-slate-500 italic line-clamp-2">{entry.remarks || "--"}</p>
                           </td>

@@ -52,6 +52,9 @@ const formatCurrency = (amount: number) => {
 const AdjustmentsTab: React.FC = () => {
     // --- State ---
     const [searchTerm, setSearchTerm] = useState('');
+    const [departmentFilter, setDepartmentFilter] = useState('All');
+    const [positionFilter, setPositionFilter] = useState('All');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
 
     // Batch Queue
@@ -72,13 +75,41 @@ const AdjustmentsTab: React.FC = () => {
         loanEndDate: ''
     });
 
+    const departments = useMemo(() => {
+        const depts = new Set(MOCK_EMPLOYEES.map(e => e.department));
+        return ['All', ...Array.from(depts)];
+    }, []);
+
+    const positions = useMemo(() => {
+        const pos = new Set(MOCK_EMPLOYEES.map(e => e.jobTitle));
+        return ['All', ...Array.from(pos)];
+    }, []);
+
     const filteredEmployees = useMemo(() => {
-        if (!searchTerm) return MOCK_EMPLOYEES;
-        return MOCK_EMPLOYEES.filter(emp =>
-            emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            emp.jobTitle.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [searchTerm]);
+        let result = MOCK_EMPLOYEES;
+
+        if (departmentFilter !== 'All') {
+            result = result.filter(emp => emp.department === departmentFilter);
+        }
+
+        if (positionFilter !== 'All') {
+            result = result.filter(emp => emp.jobTitle === positionFilter);
+        }
+
+        if (searchTerm) {
+            result = result.filter(emp =>
+                emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                emp.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                emp.department.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        result = [...result].sort((a, b) => {
+            return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+        });
+
+        return result;
+    }, [searchTerm, departmentFilter, positionFilter, sortOrder]);
 
     // Cutoff Reference Logic
     const activeCutoffReference = useMemo(() => {
@@ -205,15 +236,43 @@ const AdjustmentsTab: React.FC = () => {
                         </h3>
                     </div>
 
-                    <div className="relative mb-4 group">
+                    <div className="relative mb-3 group">
                         <input
                             type="text"
-                            placeholder="Find by name or role..."
-                            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all placeholder:text-slate-400 placeholder:font-medium shadow-sm"
+                            placeholder="Find by name, role, dept..."
+                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-sm font-bold text-slate-900 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all placeholder:text-slate-400 placeholder:font-medium shadow-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+                    </div>
+
+                    <div className="flex gap-2 mb-4">
+                        <select
+                            className="bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-600 rounded-xl px-2 py-2 outline-none focus:border-indigo-500 focus:bg-white transition-all flex-1 shadow-sm cursor-pointer"
+                            value={departmentFilter}
+                            onChange={(e) => setDepartmentFilter(e.target.value)}
+                        >
+                            {departments.map(dept => (
+                                <option key={dept} value={dept}>{dept === 'All' ? 'All Depts' : `${dept}`}</option>
+                            ))}
+                        </select>
+                        <select
+                            className="bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-600 rounded-xl px-2 py-2 outline-none focus:border-indigo-500 focus:bg-white transition-all flex-1 shadow-sm cursor-pointer"
+                            value={positionFilter}
+                            onChange={(e) => setPositionFilter(e.target.value)}
+                        >
+                            {positions.map(pos => (
+                                <option key={pos} value={pos}>{pos === 'All' ? 'All Positions' : pos}</option>
+                            ))}
+                        </select>
+                        <button
+                            onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                            className="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600 rounded-xl px-4 py-2 hover:bg-slate-100 hover:text-indigo-600 transition-colors flex items-center gap-1.5 shadow-sm"
+                        >
+                            <Sliders size={14} />
+                            {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
+                        </button>
                     </div>
 
                     <div className="flex justify-between items-center px-1">

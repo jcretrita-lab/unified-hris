@@ -29,7 +29,24 @@ interface NotificationItem {
 
 // --- Mock Data ---
 const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  // New notifications based on Notification Settings (placed at top for visibility)
+  {
+    id: 'n-cutoff-1',
+    title: 'Cutoff Period Ended',
+    message: "The current cutoff period has ended. Please review your attendance records and file any missing logs or adjustments for payroll.",
+    timestamp: 'Just now',
+    type: 'Warning',
+    isRead: false,
+    link: '/my-profile/attendance'
+  },
+  {
+    id: 'n-bio-1',
+    title: 'Attendance Records Updated',
+    message: 'Latest biometric records have been successfully uploaded. You can now view your updated attendance history.',
+    timestamp: '10 minutes ago',
+    type: 'Success',
+    isRead: false,
+    link: '/my-profile/attendance'
+  },
   {
     id: 'n13',
     title: 'Bank Details Required',

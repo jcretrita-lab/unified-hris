@@ -157,7 +157,7 @@ const EmployeeSchedule: React.FC = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('Schedule Management');
-    const [scheduleView, setScheduleView] = useState<'List' | 'Day' | 'Week' | 'Month'>('List');
+    const [scheduleView, setScheduleView] = useState<'List' | 'Cutoff' | 'Week' | 'Month'>('List');
 
     // Filter Handling (Mock)
     const filteredSchedules = MOCK_SCHEDULES.filter(item =>
@@ -172,15 +172,15 @@ const EmployeeSchedule: React.FC = () => {
 
     const tabs = ['Schedule Management', 'Leave Management'];
 
-    const renderDayView = () => (
-        <div className="p-5 overflow-auto">
-            <div className="flex bg-slate-50 rounded-lg p-2 font-bold text-xs text-slate-500 uppercase tracking-widest min-w-[800px]">
+    const renderCutoffView = () => (
+        <div className="p-5 overflow-x-auto max-w-full w-full custom-scrollbar">
+            <div className="flex bg-slate-50 rounded-lg p-2 font-bold text-xs text-slate-500 uppercase tracking-widest min-w-[1200px]">
                 <div className="w-56 shrink-0 pl-4">Employee</div>
-                <div className="flex-1 flex justify-between pr-4">
-                    {[8, 10, 12, 14, 16, 18].map(h => <span key={h}>{h}:00</span>)}
-                </div>
+                {Array.from({ length: 15 }, (_, i) => i + 1).map(d => (
+                    <div key={d} className="flex-1 text-center">Cutoff 1<br/>Day {d}</div>
+                ))}
             </div>
-            <div className="min-w-[800px]">
+            <div className="min-w-[1200px]">
                 {filteredSchedules.map(emp => (
                     <div key={emp.id} className="flex border-b border-slate-100 p-3 items-center hover:bg-slate-50 cursor-pointer">
                         <div className="w-56 shrink-0 flex items-center gap-3">
@@ -190,11 +190,21 @@ const EmployeeSchedule: React.FC = () => {
                                 <div className="text-[10px] text-slate-400">{emp.department}</div>
                             </div>
                         </div>
-                        <div className="flex-1 relative h-12 flex items-center">
-                            <div className="absolute left-[10%] right-[20%] h-8 bg-indigo-50 rounded-lg border border-indigo-100 flex items-center px-3 shadow-sm">
-                                <span className="text-xs text-indigo-700 font-bold">{emp.shiftTime}</span>
-                            </div>
-                        </div>
+                        {Array.from({ length: 15 }, (_, i) => i + 1).map((d) => {
+                            const hasShift = d % 7 !== 0 && d % 7 !== 6;
+                            return (
+                                <div key={d} className="flex-1 p-1">
+                                    {hasShift ? (
+                                        <div className="h-10 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-lg flex flex-col items-center justify-center text-[9px] font-bold text-center shadow-sm overflow-hidden whitespace-nowrap">
+                                            <span>{emp.shiftTime.split(' - ')[0]}</span>
+                                            <span>- {emp.shiftTime.split(' - ')[1]}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="h-10 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-center text-[10px] font-medium text-slate-300">Off</div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 ))}
             </div>
@@ -202,7 +212,7 @@ const EmployeeSchedule: React.FC = () => {
     );
 
     const renderWeekView = () => (
-        <div className="p-5 overflow-auto">
+        <div className="p-5 overflow-x-auto max-w-full w-full custom-scrollbar">
             <div className="flex bg-slate-50 rounded-lg p-2 font-bold text-xs text-slate-500 uppercase tracking-widest min-w-[800px]">
                 <div className="w-56 shrink-0 pl-4">Employee</div>
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
@@ -340,7 +350,7 @@ const EmployeeSchedule: React.FC = () => {
 
             {/* Schedule Management Tab */}
             {activeTab === 'Schedule Management' && (
-                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-full w-full">
                     {/* Toolbar */}
                     <div className="p-5 border-b border-slate-50 flex flex-col lg:flex-row gap-4 items-center justify-between bg-white">
                         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
@@ -360,7 +370,7 @@ const EmployeeSchedule: React.FC = () => {
                                     className="appearance-none flex flex-1 items-center gap-2 px-4 py-2.5 pr-10 bg-transparent text-xs font-bold text-slate-600 outline-none cursor-pointer group-hover:text-indigo-600"
                                 >
                                     <option value="List">List View</option>
-                                    <option value="Day">Day View</option>
+                                    <option value="Cutoff">Cutoff View</option>
                                     <option value="Week">Week View</option>
                                     <option value="Month">Month View</option>
                                 </select>
@@ -440,7 +450,7 @@ const EmployeeSchedule: React.FC = () => {
                             </table>
                         </div>
                     )}
-                    {scheduleView === 'Day' && renderDayView()}
+                    {scheduleView === 'Cutoff' && renderCutoffView()}
                     {scheduleView === 'Week' && renderWeekView()}
                     {scheduleView === 'Month' && renderMonthView()}
 
@@ -463,7 +473,7 @@ const EmployeeSchedule: React.FC = () => {
 
             {/* Leave Management Tab */}
             {activeTab === 'Leave Management' && (
-                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-full w-full">
                     {/* Toolbar */}
                     <div className="p-5 border-b border-slate-50 flex flex-col lg:flex-row gap-4 items-center justify-between bg-white">
                         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">

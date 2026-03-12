@@ -1921,7 +1921,7 @@ const PoliciesPage: React.FC = () => {
                                                                 <div>
                                                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Accrual Policy</label>
                                                                     <div className="grid grid-cols-2 gap-3">
-                                                                        {['Immediate', 'Monthly', 'Yearly', 'Upon regularization'].map(policy => {
+                                                                        {['Immediate', 'Monthly', 'Yearly', 'Upon regularization', 'Monthly Accrual (Earned)', 'Others (Specify)'].map(policy => {
                                                                             const active = currentLeaveConfig.accrualPolicy === policy;
                                                                             return (
                                                                                 <button
@@ -1937,6 +1937,44 @@ const PoliciesPage: React.FC = () => {
                                                                             );
                                                                         })}
                                                                     </div>
+                                                                    {currentLeaveConfig.accrualPolicy === 'Monthly Accrual (Earned)' && (
+                                                                        <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                                                                            <label className="block text-[10px] font-black text-indigo-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                                                <Info size={14} /> Accrual Setup (Years of Service)
+                                                                            </label>
+                                                                            <div className="space-y-2">
+                                                                                {[
+                                                                                    { year: '1st Year', value: 'Prorated' },
+                                                                                    { year: '2nd Year', value: '6' },
+                                                                                    { year: '3rd Year', value: '9' },
+                                                                                    { year: '4th Year', value: '9' },
+                                                                                    { year: '5th Year', value: '12' },
+                                                                                ].map((tier, idx) => (
+                                                                                    <div key={idx} className="flex items-center gap-3">
+                                                                                        <div className="w-20 text-[10px] font-black text-slate-500 uppercase">{tier.year}</div>
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            className="flex-1 p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:border-indigo-400 transition-colors"
+                                                                                            defaultValue={tier.value}
+                                                                                        />
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                            <button className="mt-4 w-full py-2.5 bg-white border border-indigo-200 rounded-xl text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:bg-indigo-100 transition-colors">
+                                                                                + Add Tier
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                    {currentLeaveConfig.accrualPolicy === 'Others (Specify)' && (
+                                                                        <div className="mt-4">
+                                                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Specify Policy</label>
+                                                                            <textarea
+                                                                                className="w-full p-4 bg-white border-2 border-slate-100 rounded-2xl text-xs font-bold focus:border-indigo-500 outline-none resize-none"
+                                                                                placeholder="Describe the custom accrual policy and rules..."
+                                                                                rows={3}
+                                                                            ></textarea>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>

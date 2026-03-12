@@ -50,6 +50,81 @@ interface NotificationDetailData {
 
 // --- Mock Data ---
 const MOCK_DETAILS: Record<string, NotificationDetailData> = {
+  'n-cutoff-1': {
+    id: 'n-cutoff-1',
+    type: 'Warning',
+    category: 'Timekeeping',
+    title: 'Cutoff Period Reminder: Aug 11 - Aug 25',
+    timestamp: 'Just now',
+    sender: { name: 'Timekeeping System', role: 'Automated Reminders', isSystem: true },
+    body: (
+      <div className="space-y-6">
+        <p className="text-slate-600 leading-relaxed">
+          The current payroll cutoff period (<strong>Aug 11, 2025 - Aug 25, 2025</strong>) has officially concluded. 
+        </p>
+        <div className="p-5 bg-amber-50 border border-amber-100 rounded-2xl">
+          <h4 className="text-sm font-bold text-amber-900 mb-2">📢 Closing Steps Required:</h4>
+          <ul className="space-y-2 text-xs text-amber-800">
+            <li className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+              Verify all daily clock-in/out logs
+            </li>
+            <li className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+              File Attendance Adjustments (AAR) for missing biometric data
+            </li>
+            <li className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+              Ensure all pending leave requests for this period are approved
+            </li>
+          </ul>
+        </div>
+        <p className="text-sm text-slate-500 italic">
+          Please complete these actions by <strong>EOD Tomorrow</strong> to avoid delays in payroll processing.
+        </p>
+      </div>
+    ),
+    actionLink: { label: 'Go to Attendance Profile', url: '/my-profile/attendance' },
+    metadata: [
+      { label: 'Cutoff Period', value: 'Aug 11 - Aug 25' },
+      { label: 'Payroll Date', value: 'Aug 30, 2025' }
+    ]
+  },
+  'n-bio-1': {
+    id: 'n-bio-1',
+    type: 'Success',
+    category: 'Timekeeping',
+    title: 'Biometric Synchronization Complete',
+    timestamp: '10 minutes ago',
+    sender: { name: 'Device Bridge', role: 'Security & Synchronization', isSystem: true },
+    body: (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl">
+          <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
+            <Shield size={24} />
+          </div>
+          <div>
+            <h4 className="font-bold text-emerald-900">Sync Successful</h4>
+            <p className="text-xs text-emerald-700">All attendance terminals are now up to date.</p>
+          </div>
+        </div>
+        <p className="text-sm text-slate-600 leading-relaxed">
+          The latest biometric logs from all office terminals have been successfully synchronized with the central cloud server. Your **Daily Time Records (DTR)** have been recalculated based on these logs.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Last Log Synced</p>
+            <p className="text-sm font-bold text-slate-900">Today, 2:45 PM</p>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Source Devices</p>
+            <p className="text-sm font-bold text-slate-900">4 Active Terminals</p>
+          </div>
+        </div>
+      </div>
+    ),
+    actionLink: { label: 'Check Updated DTR', url: '/my-profile/attendance' }
+  },
   'n0': {
     id: 'n0',
     type: 'Warning',
@@ -532,7 +607,7 @@ const NotificationDetail: React.FC = () => {
   const [isArchived, setIsArchived] = useState(false);
 
   // Fallback if ID not found (simulate generic)
-  const data = (id && MOCK_DETAILS[id]) ? MOCK_DETAILS[id] : MOCK_DETAILS['n1'];
+  const data = (id && MOCK_DETAILS[id]) ? MOCK_DETAILS[id] : MOCK_DETAILS['n0'];
 
   const getTypeStyles = (type: NotificationType) => {
     switch (type) {

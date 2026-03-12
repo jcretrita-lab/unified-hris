@@ -394,23 +394,29 @@ const LedgerView: React.FC<{
     // Year: Past (Jan-Feb), Present (Mar), Future (Apr-Dec)
     // Month: P1, P2 for semi-monthly context
     const getColumns = () => {
+        const getMeta = (idx: number) => {
+            const currentIdx = month * 2 + cutoff;
+            if (idx < currentIdx) return 'past';
+            if (idx === currentIdx) return 'present';
+            return 'future';
+        };
+
         if (type === 'year') {
             const cols: { label: string; meta: 'past' | 'present' | 'future'; type: 'value' | 'audit'; dataIdx: number }[] = [];
             monthNames.forEach((m, mIdx) => {
-                const meta = mIdx < 2 ? 'past' : mIdx === 2 ? 'present' : 'future';
-                cols.push({ label: 'P1', meta, type: 'value', dataIdx: mIdx * 2 });
-                cols.push({ label: 'Src', meta, type: 'audit', dataIdx: mIdx * 2 });
-                cols.push({ label: 'P2', meta, type: 'value', dataIdx: mIdx * 2 + 1 });
-                cols.push({ label: 'Src', meta, type: 'audit', dataIdx: mIdx * 2 + 1 });
+                cols.push({ label: 'P1', meta: getMeta(mIdx * 2), type: 'value', dataIdx: mIdx * 2 });
+                cols.push({ label: 'Src', meta: getMeta(mIdx * 2), type: 'audit', dataIdx: mIdx * 2 });
+                cols.push({ label: 'P2', meta: getMeta(mIdx * 2 + 1), type: 'value', dataIdx: mIdx * 2 + 1 });
+                cols.push({ label: 'Src', meta: getMeta(mIdx * 2 + 1), type: 'audit', dataIdx: mIdx * 2 + 1 });
             });
             return cols;
         }
         if (type === 'month') {
             return [
-                { label: 'P1', meta: 'present', type: 'value', dataIdx: month * 2 } as const,
-                { label: 'Src', meta: 'present', type: 'audit', dataIdx: month * 2 } as const,
-                { label: 'P2', meta: 'present', type: 'value', dataIdx: month * 2 + 1 } as const,
-                { label: 'Src', meta: 'present', type: 'audit', dataIdx: month * 2 + 1 } as const,
+                { label: 'P1', meta: getMeta(month * 2), type: 'value', dataIdx: month * 2 } as const,
+                { label: 'Src', meta: getMeta(month * 2), type: 'audit', dataIdx: month * 2 } as const,
+                { label: 'P2', meta: getMeta(month * 2 + 1), type: 'value', dataIdx: month * 2 + 1 } as const,
+                { label: 'Src', meta: getMeta(month * 2 + 1), type: 'audit', dataIdx: month * 2 + 1 } as const,
             ];
         }
         return [
@@ -482,19 +488,19 @@ const LedgerView: React.FC<{
                 sourceType: 'deductions',
                 rows: [
                     {
-                        label: 'SSS PH-Contribution',
+                        label: 'SSS',
                         values: Array.from({ length: 24 }, () => 1125 / 2),
                         forecasted: [],
                         docs: []
                     },
                     {
-                        label: 'PhilHealth Benefit',
+                        label: 'PhilHealth',
                         values: Array.from({ length: 24 }, () => 800 / 2),
                         forecasted: [],
                         docs: []
                     },
                     {
-                        label: 'HDMF Pag-IBIG Core',
+                        label: 'Pag-IBIG',
                         values: Array.from({ length: 24 }, () => 100 / 2),
                         forecasted: [],
                         docs: []
@@ -602,7 +608,7 @@ const LedgerView: React.FC<{
                             </tr>
                             <tr className={`${type === 'year' ? 'border-b-[3px] border-slate-900 border-dashed' : 'border-b-2 border-slate-900'} bg-white`}>
                                 {columns.map((col, idx) => (
-                                    <th key={idx} className={`px-2 py-2 text-[9px] font-black text-center uppercase tracking-widest border-r border-slate-100 transition-all duration-300 ${col.meta === 'present' ? 'text-indigo-600 bg-indigo-50/10' :
+                                    <th key={idx} className={`px-2 py-2 text-[9px] font-black text-center uppercase tracking-widest border-r border-slate-100 transition-all duration-300 ${col.meta === 'present' ? 'text-blue-700 bg-blue-50' :
                                         col.meta === 'future' ? 'text-slate-400 opacity-60' : 'text-slate-400 bg-white'
                                         } ${col.type === 'audit' ? 'min-w-[50px]' : 'min-w-[90px]'} ${idx % 2 === 1 ? 'border-r-2 border-slate-200' : ''}`}>
                                         {col.label}
@@ -633,7 +639,7 @@ const LedgerView: React.FC<{
                                                 </td>
                                                 {columns.map((col, cIdx) => (
                                                     <td key={cIdx} className={`px-2 py-3 text-right border-r border-slate-50 transition-colors duration-300 ${col.meta === 'future' ? 'opacity-40' :
-                                                        col.meta === 'present' ? 'bg-indigo-50/5' : ''
+                                                        col.meta === 'present' ? 'bg-blue-50/60' : ''
                                                         } ${col.type === 'audit' ? 'text-center' : ''} ${cIdx % 2 === 1 ? 'border-r-2 border-slate-200' : ''}`}>
                                                         {col.type === 'value' ? (
                                                             <span className={`font-mono text-[11px] ${col.meta === 'future' ? 'text-slate-400 italic' :
@@ -733,44 +739,40 @@ const PayProfileTab: React.FC = () => {
                 <div className="flex flex-wrap items-end justify-between gap-6 mb-10">
                     <ViewTab active={viewType} onChange={setViewType} />
 
-                    {viewType !== 'year' && (
-                        <div className="flex items-center gap-4 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
-                            <div className="flex items-center gap-1 bg-white p-1 rounded-xl shadow-sm border border-slate-100">
-                                <button
-                                    onClick={() => setSelectedMonth(prev => Math.max(0, prev - 1))}
-                                    className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors"
-                                >
-                                    <ChevronLeft size={16} />
-                                </button>
-                                <div className="px-4 py-1 text-[11px] font-black text-slate-900 uppercase tracking-widest min-w-[120px] text-center">
-                                    {monthNames[selectedMonth]} 2024
-                                </div>
-                                <button
-                                    onClick={() => setSelectedMonth(prev => Math.min(11, prev + 1))}
-                                    className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors"
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
+                    <div className="flex items-center gap-4 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
+                        <div className="flex items-center gap-1 bg-white p-1 rounded-xl shadow-sm border border-slate-100">
+                            <button
+                                onClick={() => setSelectedMonth(prev => Math.max(0, prev - 1))}
+                                className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <div className="px-4 py-1 text-[11px] font-black text-slate-900 uppercase tracking-widest min-w-[120px] text-center">
+                                {monthNames[selectedMonth]} 2024
                             </div>
-
-                            {viewType === 'cutoff' && (
-                                <div className="flex items-center gap-1 bg-slate-200/50 p-1 rounded-xl">
-                                    {['Period 1', 'Period 2'].map((label, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setSelectedCutoff(idx)}
-                                            className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedCutoff === idx
-                                                ? 'bg-white text-indigo-600 shadow-sm'
-                                                : 'text-slate-500 hover:text-slate-700'
-                                                }`}
-                                        >
-                                            {label}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                            <button
+                                onClick={() => setSelectedMonth(prev => Math.min(11, prev + 1))}
+                                className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
                         </div>
-                    )}
+
+                        <div className="flex items-center gap-1 bg-slate-200/50 p-1 rounded-xl">
+                            {['Period 1', 'Period 2'].map((label, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setSelectedCutoff(idx)}
+                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedCutoff === idx
+                                        ? 'bg-white text-indigo-600 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700'
+                                        }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
                 <LedgerView type={viewType} month={selectedMonth} cutoff={selectedCutoff} />
             </div>
