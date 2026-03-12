@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import RankLabelsModal from "../components/RankLabelsComponent";
+import { useSystemSettings } from '../context/SystemSettingsContext';
 import { Rank, SalaryGrade, SubRank,RankStructureConfig, defaultRankStructureConfig } from "../types";
 import {
   Settings,
@@ -55,7 +55,7 @@ const RankSettingsPage: React.FC = () => {
   const [isRankLabelsModalOpen, setIsRankLabelsModalOpen] = useState(false);
   const [grades] = useState<SalaryGrade[]>(MOCK_SALARY_GRADES);
 
-  const [rankConfig, setRankConfig] = useState<RankStructureConfig>(defaultRankStructureConfig);
+  const { rankConfig, setRankConfig } = useSystemSettings();
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [tempConfig, setTempConfig] = useState<RankStructureConfig>(rankConfig);
 
@@ -134,7 +134,7 @@ interface GlobalRanksProps {
   rankConfig: RankStructureConfig;
 }
 
-const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) => {
+const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades, rankConfig}) => {
   // Add Mode State
   const [isAdding, setIsAdding] = useState(false);
   const [newRank, setNewRank] = useState<Partial<Rank>>({ subRanks: [] });
@@ -237,7 +237,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
     <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-h-[700px] flex flex-col">
       <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
         <div>
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Shield size={20} className="text-indigo-600" /> Rank Definitions</h2>
+          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Shield size={20} className="text-indigo-600" /> {rankConfig.rankLabel} Definitions</h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
             Define standard hierarchy levels. Supports single-grade ranks or
             multi-tiered ranks (e.g. Teacher I, II, III).
@@ -253,7 +253,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
           disabled={isAdding || editingId !== null}
           className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 text-xs font-bold shadow-lg shadow-indigo-200"
         >
-          <Plus size={16} /> Add Rank
+          <Plus size={16} /> Add {rankConfig.rankLabel}
         </button>
       </div>
 
@@ -265,7 +265,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
               <div className="flex justify-between items-center border-b border-indigo-100 pb-4">
                 <div className="flex items-center gap-2 text-indigo-900 font-bold">
                   {isAdding ? <Plus size={18} /> : <Edit2 size={18} />}
-                  {isAdding ? "New Rank Definition" : "Editing Rank"}
+                  {isAdding ? `New ${rankConfig.rankLabel} Definition` : `Editing ${rankConfig.rankLabel}`}
                 </div>
                 <button
                   onClick={() => {
@@ -282,7 +282,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">
-                    Rank Name
+                    {rankConfig.rankLabel} Name
                   </label>
                   <input
                     autoFocus
@@ -324,7 +324,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
               <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <span className="text-sm font-bold text-slate-700">
-                    Rank Structure Configuration
+                    {rankConfig.rankLabel} Structure Configuration
                   </span>
                 </div>
 
@@ -377,13 +377,13 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
                 {/* Sub Rank Builder */}
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 block">
-                    Sub-Ranks / Tiers
+                    {rankConfig.subRankLabel}s
                   </label>
 
                   {/* Add Sub Rank Input */}
                   <div className="flex gap-2 mb-4">
                     <input
-                      placeholder="Tier Name (e.g. 'I', 'Senior')"
+                      placeholder={`${rankConfig.subRankLabel} Name (e.g. 'I', 'Senior')`}
                       className="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium outline-none focus:border-indigo-500 bg-white text-slate-900"
                       value={subRankInput.name}
                       onChange={(e) =>
@@ -449,7 +449,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
                     })}
                     {tempSubRanks.length === 0 && (
                       <p className="text-xs text-slate-400 italic text-center py-4">
-                        No sub-ranks defined. Add one above.
+                        No {rankConfig.subRankLabel.toLowerCase()}s defined. Add one above.
                       </p>
                     )}
                   </div>
@@ -461,7 +461,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
                   onClick={isAdding ? handleAdd : handleSaveEdit}
                   className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 active:scale-95 transition-all text-sm"
                 >
-                  {isAdding ? "Create Rank" : "Save Changes"}
+                  {isAdding ? `Create ${rankConfig.rankLabel}` : "Save Changes"}
                 </button>
                 <button
                   onClick={() => {
@@ -491,14 +491,14 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
                     <button
                       onClick={() => handleStartEdit(rank)}
                       className="p-2 bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                      title="Edit Rank"
+                      title={`Edit ${rankConfig.rankLabel}`}
                     >
                       <Edit2 size={14} />
                     </button>
                     <button
                       onClick={() => handleDelete(rank.id)}
                       className="p-2 bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                      title="Delete Rank"
+                      title={`Delete ${rankConfig.rankLabel}`}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -515,7 +515,7 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
                         </h3>
                         <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
                           <Tag size={12} />{" "}
-                          {hasSubRanks ? "Tiered Structure" : "Standard Structure"}
+                          <span>{hasSubRanks ? `${rankConfig.subRankLabel}s` : 'Role Structure'}</span>
                         </div>
                       </div>
                     </div>
@@ -584,10 +584,9 @@ const GlobalRanks: React.FC<GlobalRanksProps> = ({ ranks, setRanks, grades }) =>
         {!isAdding && ranks.length === 0 && (
           <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed border-slate-200 rounded-3xl m-4">
             <Shield size={48} className="mb-4 opacity-20" />
-            <p className="font-bold text-slate-600 mb-1">No ranks defined.</p>
+            <p className="font-bold text-slate-600 mb-1">No {rankConfig.rankLabel.toLowerCase()}s defined.</p>
             <p className="text-sm font-medium">
-              Create standard ranks or tiered ranks like "Specialist I, II,
-              III".
+              Create standard {rankConfig.rankLabel.toLowerCase()}s or tiered {rankConfig.rankLabel.toLowerCase()}s like "Specialist I, II, III".
             </p>
           </div>
         )}

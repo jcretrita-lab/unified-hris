@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PayComponent, PayTemplate, OrgUnit, Rank, Position, Employee, EmployeeStatus } from '../../types';
+import { useSystemSettings } from '../../context/SystemSettingsContext';
 import Modal from '../../components/Modal';
 import {
     Plus,
@@ -75,6 +76,7 @@ interface PayTemplatesProps {
 }
 
 const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, components }) => {
+    const { rankConfig } = useSystemSettings();
     // Local data usage for simulator
     const ranks = MOCK_RANKS;
     const orgUnits = MOCK_ORG_UNITS;
@@ -312,7 +314,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
         if (t.targetType === 'Rank') {
             const r = ranks.find(rk => rk.id === t.targetId);
             const sr = r?.subRanks?.find(s => s.id === t.targetSubRankId);
-            return `Rank: ${r?.name || 'Unknown'} ${sr ? `(${sr.name})` : ''}`;
+            return `${rankConfig.rankLabel}: ${r?.name || 'Unknown'} ${sr ? `(${sr.name})` : ''}`;
         }
         if (t.targetType === 'Position') {
             const p = positions.find(pos => pos.id === t.targetId);
@@ -333,7 +335,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
         }
         if (activeTemplate.targetType === 'Rank' && activeTemplate.targetId) {
             const rank = ranks.find(r => r.id === activeTemplate.targetId);
-            return { amount: 0, label: rank?.name || 'Rank', source: 'Varies by Position' };
+            return { amount: 0, label: rank?.name || rankConfig.rankLabel, source: 'Varies by Position' };
         }
         return { amount: 0, label: 'All Roles', source: 'Varies' };
     };
@@ -917,7 +919,7 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                         <div><label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Target Scope</label><select className="w-full border border-slate-200 p-3 rounded-xl bg-white outline-none focus:ring-2 ring-amber-500 text-sm font-bold text-slate-700" value={targetType} onChange={e => { setTargetType(e.target.value as any); setFilterDeptId(''); setFilterRankId(''); setFilterSubRankId(''); setFinalTargetId(''); }}>
                             <option value="Global">All Employees</option>
                             <option value="Department">Specific Department</option>
-                            <option value="Rank">Specific Rank</option>
+                            <option value="Rank">Specific {rankConfig.rankLabel}</option>
                             <option value="Position">Specific Position (Recommended)</option>
                             <option value="Employee">Specific Employee</option>
                         </select></div>
@@ -933,17 +935,17 @@ const PayTemplates: React.FC<PayTemplatesProps> = ({ templates, setTemplates, co
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Select Rank</label>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Select {rankConfig.rankLabel}</label>
                                     <select className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50 text-sm font-bold text-slate-900 outline-none" value={finalTargetId} onChange={e => { setFinalTargetId(e.target.value); setFilterRankId(e.target.value); }}>
-                                        <option value="">-- Choose Rank --</option>
+                                        <option value="">-- Choose {rankConfig.rankLabel} --</option>
                                         {availableRanksInDept.length > 0 ? availableRanksInDept.map(r => <option key={r.id} value={r.id}>{r.name} (L{r.level})</option>) : ranks.map(r => <option key={r.id} value={r.id}>{r.name} (L{r.level})</option>)}
                                     </select>
                                 </div>
                                 {availableSubRanks && availableSubRanks.length > 0 && (
                                     <div>
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Select Sub-Rank (Optional)</label>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Select {rankConfig.subRankLabel} (Optional)</label>
                                         <select className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50 text-sm font-bold text-slate-900 outline-none" value={filterSubRankId} onChange={e => setFilterSubRankId(e.target.value)}>
-                                            <option value="">-- All Sub-Ranks --</option>
+                                            <option value="">-- All {rankConfig.subRankLabel}s --</option>
                                             {availableSubRanks.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                         </select>
                                     </div>

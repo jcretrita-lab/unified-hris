@@ -526,7 +526,7 @@ const LeaveRequests: React.FC = () => {
             leaveCredits: totalRequestCredits,
             leaveBalanceAfter: projectedBalance,
             leaveReason: leaveReason
-    };
+        };
 
 
         const globalRequest = submitLeaveRequest(newRequest);
@@ -572,16 +572,17 @@ const LeaveRequests: React.FC = () => {
                         const attendanceLog = MOCK_ATTENDANCE_DB[dateStr];
 
                         let statusColor = '';
-                        let payBorder = '';
+                        let hasPay = false;
+                        let noPay = false;
 
                         if (req) {
-                            if (req.status === 'Approved') statusColor = 'bg-purple-500';
-                            else if (req.status === 'Rejected') statusColor = 'bg-rose-500';
-                            else statusColor = 'bg-indigo-300';
+                            if (req.status === 'Approved') statusColor = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                            else if (req.status === 'Rejected') statusColor = 'bg-rose-100 text-rose-800 border-rose-200';
+                            else statusColor = 'bg-amber-100 text-amber-800 border-amber-200'; // Pending
 
-                            // NEW: Pay status border
-                            if (req.payStatus === 'with-pay') payBorder = 'ring-2 ring-emerald-400';
-                            else payBorder = 'ring-2 ring-slate-400';
+                            // NEW: Pay status bottom border indicator instead of ring
+                            if (req.payStatus === 'with-pay') hasPay = true;
+                            else if (req.payStatus === 'without-pay') noPay = true;
                         }
 
                         return (
@@ -601,15 +602,17 @@ const LeaveRequests: React.FC = () => {
                                         }
                                     }}
                                     onMouseLeave={() => setHoveredAttendance(null)}
-                                    className={`h-full w-full flex items-center justify-center text-xs font-bold rounded-lg relative transition-all 
-                                    ${req ? 'text-white shadow-sm hover:scale-105' : 'text-slate-700 hover:bg-slate-50'} 
+                                    className={`h-full w-full flex items-center justify-center text-xs font-bold rounded-lg relative transition-all border border-transparent
+                                    ${req ? 'shadow-sm hover:scale-105' : 'text-slate-700 hover:bg-slate-50'} 
                                     ${req ? statusColor : ''} 
-                                    ${req ? payBorder : ''}
                                     ${isSelected && req ? 'ring-2 ring-offset-2 ring-indigo-500 z-10' : ''}
                                     ${attendanceLog ? 'bg-slate-50 text-slate-300 line-through decoration-rose-400 decoration-2 cursor-not-allowed opacity-80' : ''}
                                 `}
                                 >
                                     {d}
+                                    {/* Subtle Pay Status Indicators */}
+                                    {hasPay && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}
+                                    {noPay && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-slate-400"></div>}
                                 </button>
                             </div>
                         );
@@ -714,37 +717,40 @@ const LeaveRequests: React.FC = () => {
                         <h3 className="text-lg font-bold text-slate-900">Leave Requests</h3>
                     </div>
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-500 text-white font-bold text-[10px] uppercase tracking-widest">
+                        <thead className="bg-slate-50/50 text-slate-500 font-bold text-[10px] uppercase tracking-widest border-b border-slate-100">
                             <tr>
-                                <th className="px-6 py-4">Leave Type</th>
-                                <th className="px-6 py-4">Dates</th>
-                                <th className="px-6 py-4 text-center">Credits Used</th>
-                                <th className="px-6 py-4 text-center">Status</th>
+                                <th className="px-6 py-4 font-bold text-slate-400">Pay Status</th>
+                                <th className="px-6 py-4 font-bold text-slate-400">Leave Type</th>
+                                <th className="px-6 py-4 font-bold text-slate-400">Dates</th>
+                                <th className="px-6 py-4 text-center font-bold text-slate-400">Duration</th>
+                                <th className="px-6 py-4 text-center font-bold text-slate-400">Status</th>
                                 <th className="px-6 py-4 text-right"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {requests.map(req => (
-                                <tr key={req.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-8 py-5 whitespace-nowrap">
-                                    {req.payStatus === 'with-pay' ? (
-                                        <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                        With Pay
-                                        </span>
-                                    ) : (
-                                        <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
-                                        Without Pay
-                                        </span>
-                                    )}
+                                <tr key={req.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="px-6 py-5 whitespace-nowrap">
+                                        {req.payStatus === 'with-pay' ? (
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                With Pay
+                                            </span>
+                                        ) : (
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                                Without Pay
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 font-bold text-slate-700">{req.type}</td>
                                     <td className="px-6 py-4 text-slate-600">
-                                        <div className="flex flex-col gap-0.5">
-                                            {req.dates.map((d: string, i) => <span key={i}>{d}</span>)}
+                                        <div className="flex flex-col gap-1">
+                                            {req.dates.map((d: string, i) => <span key={i} className="bg-white border border-slate-100 px-2 py-0.5 rounded text-xs w-max">{d}</span>)}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center font-mono font-bold text-slate-600">{req.credits.toFixed(1)}</td>
-                                    <td className="px-6 py-4 text-center">
+                                    <td className="px-6 py-5 text-center">
+                                        <span className="font-mono font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">{req.credits.toFixed(1)} <span className="text-[10px] text-slate-500 font-medium">d</span></span>
+                                    </td>
+                                    <td className="px-6 py-5 text-center">
                                         <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide border ${req.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : req.status === 'Rejected' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
                                             {req.status}
                                         </span>
@@ -773,8 +779,8 @@ const LeaveRequests: React.FC = () => {
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-slate-900">Leave Calendar</h3>
                             <div className="flex gap-4 text-xs font-bold">
-                                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-purple-500"></div> Approved</div>
-                                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-indigo-300"></div> Pending</div>
+                                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-100 border border-emerald-300"></div> Approved</div>
+                                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-amber-100 border border-amber-300"></div> Pending</div>
                                 <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-slate-400 opacity-50"></div> Occupied/Past</div>
                             </div>
                         </div>
@@ -872,7 +878,7 @@ const LeaveRequests: React.FC = () => {
             {/* Detail View Modal (Read Only) */}
             <Modal isOpen={isLeaveModalOpen} onClose={() => setIsLeaveModalOpen(false)} className="max-w-xl">
                 {selectedLeaveRequest && (
-                    
+
                     <div className="p-8">
                         <div className="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
                             <h3 className="text-xl font-bold text-slate-900">{selectedLeaveRequest.type}</h3>
@@ -882,11 +888,11 @@ const LeaveRequests: React.FC = () => {
                             <span className="text-xs font-bold text-slate-500 uppercase">Pay Status:</span>
                             {selectedLeaveRequest?.payStatus === 'with-pay' ? (
                                 <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-100">
-                                With Pay
+                                    With Pay
                                 </span>
                             ) : (
                                 <span className="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-200">
-                                Without Pay
+                                    Without Pay
                                 </span>
                             )}
                         </div>
@@ -897,7 +903,7 @@ const LeaveRequests: React.FC = () => {
                         </div>
                         <div className="mt-8 flex justify-end"><button onClick={() => setIsLeaveModalOpen(false)} className="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold">Close</button></div>
                     </div>
-                    
+
                 )}
             </Modal>
 
@@ -913,7 +919,7 @@ const LeaveRequests: React.FC = () => {
                             </h3>
                             <p className="text-xs text-slate-500 mt-1">Select dates to build your leave application.</p>
                         </div>
-                        
+
 
                         <div className="space-y-6 flex-1">
                             {/* Leave Type */}

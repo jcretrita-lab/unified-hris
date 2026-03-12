@@ -19,11 +19,13 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { useSystemSettings } from '../../context/SystemSettingsContext';
 
 const SettingsOverview: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const role = user?.role || 'Employee';
+  const { rankConfig } = useSystemSettings();
 
   const settingsModules = [
     {
@@ -91,8 +93,8 @@ const SettingsOverview: React.FC = () => {
       roles: ['Superadmin', 'HR Admin', 'HR Payroll Personnel']
     },
     {
-      title: 'Ranks & Levels',
-      description: 'Configure job levels and hierarchy ranking.',
+      title: `${rankConfig.rankLabel}s & Levels`,
+      description: `Configure job levels and hierarchy ${rankConfig.rankLabel.toLowerCase()}ing.`,
       icon: <Users size={24} />,
       path: '/settings/ranks',
       color: 'bg-emerald-50 text-emerald-600',

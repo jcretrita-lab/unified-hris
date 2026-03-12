@@ -39,6 +39,8 @@ import * as d3 from "d3";
 import { useOrganization } from "../context/OrganizationContext";
 import { OrganizationStructureConfig } from "../types";
 import { Settings as Cog } from "lucide-react";
+import { useSystemSettings } from "../context/SystemSettingsContext";
+import { RankStructureConfig } from "../types";
 
 // --- MOCK DATA ---
 const MOCK_UNIT_TYPES: OrgUnitType[] = [
@@ -269,6 +271,8 @@ const OrgStructurePage: React.FC = () => {
   const { orgLabels, updateOrgLabels } = useOrganization();
   const [isLabelsModalOpen, setIsLabelsModalOpen] = useState(false);
 
+  const { rankConfig } = useSystemSettings();
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -290,6 +294,7 @@ const OrgStructurePage: React.FC = () => {
         employees={employees}
         unitTypes={unitTypes}
         setUnitTypes={setUnitTypes}
+        rankConfig={rankConfig}
       />
       {isLabelsModalOpen && (
         <OrgLabelsModal
@@ -312,6 +317,7 @@ interface Props {
   employees: Employee[];
   unitTypes: OrgUnitType[];
   setUnitTypes: (types: OrgUnitType[]) => void;
+  rankConfig: RankStructureConfig;
 }
 
 interface UnitStats {
@@ -331,6 +337,7 @@ const OrgStructure: React.FC<Props> = ({
   employees,
   unitTypes,
   setUnitTypes,
+  rankConfig,
 }) => {
   const [viewMode, setViewMode] = useState<"list" | "chart">("list");
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['root', 'div-1']));
@@ -1671,14 +1678,14 @@ const OrgStructure: React.FC<Props> = ({
               <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-lg space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-indigo-800 uppercase mb-1 flex items-center gap-1">
-                    <Shield size={12} /> Rank
+                    <Shield size={12} /> {rankConfig.rankLabel}
                   </label>
                   <select
                     className="w-full border border-indigo-200 p-2.5 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-indigo-600 outline-none"
                     value={posForm.rankId}
                     onChange={(e) => handleRankSelect(e.target.value)}
                   >
-                    <option value="">-- Choose Rank --</option>
+                    <option value="">-- Choose {rankConfig.rankLabel} --</option>
                     {ranks.map((r) => (
                       <option key={r.id} value={r.id}>
                         Level {r.level}: {r.name}
@@ -1689,14 +1696,14 @@ const OrgStructure: React.FC<Props> = ({
                 {showSubRankSelect && (
                   <div className="animate-in fade-in slide-in-from-top-1">
                     <label className="block text-xs font-bold text-indigo-800 uppercase mb-1 flex items-center gap-1">
-                      Sub-Rank / Tier
+                      {rankConfig.subRankLabel}
                     </label>
                     <select
                       className="w-full border border-indigo-200 p-2.5 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-indigo-600 outline-none"
                       value={posForm.subRankId}
                       onChange={(e) => handleSubRankSelect(e.target.value)}
                     >
-                      <option value="">-- Choose Tier --</option>
+                      <option value="">-- Choose {rankConfig.subRankLabel} --</option>
                       {selectedRank.subRanks!.map((s) => {
                         const sg = grades.find((g) => g.id === s.salaryGradeId);
                         return (

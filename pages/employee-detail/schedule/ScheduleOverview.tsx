@@ -15,8 +15,8 @@ const ScheduleOverview: React.FC = () => {
     const employeeSchedule = {
       name: 'Corporate Employees',
       frequency: 'Semi-Monthly',
-      firstCutoffRange: { startDay: 1, endDay: 15 },
-      secondCutoffRange: { startDay: 16, endDay: 30 }
+      firstCutoffRange: { startDay: 21, endDay: 5 },
+      secondCutoffRange: { startDay: 6, endDay: 20 }
     };
 
     const getCurrentCutoffDisplay = () => {

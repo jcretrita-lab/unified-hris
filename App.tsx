@@ -57,6 +57,7 @@ import EmployeeScheduleSettings from './pages/settings/EmployeeScheduleSettings'
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { RequestProvider } from './context/RequestContext';
 import { OrganizationProvider } from './context/OrganizationContext';
+import { SystemSettingsProvider } from './context/SystemSettingsContext';
 
 
 // Guard Component
@@ -201,11 +202,13 @@ const App: React.FC = () => {
     <AuthProvider>
       <OrganizationProvider>
         <RequestProvider>
-          <HashRouter>
-            <Layout>
-              <AnimatedRoutes />
-            </Layout>
-          </HashRouter>
+          <SystemSettingsProvider> {/* <-- ADDED THIS */}
+            <HashRouter>
+              <Layout>
+                <AnimatedRoutes />
+              </Layout>
+            </HashRouter>
+          </SystemSettingsProvider> {/* <-- ADDED THIS */}
         </RequestProvider>
       </OrganizationProvider>
     </AuthProvider>

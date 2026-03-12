@@ -14,6 +14,7 @@ import {
   BANKS 
 } from './ProfileShared';
 import { ExtendedProfile } from '../../../model/Profile';
+import { useSystemSettings } from '../../../context/SystemSettingsContext';
 
 interface CompanyDetailsProps {
   formData: ExtendedProfile;
@@ -27,6 +28,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({
   isEditing 
 }) => {
   const MotionDiv = motion.div as any;
+  const { rankConfig } = useSystemSettings();
 
   const handleUpdate = (field: keyof ExtendedProfile, value: any) => {
     setFormData({ ...formData, [field]: value });
@@ -48,7 +50,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({
             <EditableField label="Section" value={formData.section} field="section" disabled formData={formData} onUpdate={handleUpdate} isEditing={isEditing} />
             
             <EditableField label="Position" value={formData.position} field="position" disabled formData={formData} onUpdate={handleUpdate} isEditing={isEditing} />
-            <EditableField label="Job Level" value={formData.jobLevel} field="jobLevel" disabled formData={formData} onUpdate={handleUpdate} isEditing={isEditing} />
+            <EditableField label={rankConfig.rankLabel} value={formData.jobLevel} field="jobLevel" disabled formData={formData} onUpdate={handleUpdate} isEditing={isEditing} />
             <EditableField label="Employment Status" value={formData.employmentStatus} field="employmentStatus" type="select" options={['Regular', 'Probationary', 'Contractual', 'Intern']} formData={formData} onUpdate={handleUpdate} isEditing={isEditing} />
             
             <EditableField label="Immediate Supervisor" value={formData.immediateSupervisor} field="immediateSupervisor" disabled formData={formData} onUpdate={handleUpdate} isEditing={isEditing} />
