@@ -15,7 +15,8 @@ import {
     AlertCircle,
     ArrowRight,
     TrendingUp,
-    X
+    X,
+    CalendarClock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -267,6 +268,17 @@ const ApprovalDetail: React.FC = () => {
                                 {data.status === 'Submitted' && <Clock size={24} className="text-amber-600" />}
                                 <span className="text-2xl font-bold tracking-tight">{data.status}</span>
                             </div>
+
+                            {/* Post-Approval Expiry Notice (Shift Change only) */}
+                            {data.type === 'Shift Change' && data.status === 'Approved' && data.postApprovalExpiryDate && (
+                                <div className="p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-start gap-3">
+                                    <CalendarClock size={18} className="text-amber-600 mt-0.5 shrink-0" />
+                                    <div>
+                                        <p className="text-sm font-bold text-amber-900">Approval expires on {new Date(data.postApprovalExpiryDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                                        <p className="text-xs text-amber-700 mt-0.5">The employee must action this shift change before the expiry date, otherwise the approval will be voided.</p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Dynamic Content */}
                             {data.type === 'Shift Change' ? <ShiftComparison /> : (

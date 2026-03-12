@@ -63,6 +63,7 @@ export interface ApprovalSetup {
   lastModified: string;
   feature: string;
   autoRejectDays: number;
+  postApprovalExpiryDays: number;
   // New Fields
   department?: string; // Display name (backward-compatible)
   unitType?: string;   // Serves as Unit Type
@@ -109,6 +110,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Jan 15, 2026 09:30',
     feature: 'Leave Management',
     autoRejectDays: 7,
+    postApprovalExpiryDays: 0,
     department: 'Backend Team',
     unitType: 'Team',
     orgUnitId: 'team-1',
@@ -116,7 +118,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     approvers: [
       { id: 'a-be-1', orderLabel: 'Approver 1', name: 'John Doe', role: 'Backend Lead', avatar: 'JD', department: 'Engineering', lastModifiedBy: 'Sarah Wilson', lastModified: 'Jan 15, 2026' },
       { id: 'a-be-2', orderLabel: 'Approver 2', name: 'James Cruz', role: 'Platform Engineering Manager', avatar: 'JC', department: 'Engineering', lastModifiedBy: 'Sarah Wilson', lastModified: 'Jan 15, 2026' },
-      { id: 'a-be-3', orderLabel: 'Verifier 1', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Jan 15, 2026', delegateId: 'emp-er-mgr', delegateName: 'Angela Tan', delegateAvatar: 'AT', delegateStartDate: '2026-03-10', delegateEndDate: '2026-03-25' },
+      { id: 'a-be-3', orderLabel: 'Verifier', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Jan 15, 2026', delegateId: 'emp-er-mgr', delegateName: 'Angela Tan', delegateAvatar: 'AT', delegateStartDate: '2026-03-10', delegateEndDate: '2026-03-25' },
     ],
   },
   {
@@ -128,13 +130,14 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 20, 2026 11:00',
     feature: 'Leave Management',
     autoRejectDays: 5,
+    postApprovalExpiryDays: 0,
     department: 'Engineering',
     unitType: 'Division',
     orgUnitId: 'div-1',
     startDate: '2026-01-01',
     approvers: [
       { id: 'a-eng-1', orderLabel: 'Approver 1', name: 'Elena Torres', role: 'CTO', avatar: 'ET', department: 'Engineering', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 20, 2026' },
-      { id: 'a-eng-2', orderLabel: 'Verifier 1', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 20, 2026' },
+      { id: 'a-eng-2', orderLabel: 'Verifier', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 20, 2026' },
     ],
   },
   {
@@ -146,13 +149,14 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 18, 2026 14:45',
     feature: 'Leave Management',
     autoRejectDays: 5,
+    postApprovalExpiryDays: 0,
     department: 'Human Resources',
     unitType: 'Division',
     orgUnitId: 'div-2',
     startDate: '2026-01-01',
     approvers: [
       { id: 'a-hr-1', orderLabel: 'Approver 1', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 18, 2026' },
-      { id: 'a-hr-2', orderLabel: 'Approver 2', name: 'Marcus Reyes', role: 'CEO', avatar: 'MR', department: 'Nexus Corp', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 18, 2026' },
+      { id: 'a-hr-2', orderLabel: 'Verifier', name: 'Marcus Reyes', role: 'CEO', avatar: 'MR', department: 'Nexus Corp', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 18, 2026' },
     ],
   },
   {
@@ -164,9 +168,10 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 25, 2026 08:00',
     feature: 'Time & Attendance',
     autoRejectDays: 0,
+    postApprovalExpiryDays: 0,
     startDate: '2025-01-01',
     approvers: [
-      { id: 'a-ob-1', orderLabel: 'Approver 1', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 25, 2026' },
+      { id: 'a-ob-1', orderLabel: 'Verifier', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Feb 25, 2026' },
     ],
   },
   {
@@ -178,13 +183,14 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 28, 2026 09:15',
     feature: 'Time & Attendance',
     autoRejectDays: 3,
+    postApprovalExpiryDays: 0,
     department: 'Platform Engineering',
     unitType: 'Department',
     orgUnitId: 'dept-1',
     startDate: '2026-01-01',
     approvers: [
       { id: 'a-ot-1', orderLabel: 'Approver 1', name: 'James Cruz', role: 'Platform Engineering Manager', avatar: 'JC', department: 'Engineering', lastModifiedBy: 'Elena Torres', lastModified: 'Feb 28, 2026' },
-      { id: 'a-ot-2', orderLabel: 'Approver 2', name: 'Elena Torres', role: 'CTO', avatar: 'ET', department: 'Engineering', lastModifiedBy: 'Elena Torres', lastModified: 'Feb 28, 2026' },
+      { id: 'a-ot-2', orderLabel: 'Verifier', name: 'Elena Torres', role: 'CTO', avatar: 'ET', department: 'Engineering', lastModifiedBy: 'Elena Torres', lastModified: 'Feb 28, 2026' },
     ],
   },
   {
@@ -196,6 +202,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 10, 2026 16:30',
     feature: 'Payroll Adjustment',
     autoRejectDays: 7,
+    postApprovalExpiryDays: 0,
     department: 'Finance & Accounting',
     unitType: 'Division',
     orgUnitId: 'div-3',
@@ -203,7 +210,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     approvers: [
       { id: 'a-fin-1', orderLabel: 'Approver 1', name: 'Mike Brown', role: 'Accounting Manager', avatar: 'MB', department: 'Finance & Accounting', lastModifiedBy: 'Michael Santos', lastModified: 'Feb 10, 2026' },
       { id: 'a-fin-2', orderLabel: 'Approver 2', name: 'Michael Santos', role: 'CFO', avatar: 'MS', department: 'Finance & Accounting', lastModifiedBy: 'Michael Santos', lastModified: 'Feb 10, 2026' },
-      { id: 'a-fin-3', orderLabel: 'Verifier 1', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Michael Santos', lastModified: 'Feb 10, 2026' },
+      { id: 'a-fin-3', orderLabel: 'Verifier', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Michael Santos', lastModified: 'Feb 10, 2026' },
     ],
   },
   {
@@ -215,13 +222,14 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 1, 2026 10:30',
     feature: 'PAF Request',
     autoRejectDays: 5,
+    postApprovalExpiryDays: 0,
     department: 'Talent Acquisition',
     unitType: 'Department',
     orgUnitId: 'dept-5',
     startDate: '2026-03-01',
     approvers: [
       { id: 'a-rec-1', orderLabel: 'Approver 1', name: 'Patricia Cruz', role: 'Talent Acquisition Manager', avatar: 'PC', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Mar 1, 2026' },
-      { id: 'a-rec-2', orderLabel: 'Approver 2', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Mar 1, 2026', secondaryId: 'emp-ceo', secondaryName: 'Marcus Reyes', secondaryAvatar: 'MR', secondaryRole: 'CEO' },
+      { id: 'a-rec-2', orderLabel: 'Verifier', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Sarah Wilson', lastModified: 'Mar 1, 2026', secondaryId: 'emp-ceo', secondaryName: 'Marcus Reyes', secondaryAvatar: 'MR', secondaryRole: 'CEO' },
     ],
   },
   {
@@ -233,13 +241,14 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 2, 2026 08:45',
     feature: 'Time & Attendance',
     autoRejectDays: 2,
+    postApprovalExpiryDays: 0,
     department: 'Sales & Marketing',
     unitType: 'Division',
     orgUnitId: 'div-4',
     startDate: '2026-01-01',
     approvers: [
       { id: 'a-st-1', orderLabel: 'Approver 1', name: 'Victor Gomez', role: 'Sales Manager', avatar: 'VG', department: 'Sales & Marketing', lastModifiedBy: 'Alice Guo', lastModified: 'Mar 2, 2026' },
-      { id: 'a-st-2', orderLabel: 'Approver 2', name: 'Alice Guo', role: 'Chief Sales & Marketing Officer', avatar: 'AG', department: 'Sales & Marketing', lastModifiedBy: 'Alice Guo', lastModified: 'Mar 2, 2026' },
+      { id: 'a-st-2', orderLabel: 'Verifier', name: 'Alice Guo', role: 'Chief Sales & Marketing Officer', avatar: 'AG', department: 'Sales & Marketing', lastModifiedBy: 'Alice Guo', lastModified: 'Mar 2, 2026' },
     ],
   },
   {
@@ -251,6 +260,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 2, 2026 09:00',
     feature: 'Payroll Adjustment',
     autoRejectDays: 5,
+    postApprovalExpiryDays: 0,
     department: 'Payroll',
     unitType: 'Department',
     orgUnitId: 'dept-9',
@@ -258,7 +268,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     approvers: [
       { id: 'a-pa-1', orderLabel: 'Approver 1', name: 'Raymond Garcia', role: 'Payroll Manager', avatar: 'RG', department: 'Finance & Accounting', lastModifiedBy: 'Michael Santos', lastModified: 'Mar 2, 2026' },
       { id: 'a-pa-2', orderLabel: 'Approver 2', name: 'Michael Santos', role: 'CFO', avatar: 'MS', department: 'Finance & Accounting', lastModifiedBy: 'Michael Santos', lastModified: 'Mar 2, 2026' },
-      { id: 'a-pa-3', orderLabel: 'Verifier 1', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Michael Santos', lastModified: 'Mar 2, 2026' },
+      { id: 'a-pa-3', orderLabel: 'Verifier', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Michael Santos', lastModified: 'Mar 2, 2026' },
     ],
   },
   {
@@ -270,13 +280,14 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 4, 2026 10:00',
     feature: 'Shift Change Request',
     autoRejectDays: 3,
+    postApprovalExpiryDays: 7,
     department: 'Engineering',
     unitType: 'Division',
     orgUnitId: 'div-1',
     startDate: '2026-03-01',
     approvers: [
       { id: 'a-sc-1', orderLabel: 'Approver 1', name: 'Elena Torres', role: 'CTO', avatar: 'ET', department: 'Engineering', lastModifiedBy: 'Elena Torres', lastModified: 'Mar 4, 2026' },
-      { id: 'a-sc-2', orderLabel: 'Verifier 1', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Elena Torres', lastModified: 'Mar 4, 2026' },
+      { id: 'a-sc-2', orderLabel: 'Verifier', name: 'Sarah Wilson', role: 'CHRO', avatar: 'SW', department: 'Human Resources', lastModifiedBy: 'Elena Torres', lastModified: 'Mar 4, 2026' },
     ],
   },
   {
@@ -288,13 +299,14 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Feb 25, 2026 13:00',
     feature: 'PAF Request',
     autoRejectDays: 4,
+    postApprovalExpiryDays: 0,
     department: 'Operations',
     unitType: 'Division',
     orgUnitId: 'div-5',
     startDate: '2026-02-01',
     approvers: [
       { id: 'a-ops-1', orderLabel: 'Approver 1', name: 'Richard Lee', role: 'IT Support Manager', avatar: 'RL', department: 'Operations', lastModifiedBy: 'Robert Chen', lastModified: 'Feb 25, 2026' },
-      { id: 'a-ops-2', orderLabel: 'Approver 2', name: 'Robert Chen', role: 'COO', avatar: 'RC', department: 'Operations', lastModifiedBy: 'Robert Chen', lastModified: 'Feb 25, 2026' },
+      { id: 'a-ops-2', orderLabel: 'Verifier', name: 'Robert Chen', role: 'COO', avatar: 'RC', department: 'Operations', lastModifiedBy: 'Robert Chen', lastModified: 'Feb 25, 2026' },
     ],
   },
   {
@@ -306,6 +318,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 3, 2026 15:00',
     feature: 'PAF Request',
     autoRejectDays: 10,
+    postApprovalExpiryDays: 0,
     department: 'Legal & Compliance',
     unitType: 'Division',
     orgUnitId: 'div-6',
@@ -313,7 +326,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     approvers: [
       { id: 'a-leg-1', orderLabel: 'Approver 1', name: 'Grace Velasco', role: 'Senior Legal Counsel', avatar: 'GV', department: 'Legal & Compliance', lastModifiedBy: 'Jennifer Lim', lastModified: 'Mar 3, 2026' },
       { id: 'a-leg-2', orderLabel: 'Approver 2', name: 'Jennifer Lim', role: 'General Counsel', avatar: 'JL', department: 'Legal & Compliance', lastModifiedBy: 'Jennifer Lim', lastModified: 'Mar 3, 2026' },
-      { id: 'a-leg-3', orderLabel: 'Verifier 1', name: 'Marcus Reyes', role: 'CEO', avatar: 'MR', department: 'Nexus Corp', lastModifiedBy: 'Jennifer Lim', lastModified: 'Mar 3, 2026' },
+      { id: 'a-leg-3', orderLabel: 'Verifier', name: 'Marcus Reyes', role: 'CEO', avatar: 'MR', department: 'Nexus Corp', lastModifiedBy: 'Jennifer Lim', lastModified: 'Mar 3, 2026' },
     ],
   },
   {
@@ -325,13 +338,14 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 5, 2026 11:30',
     feature: 'Time & Attendance',
     autoRejectDays: 3,
+    postApprovalExpiryDays: 0,
     department: 'DevOps & Infrastructure',
     unitType: 'Department',
     orgUnitId: 'dept-3',
     startDate: '2026-03-01',
     approvers: [
       { id: 'a-do-1', orderLabel: 'Approver 1', name: 'David Kim', role: 'DevOps Lead', avatar: 'DK', department: 'Engineering', lastModifiedBy: 'Elena Torres', lastModified: 'Mar 5, 2026' },
-      { id: 'a-do-2', orderLabel: 'Approver 2', name: 'Elena Torres', role: 'CTO', avatar: 'ET', department: 'Engineering', lastModifiedBy: 'Elena Torres', lastModified: 'Mar 5, 2026' },
+      { id: 'a-do-2', orderLabel: 'Verifier', name: 'Elena Torres', role: 'CTO', avatar: 'ET', department: 'Engineering', lastModifiedBy: 'Elena Torres', lastModified: 'Mar 5, 2026' },
     ],
   },
   {
@@ -343,6 +357,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     lastModified: 'Mar 6, 2026 14:00',
     feature: 'Payroll Adjustment',
     autoRejectDays: 7,
+    postApprovalExpiryDays: 0,
     department: 'Marketing',
     unitType: 'Department',
     orgUnitId: 'dept-12',
@@ -350,7 +365,7 @@ export const MOCK_SETUPS: ApprovalSetup[] = [
     approvers: [
       { id: 'a-mc-1', orderLabel: 'Approver 1', name: 'Benjamin Tan', role: 'Marketing Manager', avatar: 'BT', department: 'Sales & Marketing', lastModifiedBy: 'Alice Guo', lastModified: 'Mar 6, 2026' },
       { id: 'a-mc-2', orderLabel: 'Approver 2', name: 'Alice Guo', role: 'Chief Sales & Marketing Officer', avatar: 'AG', department: 'Sales & Marketing', lastModifiedBy: 'Alice Guo', lastModified: 'Mar 6, 2026' },
-      { id: 'a-mc-3', orderLabel: 'Verifier 1', name: 'Michael Santos', role: 'CFO', avatar: 'MS', department: 'Finance & Accounting', lastModifiedBy: 'Alice Guo', lastModified: 'Mar 6, 2026' },
+      { id: 'a-mc-3', orderLabel: 'Verifier', name: 'Michael Santos', role: 'CFO', avatar: 'MS', department: 'Finance & Accounting', lastModifiedBy: 'Alice Guo', lastModified: 'Mar 6, 2026' },
     ],
   },
 ];
@@ -556,6 +571,13 @@ function deriveApproverChain(
   ];
 }
 
+// Assigns "Approver 1", "Approver 2", … and "Verifier" to the last step.
+const recomputeLabels = (approvers: Approver[]): Approver[] =>
+  approvers.map((a, i) => ({
+    ...a,
+    orderLabel: i === approvers.length - 1 ? 'Verifier' : `Approver ${i + 1}`,
+  }));
+
 const ApprovalSetupPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'editor'>('list');
   const [activeSetup, setActiveSetup] = useState<ApprovalSetup | null>(null);
@@ -586,6 +608,7 @@ const ApprovalSetupPage: React.FC = () => {
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'approver' | 'assignee' | 'delegate' | 'co-approver'>('assignee');
   const [activeApproverId, setActiveApproverId] = useState<string | null>(null); // For delegate/co-approver logic
+  const [delegationExpiryDate, setDelegationExpiryDate] = useState('');
 
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [employeeDept, setEmployeeDept] = useState('');
@@ -669,7 +692,7 @@ const ApprovalSetupPage: React.FC = () => {
       )) return;
     }
 
-    setActiveSetup({ ...activeSetup, approvers: newApprovers });
+    setActiveSetup({ ...activeSetup, approvers: recomputeLabels(newApprovers) });
   };
 
   // --- Drag-and-Drop Handlers ---
@@ -687,7 +710,7 @@ const ApprovalSetupPage: React.FC = () => {
     const newApprovers = [...activeSetup.approvers];
     const [moved] = newApprovers.splice(dragIndex, 1);
     newApprovers.splice(index, 0, moved);
-    setActiveSetup({ ...activeSetup, approvers: newApprovers });
+    setActiveSetup({ ...activeSetup, approvers: recomputeLabels(newApprovers) });
     setDragIndex(null);
     setDragOverIndex(null);
   };
@@ -699,7 +722,7 @@ const ApprovalSetupPage: React.FC = () => {
 
   const handleDeleteApprover = (id: string) => {
     if (!activeSetup) return;
-    const updatedApprovers = activeSetup.approvers.filter(a => a.id !== id);
+    const updatedApprovers = recomputeLabels(activeSetup.approvers.filter(a => a.id !== id));
     setActiveSetup({ ...activeSetup, approvers: updatedApprovers });
   };
 
@@ -789,6 +812,9 @@ const ApprovalSetupPage: React.FC = () => {
     if ((mode === 'delegate' || mode === 'co-approver') && approverId) {
       setActiveApproverId(approverId);
     }
+    if (mode === 'delegate') {
+      setDelegationExpiryDate('');
+    }
     setIsEmployeeModalOpen(true);
   };
 
@@ -826,7 +852,7 @@ const ApprovalSetupPage: React.FC = () => {
       }));
       setActiveSetup({
         ...activeSetup,
-        approvers: [...activeSetup.approvers, ...derivedNewApprovers, ...extraNewApprovers],
+        approvers: recomputeLabels([...activeSetup.approvers, ...derivedNewApprovers, ...extraNewApprovers]),
       });
     } else if (modalMode === 'delegate' && activeSetup && activeApproverId && selectedEmps.length > 0) {
       const delegate = selectedEmps[0];
@@ -838,7 +864,7 @@ const ApprovalSetupPage: React.FC = () => {
             delegateName: delegate.name,
             delegateAvatar: delegate.avatar,
             delegateStartDate: new Date().toISOString().split('T')[0],
-            delegateEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            delegateEndDate: delegationExpiryDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           };
         }
         return a;
@@ -1193,9 +1219,15 @@ const ApprovalSetupPage: React.FC = () => {
                               <GripVertical size={16} className="text-slate-300 hover:text-slate-500 mx-auto cursor-grab active:cursor-grabbing" />
                             </td>
                             <td className="px-6 py-4 align-top">
-                              <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border border-slate-200">
-                                Step {index + 1}
-                              </span>
+                              {approver.orderLabel === 'Verifier' ? (
+                                <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border border-violet-300">
+                                  Verifier
+                                </span>
+                              ) : (
+                                <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border border-slate-200">
+                                  {approver.orderLabel}
+                                </span>
+                              )}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex flex-col gap-4">
@@ -1242,7 +1274,7 @@ const ApprovalSetupPage: React.FC = () => {
                                       <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
                                           <span className="text-[9px] font-bold uppercase bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 flex items-center gap-1">
-                                            <UserCog size={10} /> Representative
+                                            <UserCog size={10} /> Delegated to
                                           </span>
                                         </div>
                                         <button onClick={() => handleRemoveDelegate(approver.id)} className="text-slate-300 hover:text-rose-500 transition-colors p-1 rounded-md hover:bg-rose-50 opacity-0 group-hover/delegate:opacity-100"><X size={12} /></button>
@@ -1253,7 +1285,7 @@ const ApprovalSetupPage: React.FC = () => {
                                         </div>
                                         <div>
                                           <div className="font-bold text-xs text-slate-800">{approver.delegateName}</div>
-                                          <div className="text-[10px] text-slate-500">Acting on behalf</div>
+                                          <div className="text-[10px] text-slate-500">Valid until {approver.delegateEndDate ? new Date(approver.delegateEndDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</div>
                                         </div>
                                       </div>
                                     </div>
@@ -1286,7 +1318,7 @@ const ApprovalSetupPage: React.FC = () => {
                                   <button
                                     onClick={() => openModal('delegate', approver.id)}
                                     className="p-2 text-slate-300 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-                                    title="Assign Representative"
+                                    title="Add Delegation"
                                   >
                                     <UserCog size={16} />
                                   </button>
@@ -1418,7 +1450,7 @@ const ApprovalSetupPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-slate-900">
-                  {modalMode === 'approver' ? 'Configure Approver Sequence' : modalMode === 'delegate' ? 'Assign Representative' : modalMode === 'co-approver' ? 'Add Co-Approver' : 'Assign Employee'}
+                  {modalMode === 'approver' ? 'Configure Approver Sequence' : modalMode === 'delegate' ? 'Add Delegation' : modalMode === 'co-approver' ? 'Add Co-Approver' : 'Assign Employee'}
                 </h3>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
                   {modalMode === 'approver'
@@ -1426,7 +1458,7 @@ const ApprovalSetupPage: React.FC = () => {
                       ? `Showing suggested chain for ${APPROVAL_ORG_UNITS.find(u => u.id === editorUnitTarget)?.name || 'selected unit'}. Uncheck steps to remove.`
                       : 'Select employees to add as approver steps.'
                     : modalMode === 'delegate'
-                      ? 'Select a designated representative for this approver.'
+                      ? 'Select an employee to delegate approvals to, and set the expiration date.'
                       : modalMode === 'co-approver'
                         ? 'Select a second person to approve alongside the primary approver.'
                         : `Select employees to assign to ${activeSetup?.name || 'this setup'}.`
@@ -1663,6 +1695,18 @@ const ApprovalSetupPage: React.FC = () => {
           {/* Footer */}
           <div className="p-5 border-t border-slate-100 flex justify-between items-center bg-white gap-3">
             <div className="text-xs text-slate-400 font-medium">
+              {modalMode === 'delegate' && (
+                <div className="flex items-center gap-3">
+                  <label className="text-xs font-bold text-slate-600 shrink-0">Delegation expires on</label>
+                  <input
+                    type="date"
+                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-indigo-400 transition-all"
+                    value={delegationExpiryDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setDelegationExpiryDate(e.target.value)}
+                  />
+                </div>
+              )}
               {modalMode === 'approver' && (
                 <>
                   {selectedDerivedPositionIds.size > 0 && (
@@ -1688,7 +1732,9 @@ const ApprovalSetupPage: React.FC = () => {
                 disabled={
                   modalMode === 'approver'
                     ? selectedDerivedPositionIds.size === 0 && selectedEmployeeIds.size === 0
-                    : selectedEmployeeIds.size === 0
+                    : modalMode === 'delegate'
+                      ? selectedEmployeeIds.size === 0 || !delegationExpiryDate
+                      : selectedEmployeeIds.size === 0
                 }
               >
                 {modalMode === 'approver' ? `Add ${selectedDerivedPositionIds.size + selectedEmployeeIds.size} Step(s)` : modalMode === 'delegate' ? 'Assign Delegate' : modalMode === 'co-approver' ? 'Add Co-Approver' : 'Add Member(s)'}

@@ -24,6 +24,7 @@ import Modal from '../components/Modal';
 
 // --- Types ---
 type ShiftType = 'Default' | 'Biometric' | 'Official Business';
+type ShiftCategory = 'Standard' | 'Compressed' | 'Flexible';
 
 interface SubShift {
   id: string;
@@ -38,6 +39,7 @@ interface SubShift {
 interface Shift {
   id: string;
   name: string;
+  category: ShiftCategory;
   isCompressible: boolean;
 
   // Regular schedule
@@ -63,6 +65,10 @@ interface Shift {
   compressedLunchIncluded?: boolean;
   compressedLunchBreakMinutes?: number;
 
+  // Flexible-specific
+  requiredHoursPerDay?: number;
+  policyNote?: string;
+
   lastModifiedBy: string;
   lastModified: string;
   isDefault?: boolean;
@@ -72,15 +78,17 @@ interface Shift {
 
 // --- Mock Data ---
 const MOCK_SHIFTS: Shift[] = [
+  // ─── Standard ───────────────────────────────────────────────
   {
     id: '1',
     name: 'Standard Regular Shift',
+    category: 'Standard',
     isCompressible: false,
     workHours: 8,
     startTime: '08:00',
     endTime: '17:00',
-    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], // your version
-    workdays: 'Mon – Fri', // main version
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    workdays: 'Mon – Fri',
     lunchIncluded: true,
     lunchBreakMinutes: 60,
     lastModifiedBy: 'Louis Panganiban',
@@ -100,51 +108,9 @@ const MOCK_SHIFTS: Shift[] = [
     ]
   },
   {
-    id: '2',
-    name: 'Sales Flexi Group',
-    isCompressible: false,
-    workHours: 9,
-    startTime: '09:00',
-    endTime: '18:00',
-    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    workdays: 'Mon – Fri',
-    lunchIncluded: false,
-    lunchBreakMinutes: 60,
-    lastModifiedBy: 'Juan Dela Cruz',
-    lastModified: 'Aug 8, 2025 12:05',
-    isDefault: false,
-    assignedEmployees: 45,
-    subShifts: [
-      {
-        id: 'sub-2',
-        type: 'Official Business',
-        name: 'Client Visit Mode',
-        startTime: '08:00',
-        endTime: '17:00',
-        condition: 'Approved OB Application',
-        workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-      }
-    ]
-  },
-  {
-    id: '3',
-    name: 'Weekend Support',
-    isCompressible: false,
-    workHours: 8,
-    startTime: '09:00',
-    endTime: '18:00',
-    workDays: ['Sat', 'Sun'],
-    workdays: 'Sat – Sun',
-    lunchIncluded: true,
-    lunchBreakMinutes: 60,
-    lastModifiedBy: 'System Admin',
-    lastModified: 'Aug 1, 2025 09:00',
-    isDefault: false,
-    assignedEmployees: 12
-  },
-  {
     id: '4',
     name: 'NSWP',
+    category: 'Standard',
     isCompressible: false,
     workHours: 8,
     startTime: '08:00',
@@ -159,8 +125,95 @@ const MOCK_SHIFTS: Shift[] = [
     assignedEmployees: 28
   },
   {
+    id: '6',
+    name: 'Night Shift',
+    category: 'Standard',
+    isCompressible: false,
+    workHours: 8,
+    startTime: '22:00',
+    endTime: '06:00',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    workdays: 'Mon – Fri',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
+    lastModifiedBy: 'System Admin',
+    lastModified: 'Oct 5, 2025 09:00',
+    isDefault: false,
+    assignedEmployees: 35
+  },
+  {
+    id: '7',
+    name: 'Mid Shift',
+    category: 'Standard',
+    isCompressible: false,
+    workHours: 8,
+    startTime: '14:00',
+    endTime: '22:00',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    workdays: 'Mon – Fri',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
+    lastModifiedBy: 'System Admin',
+    lastModified: 'Oct 5, 2025 09:15',
+    isDefault: false,
+    assignedEmployees: 22
+  },
+  {
+    id: '8',
+    name: 'Early Morning Shift',
+    category: 'Standard',
+    isCompressible: false,
+    workHours: 8,
+    startTime: '06:00',
+    endTime: '14:00',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    workdays: 'Mon – Fri',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
+    lastModifiedBy: 'System Admin',
+    lastModified: 'Oct 5, 2025 09:30',
+    isDefault: false,
+    assignedEmployees: 18
+  },
+  {
+    id: '3',
+    name: 'Weekend Support',
+    category: 'Standard',
+    isCompressible: false,
+    workHours: 8,
+    startTime: '09:00',
+    endTime: '18:00',
+    workDays: ['Sat', 'Sun'],
+    workdays: 'Sat – Sun',
+    lunchIncluded: true,
+    lunchBreakMinutes: 60,
+    lastModifiedBy: 'System Admin',
+    lastModified: 'Aug 1, 2025 09:00',
+    isDefault: false,
+    assignedEmployees: 12
+  },
+  {
+    id: '12',
+    name: 'Admin Flex Shift',
+    category: 'Standard',
+    isCompressible: false,
+    workHours: 8.5,
+    startTime: '08:00',
+    endTime: '17:30',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    workdays: 'Mon – Fri',
+    lunchIncluded: true,
+    lunchBreakMinutes: 30,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Mar 5, 2026 09:00',
+    isDefault: false,
+    assignedEmployees: 9
+  },
+  // ─── Compressed ─────────────────────────────────────────────
+  {
     id: '5',
     name: 'CWS Production Group',
+    category: 'Compressed',
     isCompressible: true,
     workHours: 10,
     startTime: '08:00',
@@ -181,56 +234,9 @@ const MOCK_SHIFTS: Shift[] = [
     assignedEmployees: 64
   },
   {
-    id: '6',
-    name: 'Night Shift',
-    isCompressible: false,
-    workHours: 8,
-    startTime: '22:00',
-    endTime: '06:00',
-    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    workdays: 'Mon – Fri',
-    lunchIncluded: false,
-    lunchBreakMinutes: 60,
-    lastModifiedBy: 'System Admin',
-    lastModified: 'Oct 5, 2025 09:00',
-    isDefault: false,
-    assignedEmployees: 35
-  },
-  {
-    id: '7',
-    name: 'Mid Shift',
-    isCompressible: false,
-    workHours: 8,
-    startTime: '14:00',
-    endTime: '22:00',
-    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    workdays: 'Mon – Fri',
-    lunchIncluded: false,
-    lunchBreakMinutes: 60,
-    lastModifiedBy: 'System Admin',
-    lastModified: 'Oct 5, 2025 09:15',
-    isDefault: false,
-    assignedEmployees: 22
-  },
-  {
-    id: '8',
-    name: 'Early Morning Shift',
-    isCompressible: false,
-    workHours: 8,
-    startTime: '06:00',
-    endTime: '14:00',
-    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    workdays: 'Mon – Fri',
-    lunchIncluded: false,
-    lunchBreakMinutes: 60,
-    lastModifiedBy: 'System Admin',
-    lastModified: 'Oct 5, 2025 09:30',
-    isDefault: false,
-    assignedEmployees: 18
-  },
-  {
     id: '9',
     name: 'IT Support CWS',
+    category: 'Compressed',
     isCompressible: true,
     workHours: 9,
     startTime: '09:00',
@@ -264,14 +270,13 @@ const MOCK_SHIFTS: Shift[] = [
   {
     id: '10',
     name: 'Warehouse Operations CWS',
+    category: 'Compressed',
     isCompressible: true,
-    // Non-compressed (9-hour workday, Mon–Fri)
     workHours: 9,
     startTime: '08:00',
     endTime: '17:00',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     workdays: 'Mon – Fri',
-    // Compressed (10-hour workday, Mon–Fri)
     compressedWorkHours: 10,
     compressedStartTime: '08:00',
     compressedEndTime: '18:00',
@@ -288,14 +293,13 @@ const MOCK_SHIFTS: Shift[] = [
   {
     id: '11',
     name: 'Diwa Employees',
+    category: 'Compressed',
     isCompressible: true,
-    // Non-compressed (9-hour workday, Mon–Sat)
     workHours: 9,
     startTime: '08:00',
     endTime: '17:00',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     workdays: 'Mon – Sat',
-    // Compressed (10-hour workday, Mon–Fri; Saturday is the day left out)
     compressedWorkHours: 10,
     compressedStartTime: '08:00',
     compressedEndTime: '18:00',
@@ -310,30 +314,117 @@ const MOCK_SHIFTS: Shift[] = [
     isDefault: false,
     assignedEmployees: 42
   },
+  // ─── Flexible ────────────────────────────────────────────────
   {
-    id: '12',
-    name: 'Admin Flex Shift',
+    id: '2',
+    name: 'Sales Flexi Group',
+    category: 'Flexible',
     isCompressible: false,
-    workHours: 8.5,
-    startTime: '08:00',
-    endTime: '17:30',
+    workHours: 8,
+    startTime: '',
+    endTime: '',
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     workdays: 'Mon – Fri',
-    lunchIncluded: true,
-    lunchBreakMinutes: 30,
-    lastModifiedBy: 'HR Admin',
-    lastModified: 'Mar 5, 2026 09:00',
+    requiredHoursPerDay: 8,
+    policyNote: 'Must render at least 8 hours per day. Core hours: 10 AM – 3 PM.',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
+    lastModifiedBy: 'Juan Dela Cruz',
+    lastModified: 'Aug 8, 2025 12:05',
     isDefault: false,
-    assignedEmployees: 9
+    assignedEmployees: 45,
+    subShifts: [
+      {
+        id: 'sub-2',
+        type: 'Official Business',
+        name: 'Client Visit Mode',
+        startTime: '08:00',
+        endTime: '17:00',
+        condition: 'Approved OB Application',
+        workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+      }
+    ]
+  },
+  {
+    id: '13',
+    name: 'Engineering Flex',
+    category: 'Flexible',
+    isCompressible: false,
+    workHours: 9,
+    startTime: '',
+    endTime: '',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    workdays: 'Mon – Fri',
+    requiredHoursPerDay: 9,
+    policyNote: 'Engineers must render 9 hours daily. Flexible start between 7 AM – 10 AM.',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
+    lastModifiedBy: 'System Admin',
+    lastModified: 'Mar 6, 2026 08:00',
+    isDefault: false,
+    assignedEmployees: 31
+  },
+  {
+    id: '14',
+    name: 'Field Operations Flex',
+    category: 'Flexible',
+    isCompressible: false,
+    workHours: 8,
+    startTime: '',
+    endTime: '',
+    workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    workdays: 'Mon – Sat',
+    requiredHoursPerDay: 8,
+    policyNote: 'Field staff must complete 8 hours per shift. Schedule varies per deployment.',
+    lunchIncluded: false,
+    lunchBreakMinutes: 60,
+    lastModifiedBy: 'HR Admin',
+    lastModified: 'Mar 7, 2026 09:30',
+    isDefault: false,
+    assignedEmployees: 23
   }
 ];
 
 const MOCK_EMPLOYEES_FOR_ASSIGN = [
-  { id: '1', name: 'Sarah Wilson', role: 'HR Manager', dept: 'HR' },
-  { id: '2', name: 'John Doe', role: 'Senior Dev', dept: 'IT' },
-  { id: '3', name: 'Jane Smith', role: 'Junior Dev', dept: 'IT' },
-  { id: '4', name: 'Mike Brown', role: 'Payroll Specialist', dept: 'Finance' },
-  { id: '5', name: 'Alice Guo', role: 'Marketing Lead', dept: 'Marketing' },
+  { id: '1', name: 'Sarah Wilson', role: 'HR Manager', dept: 'Human Resources', orgUnitId: 'ou-2', positionId: 'pos-3' },
+  { id: '2', name: 'John Doe', role: 'Senior Developer', dept: 'IT', orgUnitId: 'ou-1', positionId: 'pos-2' },
+  { id: '3', name: 'Jane Smith', role: 'Software Engineer', dept: 'IT', orgUnitId: 'ou-1', positionId: 'pos-1' },
+  { id: '4', name: 'Mike Brown', role: 'Payroll Specialist', dept: 'Finance', orgUnitId: 'ou-3', positionId: 'pos-4' },
+  { id: '5', name: 'Alice Guo', role: 'Marketing Lead', dept: 'Marketing', orgUnitId: 'ou-4', positionId: 'pos-5' },
+  { id: '6', name: 'Carlo Reyes', role: 'Operations Supervisor', dept: 'Operations', orgUnitId: 'ou-5', positionId: 'pos-6' },
+  { id: '7', name: 'Maria Santos', role: 'Sales Representative', dept: 'Sales', orgUnitId: 'ou-6', positionId: 'pos-7' },
+  { id: '8', name: 'Robert Cruz', role: 'Warehouse Staff', dept: 'Operations', orgUnitId: 'ou-5', positionId: 'pos-8' },
+  { id: '9', name: 'Diana Lopez', role: 'Software Engineer', dept: 'IT', orgUnitId: 'ou-7', positionId: 'pos-1' },
+  { id: '10', name: 'Kevin Tan', role: 'Software Engineer', dept: 'IT', orgUnitId: 'ou-8', positionId: 'pos-1' },
+];
+
+const MOCK_ORG_UNITS = [
+  { id: 'ou-1', name: 'Information Technology', type: 'Department', employeeCount: 24 },
+  { id: 'ou-2', name: 'Human Resources', type: 'Department', employeeCount: 12 },
+  { id: 'ou-3', name: 'Finance', type: 'Department', employeeCount: 18 },
+  { id: 'ou-4', name: 'Marketing', type: 'Department', employeeCount: 15 },
+  { id: 'ou-5', name: 'Operations', type: 'Department', employeeCount: 42 },
+  { id: 'ou-6', name: 'Sales', type: 'Division', employeeCount: 30 },
+  { id: 'ou-7', name: 'Engineering Team A', type: 'Team', employeeCount: 8 },
+  { id: 'ou-8', name: 'Engineering Team B', type: 'Team', employeeCount: 7 },
+];
+
+const MOCK_POSITIONS = [
+  { id: 'pos-1', title: 'Software Engineer', department: 'IT', employeeCount: 12 },
+  { id: 'pos-2', title: 'Senior Developer', department: 'IT', employeeCount: 6 },
+  { id: 'pos-3', title: 'HR Manager', department: 'Human Resources', employeeCount: 3 },
+  { id: 'pos-4', title: 'Payroll Specialist', department: 'Finance', employeeCount: 5 },
+  { id: 'pos-5', title: 'Marketing Lead', department: 'Marketing', employeeCount: 4 },
+  { id: 'pos-6', title: 'Operations Supervisor', department: 'Operations', employeeCount: 8 },
+  { id: 'pos-7', title: 'Sales Representative', department: 'Sales', employeeCount: 15 },
+  { id: 'pos-8', title: 'Warehouse Staff', department: 'Operations', employeeCount: 20 },
+];
+
+const MOCK_EMPLOYEE_GROUPS = [
+  { id: 'grp-1', name: 'Night Shift Pool', description: 'All employees eligible for night shift', employeeCount: 35 },
+  { id: 'grp-2', name: 'Production Floor Staff', description: 'Manufacturing and assembly workers', employeeCount: 64 },
+  { id: 'grp-3', name: 'Field Agents', description: 'Mobile and field operations staff', employeeCount: 23 },
+  { id: 'grp-4', name: 'Office Regulars', description: 'Standard office-based employees', employeeCount: 87 },
 ];
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -341,6 +432,7 @@ const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const ShiftManagement: React.FC = () => {
   const [shifts, setShifts] = useState<Shift[]>(MOCK_SHIFTS);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState<ShiftCategory>('Standard');
 
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -352,32 +444,32 @@ const ShiftManagement: React.FC = () => {
   // Create/Edit Form State
   const [formData, setFormData] = useState<Partial<Shift>>({
     name: '',
+    category: 'Standard',
     isCompressible: false,
     startTime: '09:00',
     endTime: '18:00',
-
-    // ARRAY version (your logic)
     workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-
-    // STRING version (main)
     workdays: 'Mon – Fri',
-
-    // compressed schedule defaults
     compressedStartTime: '06:00',
     compressedEndTime: '18:00',
     compressedWorkdays: 'Mon – Thu',
-
     lunchIncluded: true,
     lunchBreakMinutes: 60,
     compressedLunchIncluded: false,
     compressedLunchBreakMinutes: 60,
-
+    requiredHoursPerDay: 8,
+    policyNote: '',
     isDefault: false,
     subShifts: []
   });
 
   // Assignment Form State
+  const [assignTab, setAssignTab] = useState<'org-unit' | 'position' | 'individual' | 'group'>('org-unit');
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
+  const [selectedOrgUnits, setSelectedOrgUnits] = useState<Set<string>>(new Set());
+  const [selectedPositions, setSelectedPositions] = useState<Set<string>>(new Set());
+  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
+  const [assignSearch, setAssignSearch] = useState('');
 
   const handleOpenModal = (shift?: Shift) => {
     if (shift) {
@@ -387,7 +479,8 @@ const ShiftManagement: React.FC = () => {
       setEditingId(null);
       setFormData({
         name: '',
-        isCompressible: false,
+        category: activeCategory,
+        isCompressible: activeCategory === 'Compressed',
         startTime: '09:00',
         endTime: '18:00',
         workDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -400,6 +493,8 @@ const ShiftManagement: React.FC = () => {
         lunchBreakMinutes: 60,
         compressedLunchIncluded: false,
         compressedLunchBreakMinutes: 60,
+        requiredHoursPerDay: 8,
+        policyNote: '',
         isDefault: false,
         subShifts: []
       });
@@ -410,6 +505,11 @@ const ShiftManagement: React.FC = () => {
   const handleOpenAssign = (shiftId: string) => {
     setAssigningShiftId(shiftId);
     setSelectedEmployees(new Set());
+    setSelectedOrgUnits(new Set());
+    setSelectedPositions(new Set());
+    setSelectedGroups(new Set());
+    setAssignTab('org-unit');
+    setAssignSearch('');
     setIsAssignModalOpen(true);
   };
 
@@ -423,35 +523,30 @@ const ShiftManagement: React.FC = () => {
   };
 
   const handleSave = () => {
-    if (!formData.name || !formData.startTime || !formData.endTime) return;
+    const cat = formData.category || 'Standard';
+    if (!formData.name) return;
+    if (cat !== 'Flexible' && (!formData.startTime || !formData.endTime)) return;
 
     const payload: Shift = {
       id: editingId || Math.random().toString(36).substr(2, 9),
       name: formData.name,
-      isCompressible: formData.isCompressible || false,
+      category: cat,
+      isCompressible: cat === 'Compressed',
 
-      // hours
-      workHours: calcNetHours(
-        formData.startTime!,
-        formData.endTime!,
-        formData.lunchIncluded ?? true,
-        formData.lunchBreakMinutes ?? 60
-      ),
+      workHours: cat === 'Flexible'
+        ? formData.requiredHoursPerDay || 8
+        : calcNetHours(formData.startTime!, formData.endTime!, formData.lunchIncluded ?? true, formData.lunchBreakMinutes ?? 60),
 
-      startTime: formData.startTime!,
-      endTime: formData.endTime!,
+      startTime: cat === 'Flexible' ? '' : formData.startTime!,
+      endTime: cat === 'Flexible' ? '' : formData.endTime!,
 
       lunchIncluded: formData.lunchIncluded ?? true,
       lunchBreakMinutes: formData.lunchBreakMinutes ?? 60,
 
-      // ARRAY version
       workDays: formData.workDays || [],
-
-      // STRING version
       workdays: formData.workdays || 'Mon – Fri',
 
-      // compressed schedule
-      ...(formData.isCompressible && {
+      ...(cat === 'Compressed' && {
         compressedWorkHours: calcNetHours(
           formData.compressedStartTime!,
           formData.compressedEndTime!,
@@ -464,6 +559,11 @@ const ShiftManagement: React.FC = () => {
         compressedLunchIncluded: formData.compressedLunchIncluded ?? false,
         compressedLunchBreakMinutes: formData.compressedLunchBreakMinutes ?? 60,
         ...(formData.compressedDayOff && { compressedDayOff: formData.compressedDayOff }),
+      }),
+
+      ...(cat === 'Flexible' && {
+        requiredHoursPerDay: formData.requiredHoursPerDay || 8,
+        policyNote: formData.policyNote || '',
       }),
 
       lastModifiedBy: 'Current User',
@@ -493,10 +593,14 @@ const ShiftManagement: React.FC = () => {
 
   const handleSaveAssignment = () => {
     if (!assigningShiftId) return;
+    const fromOrgUnits = MOCK_ORG_UNITS.filter(u => selectedOrgUnits.has(u.id)).reduce((s, u) => s + u.employeeCount, 0);
+    const fromPositions = MOCK_POSITIONS.filter(p => selectedPositions.has(p.id)).reduce((s, p) => s + p.employeeCount, 0);
+    const fromGroups = MOCK_EMPLOYEE_GROUPS.filter(g => selectedGroups.has(g.id)).reduce((s, g) => s + g.employeeCount, 0);
+    const total = fromOrgUnits + fromPositions + fromGroups + selectedEmployees.size;
     setShifts(
       shifts.map(s =>
         s.id === assigningShiftId
-          ? { ...s, assignedEmployees: s.assignedEmployees + selectedEmployees.size }
+          ? { ...s, assignedEmployees: s.assignedEmployees + total }
           : s
       )
     );
@@ -572,6 +676,7 @@ const ShiftManagement: React.FC = () => {
   };
 
   const filteredShifts = shifts.filter(s =>
+    s.category === activeCategory &&
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -605,6 +710,32 @@ const ShiftManagement: React.FC = () => {
       </div>
 
       <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm min-h-[600px] flex flex-col">
+        {/* Category Tabs */}
+        <div className="px-5 pt-5 flex gap-2 border-b border-slate-50 pb-4">
+          {(['Standard', 'Compressed', 'Flexible'] as ShiftCategory[]).map((cat) => {
+            const count = shifts.filter(s => s.category === cat).length;
+            const isActive = activeCategory === cat;
+            const activeStyle =
+              cat === 'Standard' ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-100' :
+              cat === 'Compressed' ? 'bg-amber-500 text-white border-amber-500 shadow-amber-100' :
+              'bg-violet-600 text-white border-violet-600 shadow-violet-100';
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-5 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+                  isActive ? activeStyle : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                {cat}
+                <span className={`ml-1.5 text-[10px] font-semibold ${isActive ? 'opacity-75' : 'opacity-50'}`}>
+                  ({count})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         <div className="p-5 border-b border-slate-50 flex items-center justify-between bg-white">
           <div className="relative max-w-sm w-full">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -653,14 +784,19 @@ const ShiftManagement: React.FC = () => {
                                 Default
                               </span>
                             )}
-                            {shift.isCompressible && (
+                            {shift.category === 'Compressed' && (
                               <span className="text-[9px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded border border-amber-100 uppercase tracking-wider">
                                 CWS
                               </span>
                             )}
+                            {shift.category === 'Flexible' && (
+                              <span className="text-[9px] bg-violet-50 text-violet-600 px-2 py-0.5 rounded border border-violet-100 uppercase tracking-wider">
+                                Flexi
+                              </span>
+                            )}
                           </span>
                           <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                            {shift.isCompressible ? 'Compressed Work Schedule' : 'Standard Config'}
+                            {shift.category === 'Compressed' ? 'Compressed Work Schedule' : shift.category === 'Flexible' ? 'Flexible Schedule' : 'Standard Schedule'}
                           </span>
                         </div>
                       </div>
@@ -698,7 +834,35 @@ const ShiftManagement: React.FC = () => {
                   {/* Schedule */}
                   <td className="px-8 py-5 align-top">
                     <div className="flex flex-col gap-3">
-                      {shift.isCompressible ? (
+                      {shift.category === 'Flexible' ? (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[9px] font-bold text-violet-500 uppercase tracking-wider">
+                              Flexible Schedule
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 mb-2 flex-wrap">
+                            {shift.workDays.map(day => (
+                              <span key={day} className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                                {day}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="bg-violet-50 border border-violet-200 rounded-xl px-4 py-2.5 w-fit">
+                            <span className="text-[9px] font-bold text-violet-400 uppercase tracking-wider block">Required</span>
+                            <span className="text-lg font-extrabold text-violet-700">
+                              {shift.requiredHoursPerDay}h
+                              <span className="text-xs font-bold text-violet-400">/day</span>
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-violet-400 font-medium mt-1 block">
+                            Weekly: {((shift.requiredHoursPerDay || 0) * shift.workDays.length).toFixed(1)}h
+                          </span>
+                          {shift.policyNote && (
+                            <p className="text-[10px] text-slate-400 italic mt-2 max-w-xs leading-relaxed">{shift.policyNote}</p>
+                          )}
+                        </div>
+                      ) : shift.category === 'Compressed' ? (
                         <>
                           <div>
                             <div className="flex items-center gap-2 mb-1.5">
@@ -888,44 +1052,110 @@ const ShiftManagement: React.FC = () => {
               />
             </div>
 
-            {/* Compressible Toggle */}
-            <button
-              type="button"
-              onClick={() =>
-                setFormData({ ...formData, isCompressible: !formData.isCompressible })
-              }
-              className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                formData.isCompressible
-                  ? 'bg-amber-50 border-amber-300'
-                  : 'bg-white border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <div className="text-left">
-                <span className="text-sm font-bold text-slate-800 block">
-                  Compressible Work Schedule (CWS)
-                </span>
-                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
-                  {formData.isCompressible
-                    ? 'Define both a compressed and a non-compressed version of this shift.'
-                    : 'Enable to configure a compressed and non-compressed variant of this shift.'}
-                </span>
+            {/* Category Selector */}
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                Schedule Type
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['Standard', 'Compressed', 'Flexible'] as ShiftCategory[]).map((cat) => {
+                  const isActive = formData.category === cat;
+                  const activeStyle =
+                    cat === 'Standard' ? 'bg-indigo-50 border-indigo-400 text-indigo-700' :
+                    cat === 'Compressed' ? 'bg-amber-50 border-amber-400 text-amber-700' :
+                    'bg-violet-50 border-violet-400 text-violet-700';
+                  const desc =
+                    cat === 'Standard' ? 'Fixed start & end times' :
+                    cat === 'Compressed' ? 'CWS with regular variant' :
+                    'Required hours per day';
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, category: cat, isCompressible: cat === 'Compressed' })}
+                      className={`flex flex-col items-start p-3 rounded-xl border-2 transition-all ${isActive ? activeStyle : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    >
+                      <span className="text-xs font-bold">{cat}</span>
+                      <span className="text-[10px] font-medium opacity-70 mt-0.5 text-left">{desc}</span>
+                    </button>
+                  );
+                })}
               </div>
-              <div
-                className={`relative w-10 h-6 rounded-full transition-all shrink-0 ml-4 ${
-                  formData.isCompressible ? 'bg-amber-500' : 'bg-slate-200'
-                }`}
-              >
-                <div
-                  className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${
-                    formData.isCompressible ? 'left-5' : 'left-1'
-                  }`}
-                />
-              </div>
-            </button>
+            </div>
 
-            {/* Non-Compressed Schedule */}
-            <div className={`space-y-4 ${formData.isCompressible ? 'bg-slate-50 p-5 rounded-2xl border border-slate-200' : ''}`}>
-              {formData.isCompressible && (
+            {/* Flexible Schedule Fields */}
+            {formData.category === 'Flexible' && (
+              <div className="space-y-4 bg-violet-50 p-5 rounded-2xl border border-violet-200">
+                <h4 className="text-xs font-bold text-violet-700 uppercase tracking-widest flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-violet-500 inline-block" />
+                  Flexible Hours Policy
+                </h4>
+                <div>
+                  <label className="block text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-1">
+                    Required Hours Per Day
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="12"
+                    step="0.5"
+                    className="w-full border border-violet-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-violet-100 text-sm font-bold text-slate-900"
+                    value={formData.requiredHoursPerDay ?? 8}
+                    onChange={(e) => setFormData({ ...formData, requiredHoursPerDay: parseFloat(e.target.value) || 8 })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-2">
+                    Work Days
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleDay(day)}
+                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
+                          formData.workDays?.includes(day)
+                            ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-100'
+                            : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-1">
+                    Policy Note
+                  </label>
+                  <textarea
+                    className="w-full border border-violet-200 p-2.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-violet-100 text-sm text-slate-700 resize-none"
+                    rows={2}
+                    placeholder="e.g. Must render 8 hours. Core hours: 10 AM – 3 PM."
+                    value={formData.policyNote || ''}
+                    onChange={(e) => setFormData({ ...formData, policyNote: e.target.value })}
+                  />
+                </div>
+                <div className="bg-violet-100 border border-violet-200 rounded-xl p-3 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-violet-600 uppercase tracking-widest block">Required Working Hours</span>
+                    <span className="text-[10px] text-violet-500 font-medium">
+                      {(formData.workDays?.length ?? 0) > 0 && `${((formData.requiredHoursPerDay || 8) * (formData.workDays?.length || 5)).toFixed(1)}h/week`}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-extrabold text-violet-700">
+                    {formData.requiredHoursPerDay || 8}h
+                    <span className="text-sm font-bold text-violet-400">/day</span>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Standard / Non-Compressed Schedule */}
+            {formData.category !== 'Flexible' && (
+            <div className={`space-y-4 ${formData.category === 'Compressed' ? 'bg-slate-50 p-5 rounded-2xl border border-slate-200' : ''}`}>
+              {formData.category === 'Compressed' && (
                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest mb-2 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" />
                   Non-Compressed Schedule
@@ -1045,9 +1275,10 @@ const ShiftManagement: React.FC = () => {
                 </div>
               )}
             </div>
+            )}
 
             {/* Compressed Schedule */}
-            {formData.isCompressible && (
+            {formData.category === 'Compressed' && (
               <div className="space-y-4">
                 <div className="bg-amber-50 p-5 rounded-2xl border border-amber-200">
                   <h4 className="text-xs font-bold text-amber-700 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -1281,48 +1512,333 @@ const ShiftManagement: React.FC = () => {
       <Modal
         isOpen={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}
-        className="max-w-lg"
+        className="max-w-2xl"
       >
-        <div className="p-6 space-y-6">
-          <h3 className="text-lg font-bold text-slate-900">Assign Employees</h3>
+        {(() => {
+          const assigningShift = shifts.find(s => s.id === assigningShiftId);
+          const totalFromOrgUnits = MOCK_ORG_UNITS.filter(u => selectedOrgUnits.has(u.id)).reduce((s, u) => s + u.employeeCount, 0);
+          const totalFromPositions = MOCK_POSITIONS.filter(p => selectedPositions.has(p.id)).reduce((s, p) => s + p.employeeCount, 0);
+          const totalFromGroups = MOCK_EMPLOYEE_GROUPS.filter(g => selectedGroups.has(g.id)).reduce((s, g) => s + g.employeeCount, 0);
+          const grandTotal = totalFromOrgUnits + totalFromPositions + totalFromGroups + selectedEmployees.size;
 
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-            {MOCK_EMPLOYEES_FOR_ASSIGN.map((emp) => (
-              <div
-                key={emp.id}
-                className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 transition-all"
-              >
+          const tabs = [
+            { key: 'org-unit' as const, label: 'Org Unit', icon: <Users size={13} /> },
+            { key: 'position' as const, label: 'Position', icon: <Briefcase size={13} /> },
+            { key: 'individual' as const, label: 'Individual', icon: <UserPlus size={13} /> },
+            { key: 'group' as const, label: 'Group', icon: <CalendarDays size={13} /> },
+          ];
+
+          const filteredOrgUnits = MOCK_ORG_UNITS.filter(u =>
+            u.name.toLowerCase().includes(assignSearch.toLowerCase()) ||
+            u.type.toLowerCase().includes(assignSearch.toLowerCase())
+          );
+          const filteredPositions = MOCK_POSITIONS.filter(p =>
+            p.title.toLowerCase().includes(assignSearch.toLowerCase()) ||
+            p.department.toLowerCase().includes(assignSearch.toLowerCase())
+          );
+          const filteredEmployees = MOCK_EMPLOYEES_FOR_ASSIGN.filter(e =>
+            e.name.toLowerCase().includes(assignSearch.toLowerCase()) ||
+            e.role.toLowerCase().includes(assignSearch.toLowerCase()) ||
+            e.dept.toLowerCase().includes(assignSearch.toLowerCase())
+          );
+          const filteredGroups = MOCK_EMPLOYEE_GROUPS.filter(g =>
+            g.name.toLowerCase().includes(assignSearch.toLowerCase()) ||
+            g.description.toLowerCase().includes(assignSearch.toLowerCase())
+          );
+
+          return (
+            <div className="p-6 space-y-5">
+              {/* Header */}
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-bold text-slate-800">{emp.name}</p>
-                  <p className="text-xs text-slate-500">
-                    {emp.role} · {emp.dept}
-                  </p>
+                  <h3 className="text-lg font-bold text-slate-900">Assign to Shift</h3>
+                  {assigningShift && (
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">
+                      {assigningShift.name}
+                    </p>
+                  )}
                 </div>
+                {grandTotal > 0 && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-xl">
+                    <Users size={13} className="text-indigo-500" />
+                    <span className="text-xs font-bold text-indigo-700">{grandTotal} to assign</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-1.5 bg-slate-50 p-1 rounded-xl">
+                {tabs.map(tab => {
+                  const count =
+                    tab.key === 'org-unit' ? selectedOrgUnits.size :
+                    tab.key === 'position' ? selectedPositions.size :
+                    tab.key === 'individual' ? selectedEmployees.size :
+                    selectedGroups.size;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => { setAssignTab(tab.key); setAssignSearch(''); }}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                        assignTab === tab.key
+                          ? 'bg-white text-indigo-700 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                      {count > 0 && (
+                        <span className="bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                <input
+                  type="text"
+                  placeholder={
+                    assignTab === 'org-unit' ? 'Search departments, teams...' :
+                    assignTab === 'position' ? 'Search positions...' :
+                    assignTab === 'individual' ? 'Search employees...' :
+                    'Search groups...'
+                  }
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none text-slate-700"
+                  value={assignSearch}
+                  onChange={(e) => setAssignSearch(e.target.value)}
+                />
+              </div>
+
+              {/* List */}
+              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+                {/* Org Unit Tab */}
+                {assignTab === 'org-unit' && (
+                  <>
+                    {filteredOrgUnits.length === 0 && (
+                      <p className="text-xs text-slate-400 text-center py-6">No org units found.</p>
+                    )}
+                    {filteredOrgUnits.map(unit => {
+                      const isSelected = selectedOrgUnits.has(unit.id);
+                      return (
+                        <div
+                          key={unit.id}
+                          onClick={() => {
+                            const next = new Set(selectedOrgUnits);
+                            isSelected ? next.delete(unit.id) : next.add(unit.id);
+                            setSelectedOrgUnits(next);
+                          }}
+                          className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${
+                            isSelected ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
+                              <Users size={15} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-800">{unit.name}</p>
+                              <p className="text-[11px] text-slate-400 font-medium">{unit.type} · {unit.employeeCount} employees</p>
+                            </div>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                            isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                          }`}>
+                            {isSelected && <Check size={11} className="text-white" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
+                {/* Position Tab */}
+                {assignTab === 'position' && (
+                  <>
+                    {filteredPositions.length === 0 && (
+                      <p className="text-xs text-slate-400 text-center py-6">No positions found.</p>
+                    )}
+                    {filteredPositions.map(pos => {
+                      const isSelected = selectedPositions.has(pos.id);
+                      return (
+                        <div
+                          key={pos.id}
+                          onClick={() => {
+                            const next = new Set(selectedPositions);
+                            isSelected ? next.delete(pos.id) : next.add(pos.id);
+                            setSelectedPositions(next);
+                          }}
+                          className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${
+                            isSelected ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
+                              <Briefcase size={15} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-800">{pos.title}</p>
+                              <p className="text-[11px] text-slate-400 font-medium">{pos.department} · {pos.employeeCount} employees</p>
+                            </div>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                            isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                          }`}>
+                            {isSelected && <Check size={11} className="text-white" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
+                {/* Individual Tab */}
+                {assignTab === 'individual' && (
+                  <>
+                    {filteredEmployees.length === 0 && (
+                      <p className="text-xs text-slate-400 text-center py-6">No employees found.</p>
+                    )}
+                    {filteredEmployees.map(emp => {
+                      const isSelected = selectedEmployees.has(emp.id);
+                      return (
+                        <div
+                          key={emp.id}
+                          onClick={() => toggleEmployeeSelect(emp.id)}
+                          className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${
+                            isSelected ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                              isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {emp.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-800">{emp.name}</p>
+                              <p className="text-[11px] text-slate-400 font-medium">{emp.role} · {emp.dept}</p>
+                            </div>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                            isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                          }`}>
+                            {isSelected && <Check size={11} className="text-white" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
+                {/* Group Tab */}
+                {assignTab === 'group' && (
+                  <>
+                    {filteredGroups.length === 0 && (
+                      <p className="text-xs text-slate-400 text-center py-6">No groups found.</p>
+                    )}
+                    {filteredGroups.map(grp => {
+                      const isSelected = selectedGroups.has(grp.id);
+                      return (
+                        <div
+                          key={grp.id}
+                          onClick={() => {
+                            const next = new Set(selectedGroups);
+                            isSelected ? next.delete(grp.id) : next.add(grp.id);
+                            setSelectedGroups(next);
+                          }}
+                          className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${
+                            isSelected ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
+                              <CalendarDays size={15} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-800">{grp.name}</p>
+                              <p className="text-[11px] text-slate-400 font-medium">{grp.description} · {grp.employeeCount} employees</p>
+                            </div>
+                          </div>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                            isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'
+                          }`}>
+                            {isSelected && <Check size={11} className="text-white" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+
+              {/* Selection Summary */}
+              {grandTotal > 0 && (
+                <div className="bg-slate-50 rounded-2xl p-4 space-y-2 border border-slate-100">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selection Summary</p>
+                  <div className="flex flex-wrap gap-2">
+                    {MOCK_ORG_UNITS.filter(u => selectedOrgUnits.has(u.id)).map(u => (
+                      <span key={u.id} className="flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700">
+                        <Users size={11} />
+                        {u.name}
+                        <span className="text-indigo-400 font-medium">({u.employeeCount})</span>
+                        <button type="button" onClick={() => { const n = new Set(selectedOrgUnits); n.delete(u.id); setSelectedOrgUnits(n); }} className="ml-0.5 text-indigo-300 hover:text-rose-500">
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                    {MOCK_POSITIONS.filter(p => selectedPositions.has(p.id)).map(p => (
+                      <span key={p.id} className="flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700">
+                        <Briefcase size={11} />
+                        {p.title}
+                        <span className="text-indigo-400 font-medium">({p.employeeCount})</span>
+                        <button type="button" onClick={() => { const n = new Set(selectedPositions); n.delete(p.id); setSelectedPositions(n); }} className="ml-0.5 text-indigo-300 hover:text-rose-500">
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                    {MOCK_EMPLOYEE_GROUPS.filter(g => selectedGroups.has(g.id)).map(g => (
+                      <span key={g.id} className="flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700">
+                        <CalendarDays size={11} />
+                        {g.name}
+                        <span className="text-indigo-400 font-medium">({g.employeeCount})</span>
+                        <button type="button" onClick={() => { const n = new Set(selectedGroups); n.delete(g.id); setSelectedGroups(n); }} className="ml-0.5 text-indigo-300 hover:text-rose-500">
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                    {MOCK_EMPLOYEES_FOR_ASSIGN.filter(e => selectedEmployees.has(e.id)).map(e => (
+                      <span key={e.id} className="flex items-center gap-1 px-2.5 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700">
+                        {e.name}
+                        <button type="button" onClick={() => toggleEmployeeSelect(e.id)} className="ml-0.5 text-indigo-300 hover:text-rose-500">
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs text-slate-400 font-medium">
+                  {grandTotal > 0 ? `${grandTotal} employee${grandTotal !== 1 ? 's' : ''} will be assigned` : 'Select items above to assign'}
+                </span>
                 <button
                   type="button"
-                  onClick={() => toggleEmployeeSelect(emp.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                    selectedEmployees.has(emp.id)
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                  }`}
+                  onClick={handleSaveAssignment}
+                  disabled={grandTotal === 0}
+                  className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all shadow-md active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {selectedEmployees.has(emp.id) ? 'Selected' : 'Select'}
+                  Save Assignments
                 </button>
               </div>
-            ))}
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleSaveAssignment}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all shadow-md active:scale-95"
-            >
-              Save Assignments
-            </button>
-          </div>
-        </div>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

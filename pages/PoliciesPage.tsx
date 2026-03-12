@@ -42,10 +42,12 @@ import {
     Edit,
     TrendingUp,
     ChevronDown,
-    ShieldPlus
+    ShieldPlus,
+    Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_SETUPS, ApprovalSetup } from './ApprovalSetup';
+import { INITIAL_SCHEDULES, getActiveRanges } from './PaySchedule';
 
 // --- Types & Constants ---
 
@@ -118,6 +120,17 @@ interface PolicyState {
 
     serviceChargeDistribution: number;
     thirteenthMonthBasis: 'Basic Pay' | 'Total Earnings';
+    thirteenthMonthFrequency: 'Annual' | 'Semi-annual' | 'Quarterly';
+    thirteenthMonthConfigs: Record<'Annual' | 'Semi-annual' | 'Quarterly', {
+        scheduleId: string | null;
+        assumedMonth: number | null;
+        assumedCutoff: number | null;
+        actualMonth: number | null;
+        actualCutoff: number | null;
+        disbursementMode: 'Full' | 'Partial';
+        partialCount: number;
+        partialPayDates: (string | null)[];
+    }[]>;
     serviceIncentiveLeave: number;
 
     // De Minimis (Tax Exempt Ceilings)
@@ -174,6 +187,7 @@ interface PolicyState {
     lastPayHoldMonths: number;
     requireAttendanceBeforeAfterHoliday: boolean;
     autoRejectDays: number;
+    leaveMonetizationTaxFreeLimit: number;
     shiftRequestDeadlineDays: number;
 };
 
@@ -197,6 +211,33 @@ const INITIAL_STATE: PolicyState = {
 
     serviceChargeDistribution: 100,
     thirteenthMonthBasis: 'Basic Pay',
+    thirteenthMonthFrequency: 'Annual',
+    thirteenthMonthConfigs: {
+        'Annual': [{
+            scheduleId: 'ps-001',
+            assumedMonth: null,
+            assumedCutoff: null,
+            actualMonth: null,
+            actualCutoff: null,
+            disbursementMode: 'Full',
+            partialCount: 1,
+            partialPayDates: [null],
+        }],
+        'Semi-annual': [
+            {
+                scheduleId: 'ps-001', assumedMonth: null, assumedCutoff: null, actualMonth: null, actualCutoff: null,
+                disbursementMode: 'Full', partialCount: 1, partialPayDates: [null],
+            },
+            {
+                scheduleId: 'ps-001', assumedMonth: null, assumedCutoff: null, actualMonth: null, actualCutoff: null,
+                disbursementMode: 'Full', partialCount: 1, partialPayDates: [null],
+            }
+        ],
+        'Quarterly': Array.from({ length: 4 }).map(() => ({
+            scheduleId: 'ps-001', assumedMonth: null, assumedCutoff: null, actualMonth: null, actualCutoff: null,
+            disbursementMode: 'Full', partialCount: 1, partialPayDates: [null],
+        }))
+    },
     serviceIncentiveLeave: 5,
 
     riceSubsidyCap: 2000,
@@ -250,6 +291,7 @@ const INITIAL_STATE: PolicyState = {
     performanceBonusRequiresAppraisal: false,
     requireAttendanceBeforeAfterHoliday: false,
     autoRejectDays: 7,
+    leaveMonetizationTaxFreeLimit: 10,
     shiftRequestDeadlineDays: 5,
 
 };
@@ -335,7 +377,57 @@ const INITIAL_LEAVE_CONFIGS: Record<string, LeaveConfig> = LEAVE_TYPES_LIST.redu
 const PoliciesPage: React.FC = () => {
     const [primaryTab, setPrimaryTab] = useState<'Government' | 'Company'>('Government');
     const [activeTab, setActiveTab] = useState<string>('Book3');
+    const [companyGovActiveTab, setCompanyGovActiveTab] = useState<string>('Book3');
     const [policies, setPolicies] = useState<PolicyState>(INITIAL_STATE);
+
+    const currentYear = new Date().getFullYear();
+    const currentInstallments = policies.thirteenthMonthConfigs[policies.thirteenthMonthFrequency];
+
+    // Gov section shared logic
+    const isGovSection = primaryTab === 'Government' || (primaryTab === 'Company' && activeTab === 'GovSection');
+    const govSubTab = primaryTab === 'Government' ? activeTab : companyGovActiveTab;
+    const govReadOnly = primaryTab === 'Government';
+
+    const getCutoffsForSchedule = React.useCallback((scheduleId: string | null) => {
+        const schedule = INITIAL_SCHEDULES.find(s => s.id === scheduleId) || INITIAL_SCHEDULES[0];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const list: { month: number; index: number; label: string; range: any; year: number }[] = [];
+        for (let m = 0; m < 12; m++) {
+            const ranges = getActiveRanges(schedule, m, currentYear);
+            ranges.forEach((range, idx) => {
+                let rangeText = `${range.startDay} - ${range.endDay}`;
+                if (range.endDayNextMonth) rangeText = `${range.startDay} - ${range.endDay} (Next Mo)`;
+                let payText = `${range.payDay}`;
+                if (range.payDayNextMonth || (range.payDay < range.startDay && range.endDayNextMonth === undefined)) payText = `${range.payDay} (Next Mo)`;
+                list.push({
+                    month: m,
+                    index: idx,
+                    year: currentYear,
+                    label: `${monthNames[m]} ${currentYear} Cutoff ${idx + 1} (${rangeText}) | Pay: ${payText}`,
+                    range
+                });
+            });
+        }
+        const nextYear = currentYear + 1;
+        const janRanges = getActiveRanges(schedule, 0, nextYear);
+        janRanges.forEach((range, idx) => {
+            let rangeText = `${range.startDay} - ${range.endDay}`;
+            if (range.endDayNextMonth) rangeText = `${range.startDay} - ${range.endDay} (Next Mo)`;
+            let payText = `${range.payDay}`;
+            if (range.payDayNextMonth || (range.payDay < range.startDay && range.endDayNextMonth === undefined)) payText = `${range.payDay} (Next Mo)`;
+            list.push({
+                month: 0,
+                index: idx,
+                year: nextYear,
+                label: `Jan ${nextYear} Cutoff ${idx + 1} (${rangeText}) | Pay: ${payText}`,
+                range
+            });
+        });
+        return list;
+    }, [currentYear]);
+
+    // Legacy support for other parts of the UI that might still expect allCutoffs from first schedule
+    const allCutoffs = React.useMemo(() => getCutoffsForSchedule(currentInstallments[0].scheduleId), [getCutoffsForSchedule, currentInstallments]);
 
     // Divisor Setup State
     const [divisors, setDivisors] = useState<Divisor[]>([
@@ -363,7 +455,8 @@ const PoliciesPage: React.FC = () => {
 
     // Master Leave Select State
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [selectedLeaveId, setSelectedLeaveId] = useState<string>('sil');
+    const [isGovDropdownOpen, setIsGovDropdownOpen] = useState(false);
+    const [selectedLeaveId, setSelectedLeaveId] = useState<string>('vl');
     const [leaveSettings, setLeaveSettings] = useState<Record<string, LeaveConfig>>(INITIAL_LEAVE_CONFIGS);
 
     // --- Helpers ---
@@ -393,8 +486,50 @@ const PoliciesPage: React.FC = () => {
                 setPolicies(prev => ({ ...prev, [syncMap[id]]: value }));
             }
         }
-
         setHasChanges(true);
+    };
+
+    const handleAddCustomLeave = () => {
+        const newId = `custom_${Math.random().toString(36).substr(2, 9)}`;
+        const newLeave: LeaveConfig = {
+            id: newId,
+            name: 'New Custom Leave',
+            code: 'NCL',
+            isStatutory: false,
+            enabled: true,
+            days: 0,
+            icon: Heart,
+            color: 'text-indigo-400',
+            citation: 'Company Policy',
+            monetizationEnabled: false,
+            monetizationMaxDays: 0,
+            monetizationRate: 100,
+            monetizationBasis: 'Daily Rate',
+            eligibility: ['Regular'],
+            accrualPolicy: 'Immediate',
+            maxFiledPerMonth: 0,
+            expiration: 'Every Year-End',
+            maxAccrued: 0,
+            isForfeited: true
+        };
+        setLeaveSettings(prev => ({ ...prev, [newId]: newLeave }));
+        setSelectedLeaveId(newId);
+        setHasChanges(true);
+    };
+
+    const handleDeleteLeave = (id: string) => {
+        if (leaveSettings[id].isStatutory) {
+            alert("Statutory leaves cannot be deleted.");
+            return;
+        }
+        if (confirm("Are you sure you want to delete this custom leave?")) {
+            const newSettings = { ...leaveSettings };
+            delete newSettings[id];
+            setLeaveSettings(newSettings);
+            const nextLeave = Object.values(newSettings).find(l => !l.isStatutory);
+            setSelectedLeaveId(nextLeave ? nextLeave.id : Object.keys(newSettings)[0]);
+            setHasChanges(true);
+        }
     };
 
     const handleSaveDivisor = () => {
@@ -570,21 +705,23 @@ const PoliciesPage: React.FC = () => {
                     <p className="text-slate-500 font-medium mt-1">Configure business rules in compliance with the <span className="text-indigo-600 font-bold">Labor Code of the Philippines</span>.</p>
                 </div>
 
-                <div className="flex items-center gap-4 bg-white p-2 pr-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <div className="h-12 w-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-200">
-                        A+
+                {primaryTab === 'Company' && (
+                    <div className="flex items-center gap-4 bg-white p-2 pr-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div className="h-12 w-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-200">
+                            A+
+                        </div>
+                        <div>
+                            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Compliance Score</div>
+                            <div className="text-sm font-bold text-slate-800">100% Compliant</div>
+                        </div>
                     </div>
-                    <div>
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Compliance Score</div>
-                        <div className="text-sm font-bold text-slate-800">100% Compliant</div>
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Primary Tab Switcher */}
             <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
                 <button
-                    onClick={() => { setPrimaryTab('Government'); setActiveTab('Book3'); }}
+                    onClick={() => { setPrimaryTab('Government'); setActiveTab('Book3'); setIsGovDropdownOpen(false); }}
                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${primaryTab === 'Government' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                 >
                     <ShieldCheck size={18} /> Government Standards
@@ -602,13 +739,14 @@ const PoliciesPage: React.FC = () => {
 
                 {/* Dropdown Section Selector + Effectivity Note */}
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-4 z-30">
-                    <div className="flex-1 relative w-full md:w-auto">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Active Section</label>
+                    <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+                    <div className="relative w-full md:w-auto">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Company Section</label>
 
                         <div className="relative">
                             <button
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className={`w-full md:w-[450px] flex items-center justify-between pl-6 pr-5 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm ${primaryTab === 'Government'
+                                onClick={() => { setIsDropdownOpen(!isDropdownOpen); setIsGovDropdownOpen(false); }}
+                                className={`w-full md:w-[260px] flex items-center justify-between pl-6 pr-5 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm ${primaryTab === 'Government'
                                     ? 'bg-slate-900 text-white border-slate-800'
                                     : 'bg-blue-600 text-white border-blue-700'
                                     }`}
@@ -671,7 +809,7 @@ const PoliciesPage: React.FC = () => {
                                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute top-full left-0 mt-3 w-full md:w-[500px] bg-white border border-slate-200 rounded-3xl shadow-2xl z-50 overflow-hidden py-3"
+                                            className="absolute top-full left-0 mt-3 w-full md:w-[320px] bg-white border border-slate-200 rounded-3xl shadow-2xl z-50 overflow-hidden py-3"
                                         >
                                             <div className="px-5 pb-2 mb-2 border-b border-slate-50">
                                                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -727,6 +865,86 @@ const PoliciesPage: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Government Section separate dropdown — Company Policies only */}
+                    {primaryTab === 'Company' && (
+                        <div className="relative w-full md:w-auto">
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Government Section</label>
+                            <button
+                                onClick={() => { setIsGovDropdownOpen(!isGovDropdownOpen); setIsDropdownOpen(false); }}
+                                className={`w-full md:w-[260px] flex items-center justify-between pl-6 pr-5 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all shadow-sm ${activeTab === 'GovSection' ? 'bg-slate-900 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'}`}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-2 rounded-lg ${activeTab === 'GovSection' ? 'bg-white/10' : 'bg-slate-100'}`}>
+                                        <ShieldCheck size={18} className={activeTab === 'GovSection' ? 'text-white' : 'text-slate-500'} />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className={`text-[10px] uppercase tracking-widest mb-0.5 ${activeTab === 'GovSection' ? 'text-white/50' : 'text-slate-400'}`}>Current View</div>
+                                        <div className="truncate">
+                                            {activeTab === 'GovSection' ? (
+                                                companyGovActiveTab === 'Book1_2' ? 'Book I-II: Recruitment & Training' :
+                                                companyGovActiveTab === 'Book3' ? 'Book III: Work & Wages' :
+                                                companyGovActiveTab === 'Book4_5' ? 'Book IV-V: Health & Relations' :
+                                                companyGovActiveTab === 'Book6' ? 'Book VI: Post-Employment' :
+                                                'Special Laws & Leaves'
+                                            ) : 'Government Section'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <ChevronDown size={20} className={`transition-transform duration-300 ${isGovDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                                {isGovDropdownOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsGovDropdownOpen(false)} />
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute top-full left-0 mt-3 w-full md:w-[320px] bg-white border border-slate-200 rounded-3xl shadow-2xl z-50 overflow-hidden py-3"
+                                        >
+                                            <div className="px-5 pb-2 mb-2 border-b border-slate-50">
+                                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Government Section</div>
+                                            </div>
+                                            <div className="px-2">
+                                                {[
+                                                    { id: 'Book1_2', icon: GraduationCap, label: 'Book I-II: Recruitment & Training', desc: 'Pre-employment standards & apprenticeships' },
+                                                    { id: 'Book3', icon: Clock, label: 'Book III: Work & Wages', desc: 'Hours, breaks, premiums & holidays' },
+                                                    { id: 'Book4_5', icon: Stethoscope, label: 'Book IV-V: Health & Relations', desc: 'Safety, medical & grievance machinery' },
+                                                    { id: 'Book6', icon: Briefcase, label: 'Book VI: Post-Employment', desc: 'Separation pay & retirement' },
+                                                    { id: 'Special', icon: Heart, label: 'Special Laws & Leaves', desc: 'Detailed leave config (Maternity, Solo Parent, etc)' },
+                                                ].map(tab => {
+                                                    const isActive = activeTab === 'GovSection' && companyGovActiveTab === tab.id;
+                                                    return (
+                                                        <button
+                                                            key={tab.id}
+                                                            onClick={() => {
+                                                                setActiveTab('GovSection');
+                                                                setCompanyGovActiveTab(tab.id);
+                                                                setIsGovDropdownOpen(false);
+                                                            }}
+                                                            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all group ${isActive ? 'bg-slate-100 text-slate-900' : 'hover:bg-slate-50 text-slate-600'}`}
+                                                        >
+                                                            <div className={`p-2.5 rounded-xl transition-all ${isActive ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'}`}>
+                                                                <tab.icon size={20} />
+                                                            </div>
+                                                            <div className="text-left flex-1">
+                                                                <div className="text-sm font-bold">{tab.label}</div>
+                                                                <div className="text-[11px] text-slate-400 group-hover:text-slate-500 font-medium">{tab.desc}</div>
+                                                            </div>
+                                                            {isActive && <CheckCircle2 size={18} className="text-indigo-600" />}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+                    </div>
+
                     <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-100 px-4 py-3 rounded-xl w-full md:w-auto md:max-w-sm">
                         <History size={14} className="text-indigo-600 mt-0.5 shrink-0" />
                         <p className="text-[10px] text-indigo-700 leading-relaxed">
@@ -737,9 +955,25 @@ const PoliciesPage: React.FC = () => {
 
                 {/* Content Area */}
                 <div className="flex-1 bg-white border border-slate-200 rounded-3xl p-8 shadow-sm min-h-[600px]">
-                    <AnimatePresence mode="wait">
+                    {primaryTab === 'Company' && (
+                        <div className="flex justify-end gap-3 mb-6">
+                            <button
+                                onClick={() => setPolicies(INITIAL_STATE)}
+                                className="px-5 py-2 text-slate-500 hover:text-slate-700 font-bold text-sm transition-colors border border-slate-200 rounded-xl hover:bg-slate-50"
+                            >
+                                Reset to Standard
+                            </button>
+                            <button
+                                disabled={!hasChanges}
+                                className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                <Save size={16} /> Save Policy
+                            </button>
+                        </div>
+                    )}
+                    <AnimatePresence mode="sync">
                         <motion.div
-                            key={`${primaryTab}-${activeTab}`}
+                            key={`${primaryTab}-${activeTab}-${companyGovActiveTab}`}
                             initial={{ opacity: 0, x: 10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
@@ -835,57 +1069,6 @@ const PoliciesPage: React.FC = () => {
                             {/* --- COMPANY: WORKS & WAGES --- */}
                             {primaryTab === 'Company' && activeTab === 'Works' && (
                                 <div className="space-y-10">
-                                    <SectionTitle
-                                        icon={Clock}
-                                        title="Company Work Configuration"
-                                        description="Custom work hours and attendance rules specific to your organization."
-                                        citation="Company Handbook"
-                                    />
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors">
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Normal Hours</label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
-                                                    value={policies.normalHours}
-                                                    onChange={(e) => updatePolicy('normalHours', Number(e.target.value))}
-                                                />
-                                                <span className="text-sm font-bold text-slate-700">Hours / Day</span>
-                                            </div>
-                                            <p className="mt-4 text-[10px] text-slate-400 italic">Target default: 9 hours for company policy.</p>
-                                        </div>
-
-                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors">
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Meal Break</label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
-                                                    value={policies.mealBreakMinutes}
-                                                    onChange={(e) => updatePolicy('mealBreakMinutes', Number(e.target.value))}
-                                                />
-                                                <span className="text-sm font-bold text-slate-700">Minutes</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors flex flex-col justify-between">
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Work Week Mode</label>
-                                                <label className="flex items-center gap-2 cursor-pointer mt-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="w-5 h-5 accent-blue-600 rounded"
-                                                        checked={policies.nonCompressedWorkWeek}
-                                                        onChange={(e) => updatePolicy('nonCompressedWorkWeek', e.target.checked)}
-                                                    />
-                                                    <span className="text-sm font-bold text-slate-700">Non-compressed week</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     {/* Work Schedule Type */}
                                     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
                                         <div className="flex items-center gap-3">
@@ -1202,6 +1385,277 @@ const PoliciesPage: React.FC = () => {
                                             </div>
                                         </div>
 
+                                        {/* 13th Month Cutoff & Disbursement Configuration */}
+                                        <div className="mt-6 bg-white p-6 border border-slate-200 rounded-2xl shadow-sm">
+                                            <div className="mb-6">
+                                                <h4 className="font-bold text-slate-900 text-sm">13th Month Pay Frequency & Schedule</h4>
+                                                <p className="text-[10px] text-slate-400 italic">Determine how often the 13th month is calculated and disbursed (Statutory: Annual, by Dec 24).</p>
+                                            </div>
+
+                                            {/* Frequency Selection */}
+                                            <div className="mb-8 p-6 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
+                                                <label className="block text-xs font-black text-indigo-700 uppercase tracking-widest mb-4">Payoff Frequency</label>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {(['Annual', 'Semi-annual', 'Quarterly'] as const).map(freq => (
+                                                        <button
+                                                            key={freq}
+                                                            onClick={() => {
+                                                                updatePolicy('thirteenthMonthFrequency', freq);
+                                                            }}
+                                                            className={`py-4 px-4 rounded-xl text-center transition-all border-2 ${policies.thirteenthMonthFrequency === freq
+                                                                ? 'bg-white border-indigo-600 shadow-md shadow-indigo-100'
+                                                                : 'bg-white/50 border-transparent text-slate-400 hover:border-slate-200'
+                                                                }`}
+                                                        >
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <Calendar size={18} className={policies.thirteenthMonthFrequency === freq ? 'text-indigo-600' : 'text-slate-300'} />
+                                                                <span className={`text-[10px] font-black uppercase tracking-widest ${policies.thirteenthMonthFrequency === freq ? 'text-indigo-900' : 'text-slate-500'}`}>{freq}</span>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="mt-4 flex items-center gap-2 text-[10px] text-indigo-600 font-bold bg-white/80 p-3 rounded-lg border border-indigo-50">
+                                                    <Info size={14} />
+                                                    <span>
+                                                        {policies.thirteenthMonthFrequency === 'Annual' && 'Standard annual payoff typically released in December.'}
+                                                        {policies.thirteenthMonthFrequency === 'Semi-annual' && 'Payoff divided into two installments (e.g., June and December).'}
+                                                        {policies.thirteenthMonthFrequency === 'Quarterly' && 'Payoff disbursed at the end of every quarter (March, June, Sept, Dec).'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Configuration based on Frequency */}
+                                            <div className="space-y-12">
+                                                {currentInstallments.map((inst, idx) => {
+                                                    const instCutoffs = getCutoffsForSchedule(inst.scheduleId);
+                                                    const instLabel = policies.thirteenthMonthFrequency === 'Annual' ? 'Main Payoff' :
+                                                        policies.thirteenthMonthFrequency === 'Semi-annual' ? (idx === 0 ? 'Mid-Year Enrollment' : 'Year-End Final Payoff') :
+                                                            `Quarter ${idx + 1} Payoff`;
+
+                                                    return (
+                                                        <div key={idx} className="p-6 border-2 border-slate-100 rounded-3xl bg-white shadow-sm hover:border-indigo-100 transition-all">
+                                                            <div className="flex items-center gap-3 mb-6">
+                                                                <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black">
+                                                                    {idx + 1}
+                                                                </div>
+                                                                <h5 className="font-black text-slate-800 uppercase tracking-widest text-sm">{instLabel} Configuration</h5>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                                                                {/* Base Pay Schedule */}
+                                                                <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl">
+                                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Base Pay Schedule</label>
+                                                                    <select
+                                                                        value={inst.scheduleId || ''}
+                                                                        onChange={(e) => {
+                                                                            const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                            newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                ...inst,
+                                                                                scheduleId: e.target.value,
+                                                                                assumedMonth: null,
+                                                                                assumedCutoff: null,
+                                                                                actualMonth: null,
+                                                                                actualCutoff: null
+                                                                            };
+                                                                            updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                        }}
+                                                                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 bg-white"
+                                                                    >
+                                                                        {INITIAL_SCHEDULES.map(s => (
+                                                                            <option key={s.id} value={s.id}>{s.name} ({s.frequency})</option>
+                                                                        ))}
+                                                                    </select>
+                                                                    <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400 font-medium">
+                                                                        <Info size={12} />
+                                                                        <span>Determines payroll ranges and cutoff options.</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Disbursement Mode */}
+                                                                <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl">
+                                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Disbursement Strategy</label>
+                                                                    <div className="flex gap-2">
+                                                                        {(['Full', 'Partial'] as const).map(mode => (
+                                                                            <button
+                                                                                key={mode}
+                                                                                onClick={() => {
+                                                                                    const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                                    newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                        ...inst,
+                                                                                        disbursementMode: mode,
+                                                                                        partialCount: mode === 'Full' ? 1 : 2,
+                                                                                        partialPayDates: mode === 'Full' ? [null] : [null, null]
+                                                                                    };
+                                                                                    updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                                }}
+                                                                                className={`flex-1 py-2 px-3 rounded-lg text-[11px] font-black uppercase tracking-widest border-2 transition-all ${inst.disbursementMode === mode
+                                                                                    ? 'bg-amber-500 border-amber-600 text-white'
+                                                                                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                                                                                    }`}
+                                                                            >
+                                                                                {mode === 'Full' ? 'Single Payment' : 'Split Payment'}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Cutoff Selectors */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 border-b border-slate-50 pb-8">
+                                                                <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm relative overflow-hidden group">
+                                                                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                                        <History size={24} />
+                                                                    </div>
+                                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Assumed Cutoff</label>
+                                                                    <select
+                                                                        value={inst.assumedMonth !== null && inst.assumedCutoff !== null ? JSON.stringify({ month: inst.assumedMonth, index: inst.assumedCutoff }) : ''}
+                                                                        onChange={(e) => {
+                                                                            if (!e.target.value) return;
+                                                                            const val = JSON.parse(e.target.value);
+                                                                            const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                            newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                ...inst,
+                                                                                assumedMonth: val.month,
+                                                                                assumedCutoff: val.index
+                                                                            };
+                                                                            updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                        }}
+                                                                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 bg-slate-50"
+                                                                    >
+                                                                        <option value="" disabled>Select Cutoff...</option>
+                                                                        {instCutoffs.map((c, i) => (
+                                                                            <option key={i} value={JSON.stringify({ month: c.month, index: c.index })}>{c.label}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+
+                                                                <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm relative overflow-hidden group">
+                                                                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                                        <Calendar size={24} />
+                                                                    </div>
+                                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Actual Cutoff</label>
+                                                                    <select
+                                                                        value={inst.actualMonth !== null && inst.actualCutoff !== null ? JSON.stringify({ month: inst.actualMonth, index: inst.actualCutoff }) : ''}
+                                                                        onChange={(e) => {
+                                                                            if (!e.target.value) return;
+                                                                            const val = JSON.parse(e.target.value);
+                                                                            const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                            newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                ...inst,
+                                                                                actualMonth: val.month,
+                                                                                actualCutoff: val.index
+                                                                            };
+                                                                            updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                        }}
+                                                                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 bg-slate-50"
+                                                                    >
+                                                                        <option value="" disabled>Select Cutoff...</option>
+                                                                        {instCutoffs.map((c, i) => (
+                                                                            <option key={i} value={JSON.stringify({ month: c.month, index: c.index })}>{c.label}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Payment Date Detail */}
+                                                            {inst.disbursementMode === 'Full' ? (
+                                                                <div className="p-6 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                                                                    <label className="block text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-3">Calculated Pay Date</label>
+                                                                    {(() => {
+                                                                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                                        const assumed = instCutoffs.find(c => c.month === inst.assumedMonth && c.index === inst.assumedCutoff);
+                                                                        if (assumed) {
+                                                                            const payDay = assumed.range.payDay;
+                                                                            const payMonth = assumed.range.payDayNextMonth ? (inst.assumedMonth! + 1) % 12 : inst.assumedMonth!;
+                                                                            return (
+                                                                                <div className="flex items-center gap-4">
+                                                                                    <div className="p-4 bg-white border border-emerald-200 rounded-xl text-lg font-black text-emerald-950 flex-1 shadow-sm">
+                                                                                        {monthNames[payMonth]} {payDay}, {assumed.year || currentYear}
+                                                                                    </div>
+                                                                                    <div className="text-[10px] font-black text-emerald-600 bg-white px-3 py-2 rounded-lg border border-emerald-100 uppercase tracking-widest">Auto-Synced</div>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                        return <p className="text-[10px] text-emerald-600 font-bold italic">Select an Assumed Cutoff to lock in the payoff date.</p>;
+                                                                    })()}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="space-y-6">
+                                                                    <div className="flex items-center justify-between p-5 bg-amber-50 border border-amber-100 rounded-2xl">
+                                                                        <div>
+                                                                            <label className="block text-[10px] font-black text-amber-800 uppercase tracking-widest mb-1">Sub-Disbursements</label>
+                                                                            <p className="text-[11px] text-amber-700 font-medium">Splitting this {instLabel} into smaller payments.</p>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <input
+                                                                                type="number"
+                                                                                min={2}
+                                                                                max={4}
+                                                                                value={inst.partialCount}
+                                                                                onChange={(e) => {
+                                                                                    const count = Math.max(2, Math.min(4, Number(e.target.value) || 2));
+                                                                                    const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                                    newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                        ...inst,
+                                                                                        partialCount: count,
+                                                                                        partialPayDates: Array(count).fill(null)
+                                                                                    };
+                                                                                    updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                                }}
+                                                                                className="w-16 p-2 border border-amber-200 rounded-lg text-sm font-black text-center outline-none focus:ring-2 ring-amber-500/20 bg-white"
+                                                                            />
+                                                                            <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest">Parts</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                        {inst.partialPayDates.map((pDate, pIdx) => {
+                                                                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                                            const assumed = instCutoffs.find(c => c.month === inst.assumedMonth && c.index === inst.assumedCutoff);
+                                                                            let autoPayDate: string | null = null;
+                                                                            if (pIdx === 0 && assumed) {
+                                                                                const payDay = assumed.range.payDay;
+                                                                                const payMonth = assumed.range.payDayNextMonth ? (inst.assumedMonth! + 1) % 12 : inst.assumedMonth!;
+                                                                                autoPayDate = `${monthNames[payMonth]} ${payDay}, ${assumed.year || currentYear}`;
+                                                                            }
+
+                                                                            return (
+                                                                                <div key={pIdx} className="p-4 border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col gap-2">
+                                                                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Part {pIdx + 1} Date</label>
+                                                                                    {pIdx === 0 && autoPayDate ? (
+                                                                                        <div className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl text-xs font-black text-indigo-900 flex justify-between items-center">
+                                                                                            {autoPayDate}
+                                                                                            <span className="text-[8px] font-black text-indigo-400 uppercase">Primary</span>
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <input
+                                                                                            type="date"
+                                                                                            value={pDate || ''}
+                                                                                            onChange={(e) => {
+                                                                                                const newDates = [...inst.partialPayDates];
+                                                                                                newDates[pIdx] = e.target.value || null;
+                                                                                                const newConfigs = { ...policies.thirteenthMonthConfigs };
+                                                                                                newConfigs[policies.thirteenthMonthFrequency][idx] = {
+                                                                                                    ...inst,
+                                                                                                    partialPayDates: newDates
+                                                                                                };
+                                                                                                updatePolicy('thirteenthMonthConfigs', newConfigs);
+                                                                                            }}
+                                                                                            className="w-full p-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:border-indigo-500"
+                                                                                        />
+                                                                                    )}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                             {/* 14th Month */}
                                             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -1269,132 +1723,479 @@ const PoliciesPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Mirrored Premiums for Company */}
-                                    <div className="p-8 border border-slate-200 rounded-3xl bg-slate-50">
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <BadgePercent size={24} className="text-blue-600" />
-                                            <div>
-                                                <h4 className="font-bold text-slate-900">Custom Premium Rates</h4>
-                                                <p className="text-xs text-slate-500">Define if company premiums differ from statutory minimums.</p>
-                                            </div>
-                                        </div>
-                                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                                <div className="space-y-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-bold text-slate-700">Overtime (Regular)</span>
-                                                        <div className="flex items-center gap-2">
-                                                            <input type="number" className="w-16 p-1 border-b border-slate-300 text-right font-bold text-blue-700" value={policies.otRegularRate} onChange={(e) => updatePolicy('otRegularRate', Number(e.target.value))} />
-                                                            <span className="text-xs font-bold text-slate-400">%</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-bold text-slate-700">Night Differential</span>
-                                                        <div className="flex items-center gap-2">
-                                                            <input type="number" className="w-16 p-1 border-b border-slate-300 text-right font-bold text-blue-700" value={policies.nightDiffRate} onChange={(e) => updatePolicy('nightDiffRate', Number(e.target.value))} />
-                                                            <span className="text-xs font-bold text-slate-400">%</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-bold text-slate-700">Rest Day Premium</span>
-                                                        <div className="flex items-center gap-2">
-                                                            <input type="number" className="w-16 p-1 border-b border-slate-300 text-right font-bold text-blue-700" value={policies.otRestDayRate} onChange={(e) => updatePolicy('otRestDayRate', Number(e.target.value))} />
-                                                            <span className="text-xs font-bold text-slate-400">%</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-bold text-slate-700">Regular Holiday</span>
-                                                        <div className="flex items-center gap-2">
-                                                            <input type="number" className="w-16 p-1 border-b border-slate-300 text-right font-bold text-blue-700" value={policies.regularHolidayRate} onChange={(e) => updatePolicy('regularHolidayRate', Number(e.target.value))} />
-                                                            <span className="text-xs font-bold text-slate-400">%</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             )}
 
                             {/* --- COMPANY: SPECIAL LAWS --- */}
                             {primaryTab === 'Company' && activeTab === 'Special' && (
                                 <div className="space-y-8">
-                                    <SectionTitle
-                                        icon={Heart}
-                                        title="Extended Benefits"
-                                        description="Additional leaves and benefits provided by the company beyond minimal requirements."
-                                        citation="Corporate Policy"
-                                    />
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {[
-                                            { label: 'Service Incentive Leave', key: 'serviceIncentiveLeave', icon: Calendar, color: 'text-slate-400' },
-                                            { label: 'Maternity Leave', key: 'maternityLeave', icon: Baby, color: 'text-pink-400' },
-                                            { label: 'Paternity Leave', key: 'paternityLeave', icon: Baby, color: 'text-blue-400' },
-                                            { label: 'Solo Parent Leave', key: 'soloParentLeave', icon: User, color: 'text-amber-400' },
-                                            { label: 'VAWC Leave', key: 'vawcLeave', icon: ShieldCheck, color: 'text-purple-400' },
-                                            { label: 'Magna Carta (Surgery)', key: 'magnaCartaLeave', icon: Heart, color: 'text-rose-400' },
-                                        ].map((item) => (
-                                            <div key={item.key} className="p-5 border border-slate-200 rounded-2xl bg-white hover:border-blue-200 transition-colors">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <item.icon size={16} className={item.color} />
-                                                    <span className="text-sm font-bold text-slate-800">{item.label}</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        className="w-16 p-1 border-b border-slate-300 font-bold text-lg text-center outline-none focus:border-blue-500 bg-white"
-                                                        value={(policies as any)[item.key]}
-                                                        onChange={(e) => updatePolicy(item.key as any, Number(e.target.value))}
-                                                    />
-                                                    <span className="text-xs text-slate-500 font-bold">Days</span>
-                                                </div>
-                                                <p className="mt-3 text-[10px] text-slate-400 italic">Overrides statutory min.</p>
-                                            </div>
-                                        ))}
+                                    <div className="flex justify-between items-center mb-6">
+                                        <SectionTitle
+                                            icon={BookMarked}
+                                            title="Company Special Laws & Leaves"
+                                            description="Configure additional leave benefits provided by the company, including custom leaves and monetization rules."
+                                            citation="Corporate Policy"
+                                        />
+                                        <button
+                                            onClick={handleAddCustomLeave}
+                                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition-all shadow-lg active:scale-95 uppercase tracking-widest"
+                                        >
+                                            <Plus size={16} /> Add Custom Leave
+                                        </button>
                                     </div>
 
-                                    <div className="w-full h-px bg-slate-100 my-10"></div>
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
+                                        {/* Left Panel: Leave Picker */}
+                                        <div className="lg:col-span-3 space-y-6">
+                                            <div className="bg-slate-900 rounded-[32px] p-6 shadow-2xl relative overflow-hidden border border-slate-800">
+                                                <div className="absolute top-0 right-0 p-6 opacity-5">
+                                                    <Calendar size={80} className="text-white" />
+                                                </div>
+                                                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6 relative z-10">Available Benefits</h4>
 
-                                    <SectionTitle
-                                        icon={DollarSign}
-                                        title="Leave Monetization"
-                                        description="Company-specific rules for leave encashment."
-                                        citation="Company Handbook Section 5"
-                                    />
+                                                <div className="space-y-2 relative z-10 max-h-[500px] overflow-y-auto custom-scrollbar-vertical pr-1">
+                                                    {Object.values(leaveSettings).filter(l => !l.isStatutory).map(leave => {
+                                                        const isSelected = selectedLeaveId === leave.id;
+                                                        const isEnabled = leave.enabled;
+                                                        return (
+                                                            <button
+                                                                key={leave.id}
+                                                                onClick={() => setSelectedLeaveId(leave.id)}
+                                                                className={`w-full text-left p-4 rounded-2xl flex items-center justify-between transition-all duration-500 relative overflow-hidden group ${isSelected
+                                                                    ? 'text-slate-900'
+                                                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                                                    }`}
+                                                            >
+                                                                {isSelected && (
+                                                                    <motion.div
+                                                                        layoutId="activeLeaveCompany"
+                                                                        className="absolute inset-0 bg-white"
+                                                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                                                    />
+                                                                )}
 
-                                    <div className="bg-white border border-slate-200 rounded-3xl p-8">
-                                        <div className="flex flex-col md:flex-row gap-8 items-start">
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-slate-900 text-sm mb-2">Tax-Exempt Monetization Limit</h4>
-                                                <p className="text-xs text-slate-500 mb-6 max-w-md">Maximum number of SIL/Vacation days that can be converted to cash tax-free.</p>
-                                                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 w-fit">
-                                                    <input
-                                                        type="number"
-                                                        className="w-20 p-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-center"
-                                                        value={policies.leaveConversionTaxExemptDays}
-                                                        onChange={(e) => updatePolicy('leaveConversionTaxExemptDays', Number(e.target.value))}
-                                                    />
-                                                    <span className="text-sm font-bold text-slate-700">Days / Year</span>
+                                                                <div className="flex items-center gap-4 relative z-10">
+                                                                    <div className={`p-2.5 rounded-xl transition-all duration-500 ${isSelected ? (leave.color.replace('text', 'bg') + ' text-white shadow-lg scale-110 rotate-3') : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700'}`}>
+                                                                        <leave.icon size={18} />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className={`w-2 h-2 rounded-full ${isEnabled ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`} />
+                                                                            <div className="text-[12px] font-black tracking-tight">{leave.name}</div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg border ${isSelected ? 'bg-slate-50 text-slate-500 border-slate-100' : 'bg-slate-800 text-slate-500 border-slate-700'}`}>
+                                                                                {leave.code}
+                                                                            </span>
+                                                                            {!leave.isStatutory && (
+                                                                                <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Custom</span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <ArrowRight size={16} className={`relative z-10 transition-all duration-500 ${isSelected ? 'translate-x-0 opacity-100 text-indigo-500' : '-translate-x-4 opacity-0'}`} />
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
-                                            <div className="w-full md:w-80 p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                                                <div className="flex items-center gap-2 text-blue-700 font-bold text-xs uppercase tracking-wider mb-2">
-                                                    <Info size={14} /> Compliance Note
+
+                                            <div className="bg-white border-2 border-slate-100 p-6 rounded-[24px] shadow-sm">
+                                                <h5 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                    <ShieldCheck size={16} className="text-emerald-500" /> Compliance Tips
+                                                </h5>
+                                                <div className="space-y-4">
+                                                    <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100/50">
+                                                        <p className="text-[10px] text-blue-700 leading-relaxed font-bold">
+                                                            Custom leaves can be configured with strict eligibility to target specific employee demographics.
+                                                        </p>
+                                                    </div>
+                                                    <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+                                                        <p className="text-[10px] text-indigo-700 leading-relaxed font-bold">
+                                                            Monetization settings above De Minimis limits will automatically be categorized as taxable earnings.
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-[11px] text-blue-600 leading-relaxed font-medium">
-                                                    Under RR 11-2018, monetization of unused SIL of up to 10 days is considered De Minimis and is tax-exempt. Excess will be taxed.
-                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Panel: Configuration */}
+                                        <div className="lg:col-span-9">
+                                            <div className="bg-white border-2 border-slate-50 rounded-[40px] p-8 shadow-2xl min-h-full flex flex-col relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full -mr-32 -mt-32 opacity-40 blur-3xl" />
+
+                                                {/* Panel Header */}
+                                                <div className="flex items-center gap-6 text-left relative z-10 mb-10 pb-8 border-b border-slate-100">
+                                                    <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center text-white shadow-2xl ${currentLeaveConfig.color.replace('text', 'bg')} transform -rotate-3 ring-8 ring-white shrink-0`}>
+                                                        <currentLeaveConfig.icon size={32} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                                                            <input
+                                                                type="text"
+                                                                className="text-3xl font-black text-slate-900 tracking-tight bg-transparent border-none p-0 focus:ring-0 w-fit outline-none"
+                                                                value={currentLeaveConfig.name}
+                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'name', e.target.value)}
+                                                            />
+                                                            <div className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full border border-slate-200">
+                                                                <input
+                                                                    type="text"
+                                                                    className="text-[10px] font-black uppercase tracking-[0.2em] bg-transparent border-none p-0 focus:ring-0 w-16 text-center"
+                                                                    value={currentLeaveConfig.code}
+                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'code', e.target.value.toUpperCase())}
+                                                                />
+                                                            </div>
+                                                            {!currentLeaveConfig.isStatutory && (
+                                                                <button
+                                                                    onClick={() => handleDeleteLeave(selectedLeaveId)}
+                                                                    className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                                                    title="Delete Custom Leave"
+                                                                >
+                                                                    <Trash2 size={18} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-3">
+                                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
+                                                                <BookMarked size={14} className="text-slate-400" />
+                                                                <input
+                                                                    type="text"
+                                                                    className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-transparent border-none p-0 focus:ring-0 w-32"
+                                                                    value={currentLeaveConfig.citation}
+                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'citation', e.target.value)}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
+                                                                <div>
+                                                                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</div>
+                                                                    <div className={`text-[10px] font-black flex items-center gap-1 ${currentLeaveConfig.enabled ? 'text-emerald-500' : 'text-slate-300'}`}>
+                                                                        {currentLeaveConfig.enabled && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                                                                        {currentLeaveConfig.enabled ? 'Active' : 'Inactive'}
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => updateLeaveConfig(selectedLeaveId, 'enabled', !currentLeaveConfig.enabled)}
+                                                                    className={`w-10 h-5 rounded-full relative transition-all duration-700 px-0.5 flex items-center shrink-0 ${currentLeaveConfig.enabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                                                                >
+                                                                    <div className={`w-4 h-4 bg-white rounded-full shadow transition-all duration-500 transform ${currentLeaveConfig.enabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className={`flex-1 space-y-10 transition-all duration-700 ${currentLeaveConfig.enabled ? 'opacity-100 scale-100 translate-y-0' : 'opacity-20 scale-[0.98] translate-y-4 pointer-events-none'}`}>
+
+                                                    {/* Configuration Grid */}
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+
+                                                        {/* Credits Section */}
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-4 mb-2">
+                                                                <div className="p-2.5 bg-indigo-50 rounded-2xl text-indigo-600 shadow-sm border border-indigo-100/50">
+                                                                    <CalendarCheck size={20} />
+                                                                </div>
+                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Credits & Accrual</h4>
+                                                            </div>
+
+                                                            <div className="bg-slate-50/30 rounded-[32px] p-8 space-y-8 border border-slate-100 shadow-inner">
+                                                                <div className="group">
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 group-hover:text-slate-600 transition-colors">Annual Days Alloted</label>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <div className="relative group">
+                                                                            <input
+                                                                                type="number"
+                                                                                className="w-24 p-4 bg-white border-2 border-slate-100 rounded-[20px] text-3xl font-black text-slate-900 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-500/5 outline-none transition-all shadow-xl"
+                                                                                value={currentLeaveConfig.days}
+                                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'days', Number(e.target.value))}
+                                                                            />
+                                                                            <div className="absolute -top-3 -right-3 bg-indigo-600 text-white text-[9px] px-3 py-1.5 rounded-[10px] font-black shadow-lg shadow-indigo-200 uppercase tracking-widest">Fixed</div>
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Days / Year</div>
+                                                                            <div className="text-[10px] font-bold text-slate-400 mt-1 tracking-tight">Standard full credit weight</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Accrual Policy</label>
+                                                                    <div className="grid grid-cols-2 gap-3">
+                                                                        {['Immediate', 'Monthly', 'Yearly', 'Upon regularization'].map(policy => {
+                                                                            const active = currentLeaveConfig.accrualPolicy === policy;
+                                                                            return (
+                                                                                <button
+                                                                                    key={policy}
+                                                                                    onClick={() => updateLeaveConfig(selectedLeaveId, 'accrualPolicy', policy)}
+                                                                                    className={`p-4 rounded-2xl border-2 text-[10px] font-black text-left transition-all relative overflow-hidden group ${active ? 'bg-slate-950 border-slate-950 text-white shadow-2xl scale-[1.02]' : 'bg-white border-slate-50 text-slate-400 hover:border-slate-200'}`}
+                                                                                >
+                                                                                    <div className="flex items-center justify-between relative z-10 gap-2">
+                                                                                        <span>{policy}</span>
+                                                                                        {active && <CheckCircle2 size={12} className="text-indigo-400" />}
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Limits Section */}
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center gap-4 mb-2">
+                                                                <div className="p-2.5 bg-amber-50 rounded-2xl text-amber-600 shadow-sm border border-amber-100/50">
+                                                                    <History size={20} />
+                                                                </div>
+                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Lifecycle & Limits</h4>
+                                                            </div>
+
+                                                            <div className="bg-slate-50/30 rounded-[32px] p-8 space-y-8 border border-slate-100 shadow-inner">
+                                                                <div className="group">
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Maximum Accrued Balance</label>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-24 p-4 bg-white border-2 border-slate-100 rounded-[20px] text-3xl font-black text-slate-900 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-500/5 outline-none transition-all shadow-xl"
+                                                                            value={currentLeaveConfig.maxAccrued}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxAccrued', Number(e.target.value))}
+                                                                        />
+                                                                        <div>
+                                                                            <div className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Credit Cap</div>
+                                                                            <div className="text-[10px] font-bold text-slate-400 mt-1 tracking-tight">Maximum allowed storage</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="space-y-6">
+                                                                    <div className="relative group">
+                                                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Expiration Cycle</label>
+                                                                        <div className="relative">
+                                                                            <select
+                                                                                className="w-full pl-6 pr-12 py-5 bg-white border-2 border-slate-100 rounded-[24px] font-black text-sm text-slate-800 focus:border-indigo-500 outline-none appearance-none cursor-pointer shadow-xl transition-all"
+                                                                                value={currentLeaveConfig.expiration}
+                                                                                onChange={(e) => updateLeaveConfig(selectedLeaveId, 'expiration', e.target.value)}
+                                                                            >
+                                                                                <option>Never</option>
+                                                                                <option>Every Year-End</option>
+                                                                                <option>After 12 Months</option>
+                                                                            </select>
+                                                                            <div className="absolute right-6 inset-y-0 flex items-center pointer-events-none text-slate-400 transition-transform group-hover:translate-y-0.5">
+                                                                                <ChevronDown size={20} />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <button
+                                                                        onClick={() => updateLeaveConfig(selectedLeaveId, 'isForfeited', !currentLeaveConfig.isForfeited)}
+                                                                        className={`w-full p-5 rounded-[24px] border-2 transition-all group flex items-start gap-4 ${currentLeaveConfig.isForfeited ? 'bg-rose-50 border-rose-100 text-rose-600 shadow-xl' : 'bg-white border-slate-50 text-slate-400 hover:border-slate-200'}`}
+                                                                    >
+                                                                        <div className={`p-2.5 rounded-2xl transition-all duration-500 ${currentLeaveConfig.isForfeited ? 'bg-rose-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
+                                                                            {currentLeaveConfig.isForfeited ? <Ban size={20} /> : <RotateCcw size={20} />}
+                                                                        </div>
+                                                                        <div className="text-left mt-0.5">
+                                                                            <span className="text-[11px] font-black uppercase tracking-widest block leading-none">Automatic Forfeiture</span>
+                                                                            <span className="text-[9px] font-bold opacity-60 uppercase tracking-[0.1em] mt-2 block italic">Unused credits are wiped on cycle reset</span>
+                                                                        </div>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 2: Governance & Constraints */}
+                                                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-10 border-t border-slate-100 pt-10">
+                                                            <div className="space-y-6">
+                                                                <div className="flex items-center gap-4 mb-2">
+                                                                    <div className="p-2.5 bg-purple-50 rounded-2xl text-purple-600 shadow-sm border border-purple-100/50">
+                                                                        <Users size={20} />
+                                                                    </div>
+                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Eligibility Bounds</h4>
+                                                                </div>
+
+                                                                <div className="bg-slate-50/30 rounded-[32px] p-8 border border-slate-100 shadow-inner">
+                                                                    <div className="flex flex-wrap gap-3">
+                                                                        {['Regular', 'Probationary', 'Full-time', 'Part-time', 'Male', 'Female', 'Solo Parent', 'Married'].map(tag => {
+                                                                            const active = currentLeaveConfig.eligibility.includes(tag);
+                                                                            return (
+                                                                                <button
+                                                                                    key={tag}
+                                                                                    onClick={() => {
+                                                                                        const exists = active;
+                                                                                        const newVal = exists
+                                                                                            ? currentLeaveConfig.eligibility.filter((t: string) => t !== tag)
+                                                                                            : [...currentLeaveConfig.eligibility, tag];
+                                                                                        updateLeaveConfig(selectedLeaveId, 'eligibility', newVal);
+                                                                                    }}
+                                                                                    className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all border-2 relative overflow-hidden group ${active ? 'bg-slate-950 border-slate-950 text-white shadow-xl' : 'bg-white border-slate-50 text-slate-400 hover:border-slate-200'}`}
+                                                                                >
+                                                                                    <div className="relative z-10 flex items-center gap-2">
+                                                                                        {active && <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />}
+                                                                                        {tag}
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-3 mt-6 opacity-60">
+                                                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-ping"></div>
+                                                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selected groups inherit this entitlement automatically.</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="space-y-6">
+                                                                <div className="flex items-center gap-4 mb-2">
+                                                                    <div className="p-2.5 bg-rose-50 rounded-2xl text-rose-600 shadow-sm border border-rose-100/50">
+                                                                        <Activity size={20} />
+                                                                    </div>
+                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Usage Velocity</h4>
+                                                                </div>
+
+                                                                <div className="bg-slate-50/30 rounded-[32px] p-8 border border-slate-100 shadow-inner flex flex-col items-center justify-center">
+                                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center w-full">Concurrent Filing Cap</label>
+                                                                    <div className="flex items-center gap-6 bg-white p-5 rounded-3xl border border-slate-100 shadow-xl">
+                                                                        <input
+                                                                            type="number"
+                                                                            className="w-24 bg-transparent text-4xl font-black text-rose-600 outline-none text-center"
+                                                                            value={currentLeaveConfig.maxFiledPerMonth}
+                                                                            onChange={(e) => updateLeaveConfig(selectedLeaveId, 'maxFiledPerMonth', Number(e.target.value))}
+                                                                        />
+                                                                        <div className="h-12 w-[2px] bg-slate-100"></div>
+                                                                        <div className="text-[12px] font-black text-slate-400 uppercase tracking-widest leading-tight">Days<br />/ Month</div>
+                                                                    </div>
+                                                                    <p className="text-[10px] text-slate-400 font-bold mt-6 text-center">Maximum number of days that can be filed within a single calendar month.</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="md:col-span-2 mt-4">
+                                                            <div className="flex items-center gap-4 mb-6">
+                                                                <div className="p-2.5 bg-emerald-50 rounded-2xl text-emerald-600 shadow-sm border border-emerald-100/50">
+                                                                    <DollarSign size={20} />
+                                                                </div>
+                                                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Monetization & Conversion</h4>
+                                                            </div>
+
+                                                            <div className={`p-10 rounded-[40px] border-4 transition-all duration-700 relative overflow-hidden group/mon ${currentLeaveConfig.monetizationEnabled ? 'bg-emerald-50/30 border-emerald-100 shadow-2xl' : 'bg-slate-50 border-slate-100'}`}>
+                                                                <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10">
+                                                                    <div className="flex-1 max-w-md">
+                                                                        <div className="flex items-center gap-4 mb-4">
+                                                                            <div className={`p-4 rounded-[22px] transition-all duration-700 ${currentLeaveConfig.monetizationEnabled ? 'bg-emerald-600 text-white shadow-2xl rotate-6' : 'bg-slate-200 text-slate-400'}`}>
+                                                                                <Coins size={32} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <h5 className={`text-xl font-black tracking-tight ${currentLeaveConfig.monetizationEnabled ? 'text-emerald-900' : 'text-slate-500'}`}>Encashment Logic</h5>
+                                                                                <p className="text-xs text-slate-500/80 font-bold mt-1">Configure how unused credits are converted to salary.</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => updateLeaveConfig(selectedLeaveId, 'monetizationEnabled', !currentLeaveConfig.monetizationEnabled)}
+                                                                            className={`mt-4 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${currentLeaveConfig.monetizationEnabled ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                                                                        >
+                                                                            {currentLeaveConfig.monetizationEnabled ? 'Disable Encashment' : 'Enable Encashment'}
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div className={`flex flex-wrap gap-8 transition-all duration-700 ${currentLeaveConfig.monetizationEnabled ? 'opacity-100 translate-y-0 scale-100' : 'opacity-30 translate-y-6 scale-95 pointer-events-none'}`}>
+                                                                        <div className="space-y-4">
+                                                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Max Days</label>
+                                                                            <div className="flex items-center gap-4">
+                                                                                <input
+                                                                                    type="number"
+                                                                                    className="w-20 p-4 bg-white border-2 border-emerald-100 rounded-2xl text-2xl font-black text-slate-900 focus:border-emerald-500 outline-none shadow-xl transition-all"
+                                                                                    value={currentLeaveConfig.monetizationMaxDays}
+                                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationMaxDays', Number(e.target.value))}
+                                                                                />
+                                                                                <span className="text-[10px] font-black text-slate-400 uppercase vertical-text tracking-widest">Limit</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="space-y-4">
+                                                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Payout Rate</label>
+                                                                            <div className="flex items-center gap-4">
+                                                                                <div className="relative">
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        className="w-20 p-4 bg-white border-2 border-emerald-100 rounded-2xl text-2xl font-black text-slate-900 focus:border-emerald-500 outline-none shadow-xl transition-all pl-10"
+                                                                                        value={currentLeaveConfig.monetizationRate}
+                                                                                        onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationRate', Number(e.target.value))}
+                                                                                    />
+                                                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-300 font-black text-xl">%</span>
+                                                                                </div>
+                                                                                <span className="text-[10px] font-black text-slate-400 uppercase vertical-text tracking-widest">Rate</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="space-y-4 min-w-[180px]">
+                                                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Calculation Basis</label>
+                                                                            <div className="relative group">
+                                                                                <select
+                                                                                    className="w-full p-4 bg-white border-2 border-emerald-100 rounded-2xl font-black text-xs text-slate-800 focus:border-emerald-500 outline-none appearance-none cursor-pointer shadow-xl transition-all"
+                                                                                    value={currentLeaveConfig.monetizationBasis}
+                                                                                    onChange={(e) => updateLeaveConfig(selectedLeaveId, 'monetizationBasis', e.target.value)}
+                                                                                >
+                                                                                    <option>Daily Rate</option>
+                                                                                    <option>Monthly Rate</option>
+                                                                                </select>
+                                                                                <div className="absolute right-4 inset-y-0 flex items-center pointer-events-none text-emerald-400">
+                                                                                    <ChevronDown size={18} />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Monetization Tax-Free Limit */}
+                                                            <div className="mt-10 p-10 bg-slate-950 rounded-[40px] text-white shadow-2xl relative overflow-hidden group">
+                                                                <div className="absolute top-0 right-0 p-10 opacity-5 -mr-10 -mt-10">
+                                                                    <ShieldPlus size={180} />
+                                                                </div>
+                                                                <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10">
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-4 mb-4">
+                                                                            <div className="p-3 bg-white/10 rounded-2xl text-emerald-400 border border-white/10 backdrop-blur-md">
+                                                                                <ShieldCheck size={24} />
+                                                                            </div>
+                                                                            <h4 className="text-xl font-black tracking-tight">Tax-Exempt Monetization Limit</h4>
+                                                                        </div>
+                                                                        <p className="text-xs text-slate-400 font-bold max-w-sm leading-relaxed mb-6">
+                                                                            Global threshold for non-taxable leave conversion as per RR 11-2018 (TRAIN Law).
+                                                                        </p>
+                                                                        <div className="flex items-center gap-6 p-6 bg-white/5 rounded-3xl border border-white/10 w-fit backdrop-blur-sm group-hover:bg-white/10 transition-all">
+                                                                            <input
+                                                                                type="number"
+                                                                                className="w-24 p-4 bg-slate-900 border-2 border-white/10 rounded-[20px] font-black text-white text-3xl text-center focus:border-emerald-500 focus:ring-8 focus:ring-emerald-500/10 outline-none transition-all shadow-2xl"
+                                                                                value={policies.leaveMonetizationTaxFreeLimit}
+                                                                                onChange={(e) => updatePolicy('leaveMonetizationTaxFreeLimit', Number(e.target.value))}
+                                                                            />
+                                                                            <div>
+                                                                                <div className="text-[12px] font-black text-white uppercase tracking-widest leading-none">Days / Year</div>
+                                                                                <div className="text-[10px] font-bold text-slate-500 mt-1 tracking-tight">De Minimis Ceiling</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="w-full lg:w-80 p-8 bg-white text-slate-900 rounded-[32px] shadow-2xl relative">
+                                                                        <div className="absolute -top-3 -left-3 p-2 bg-emerald-500 text-white rounded-lg shadow-lg">
+                                                                            <Info size={16} />
+                                                                        </div>
+                                                                        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Statutory Rule</h5>
+                                                                        <p className="text-[11px] text-slate-800 leading-relaxed font-bold">
+                                                                            Monetization of unused SIL credits of up to <span className="text-emerald-600 font-black">10 days</span> is considered De Minimis and is <span className="underline decoration-emerald-500 decoration-2 underline-offset-4">tax-exempt</span>. Conversion of more than the specified limit is taxable.
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* --- GOVERNMENT SECTIONS --- */}
-                            {primaryTab === 'Government' && activeTab === 'Book3' && (
+                            {/* --- GOVERNMENT SECTIONS (shared: Government tab + Company > Government Section) --- */}
+                            {isGovSection && govSubTab === 'Book3' && (
                                 <div className="space-y-10">
 
                                     {/* 1. Work Hours & Attendance */}
@@ -1411,9 +2212,10 @@ const PoliciesPage: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
-                                                        className="w-24 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        className={`w-24 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                         value={policies.normalHours}
-                                                        onChange={(e) => updatePolicy('normalHours', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('normalHours', Number(e.target.value))}
                                                     />
                                                     <span className="text-xs font-bold text-slate-500">Hours / Day</span>
                                                 </div>
@@ -1424,9 +2226,10 @@ const PoliciesPage: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
-                                                        className="w-24 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        className={`w-24 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                         value={policies.mealBreakMinutes}
-                                                        onChange={(e) => updatePolicy('mealBreakMinutes', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('mealBreakMinutes', Number(e.target.value))}
                                                     />
                                                     <span className="text-xs font-bold text-slate-500">Minutes</span>
                                                 </div>
@@ -1437,18 +2240,20 @@ const PoliciesPage: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
-                                                        className="w-24 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        className={`w-24 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                         value={policies.gracePeriod}
-                                                        onChange={(e) => updatePolicy('gracePeriod', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('gracePeriod', Number(e.target.value))}
                                                     />
                                                     <span className="text-xs font-bold text-slate-500">Minutes</span>
                                                 </div>
-                                                <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                                                <label className={`flex items-center gap-2 mt-3 ${govReadOnly ? 'cursor-default' : 'cursor-pointer'}`}>
                                                     <input
                                                         type="checkbox"
                                                         className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
                                                         checked={policies.deductGracePeriod}
-                                                        onChange={(e) => updatePolicy('deductGracePeriod', e.target.checked)}
+                                                        disabled={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('deductGracePeriod', e.target.checked)}
                                                     />
                                                     <span className="text-xs text-slate-600">Deduct from work hours if exceeded</span>
                                                 </label>
@@ -1485,11 +2290,13 @@ const PoliciesPage: React.FC = () => {
                                                         <td className="px-6 py-4 font-bold text-slate-700">Regular Holiday</td>
                                                         <td className="px-6 py-4 text-slate-500">100%</td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <div className="flex items-center justify-center gap-1 text-indigo-600 font-bold">
+                                                            <div className="flex items-center justify-center gap-1 text-slate-500 font-bold">
                                                                 + <input
-                                                                    className="w-12 text-center border-b border-indigo-200 focus:border-indigo-600 outline-none bg-transparent"
+                                                                    type="number"
+                                                                    className={`w-12 text-center outline-none ${govReadOnly ? 'bg-transparent cursor-default select-none' : 'border border-slate-300 rounded bg-white focus:ring-1 focus:ring-indigo-400'}`}
                                                                     value={policies.regularHolidayRate}
-                                                                    onChange={(e) => updatePolicy('regularHolidayRate', Number(e.target.value))}
+                                                                    readOnly={govReadOnly}
+                                                                    onChange={govReadOnly ? undefined : (e) => updatePolicy('regularHolidayRate', Number(e.target.value))}
                                                                 /> %
                                                             </div>
                                                         </td>
@@ -1506,11 +2313,13 @@ const PoliciesPage: React.FC = () => {
                                                         <td className="px-6 py-4 font-bold text-slate-700">Special Non-Working</td>
                                                         <td className="px-6 py-4 text-slate-500">No Work, No Pay</td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <div className="flex items-center justify-center gap-1 text-indigo-600 font-bold">
+                                                            <div className="flex items-center justify-center gap-1 text-slate-500 font-bold">
                                                                 + <input
-                                                                    className="w-12 text-center border-b border-indigo-200 focus:border-indigo-600 outline-none bg-transparent"
+                                                                    type="number"
+                                                                    className={`w-12 text-center outline-none ${govReadOnly ? 'bg-transparent cursor-default select-none' : 'border border-slate-300 rounded bg-white focus:ring-1 focus:ring-indigo-400'}`}
                                                                     value={policies.specialHolidayRate}
-                                                                    onChange={(e) => updatePolicy('specialHolidayRate', Number(e.target.value))}
+                                                                    readOnly={govReadOnly}
+                                                                    onChange={govReadOnly ? undefined : (e) => updatePolicy('specialHolidayRate', Number(e.target.value))}
                                                                 /> %
                                                             </div>
                                                         </td>
@@ -1527,11 +2336,13 @@ const PoliciesPage: React.FC = () => {
                                                         <td className="px-6 py-4 font-bold text-slate-700">Rest Day (Worked)</td>
                                                         <td className="px-6 py-4 text-slate-500">100%</td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <div className="flex items-center justify-center gap-1 text-indigo-600 font-bold">
+                                                            <div className="flex items-center justify-center gap-1 text-slate-500 font-bold">
                                                                 + <input
-                                                                    className="w-12 text-center border-b border-indigo-200 focus:border-indigo-600 outline-none bg-transparent"
+                                                                    type="number"
+                                                                    className={`w-12 text-center outline-none ${govReadOnly ? 'bg-transparent cursor-default select-none' : 'border border-slate-300 rounded bg-white focus:ring-1 focus:ring-indigo-400'}`}
                                                                     value={policies.otRestDayRate}
-                                                                    onChange={(e) => updatePolicy('otRestDayRate', Number(e.target.value))}
+                                                                    readOnly={govReadOnly}
+                                                                    onChange={govReadOnly ? undefined : (e) => updatePolicy('otRestDayRate', Number(e.target.value))}
                                                                 /> %
                                                             </div>
                                                         </td>
@@ -1548,11 +2359,13 @@ const PoliciesPage: React.FC = () => {
                                                         <td className="px-6 py-4 font-bold text-slate-700">Night Differential</td>
                                                         <td className="px-6 py-4 text-slate-500">Hourly Rate</td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <div className="flex items-center justify-center gap-1 text-indigo-600 font-bold">
+                                                            <div className="flex items-center justify-center gap-1 text-slate-500 font-bold">
                                                                 + <input
-                                                                    className="w-12 text-center border-b border-indigo-200 focus:border-indigo-600 outline-none bg-transparent"
+                                                                    type="number"
+                                                                    className={`w-12 text-center outline-none ${govReadOnly ? 'bg-transparent cursor-default select-none' : 'border border-slate-300 rounded bg-white focus:ring-1 focus:ring-indigo-400'}`}
                                                                     value={policies.nightDiffRate}
-                                                                    onChange={(e) => updatePolicy('nightDiffRate', Number(e.target.value))}
+                                                                    readOnly={govReadOnly}
+                                                                    onChange={govReadOnly ? undefined : (e) => updatePolicy('nightDiffRate', Number(e.target.value))}
                                                                 /> %
                                                             </div>
                                                         </td>
@@ -1586,9 +2399,10 @@ const PoliciesPage: React.FC = () => {
                                                     <span className="text-slate-400 font-bold">₱</span>
                                                     <input
                                                         type="number"
-                                                        className="w-full p-2 border-b border-slate-200 font-bold text-lg text-slate-900 outline-none focus:border-indigo-500 bg-white"
+                                                        className={`w-full p-2 border-b border-slate-200 font-bold text-lg text-slate-900 outline-none ${govReadOnly ? 'bg-slate-50 cursor-default' : 'focus:border-indigo-500 bg-white'}`}
                                                         value={policies.riceSubsidyCap}
-                                                        onChange={(e) => updatePolicy('riceSubsidyCap', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('riceSubsidyCap', Number(e.target.value))}
                                                     />
                                                     <span className="text-xs font-bold text-slate-400">/ Mo</span>
                                                 </div>
@@ -1601,9 +2415,10 @@ const PoliciesPage: React.FC = () => {
                                                     <span className="text-slate-400 font-bold">₱</span>
                                                     <input
                                                         type="number"
-                                                        className="w-full p-2 border-b border-slate-200 font-bold text-lg text-slate-900 outline-none focus:border-indigo-500 bg-white"
+                                                        className={`w-full p-2 border-b border-slate-200 font-bold text-lg text-slate-900 outline-none ${govReadOnly ? 'bg-slate-50 cursor-default' : 'focus:border-indigo-500 bg-white'}`}
                                                         value={policies.clothingAllowanceCap}
-                                                        onChange={(e) => updatePolicy('clothingAllowanceCap', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('clothingAllowanceCap', Number(e.target.value))}
                                                     />
                                                     <span className="text-xs font-bold text-slate-400">/ Yr</span>
                                                 </div>
@@ -1616,9 +2431,10 @@ const PoliciesPage: React.FC = () => {
                                                     <span className="text-slate-400 font-bold">₱</span>
                                                     <input
                                                         type="number"
-                                                        className="w-full p-2 border-b border-slate-200 font-bold text-lg text-slate-900 outline-none focus:border-indigo-500 bg-white"
+                                                        className={`w-full p-2 border-b border-slate-200 font-bold text-lg text-slate-900 outline-none ${govReadOnly ? 'bg-slate-50 cursor-default' : 'focus:border-indigo-500 bg-white'}`}
                                                         value={policies.laundryAllowanceCap}
-                                                        onChange={(e) => updatePolicy('laundryAllowanceCap', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('laundryAllowanceCap', Number(e.target.value))}
                                                     />
                                                     <span className="text-xs font-bold text-slate-400">/ Mo</span>
                                                 </div>
@@ -1634,14 +2450,14 @@ const PoliciesPage: React.FC = () => {
                                             </div>
                                             <div className="flex gap-2">
                                                 <button
-                                                    onClick={() => updatePolicy('thirteenthMonthBasis', 'Basic Pay')}
-                                                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${policies.thirteenthMonthBasis === 'Basic Pay' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-slate-500 border-slate-200'}`}
+                                                    onClick={govReadOnly ? undefined : () => updatePolicy('thirteenthMonthBasis', 'Basic Pay')}
+                                                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${policies.thirteenthMonthBasis === 'Basic Pay' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-slate-500 border-slate-200'} ${govReadOnly ? 'cursor-default pointer-events-none' : ''}`}
                                                 >
                                                     Basic Pay Earned
                                                 </button>
                                                 <button
-                                                    onClick={() => updatePolicy('thirteenthMonthBasis', 'Total Earnings')}
-                                                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${policies.thirteenthMonthBasis === 'Total Earnings' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-slate-500 border-slate-200'}`}
+                                                    onClick={govReadOnly ? undefined : () => updatePolicy('thirteenthMonthBasis', 'Total Earnings')}
+                                                    className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${policies.thirteenthMonthBasis === 'Total Earnings' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-slate-500 border-slate-200'} ${govReadOnly ? 'cursor-default pointer-events-none' : ''}`}
                                                 >
                                                     Total Earnings
                                                 </button>
@@ -1653,7 +2469,7 @@ const PoliciesPage: React.FC = () => {
                             )}
 
                             {/* --- BOOKS I & II: PRE-EMPLOYMENT & HRD --- */}
-                            {primaryTab === 'Government' && activeTab === 'Book1_2' && (
+                            {isGovSection && govSubTab === 'Book1_2' && (
                                 <div className="space-y-8">
                                     <SectionTitle
                                         icon={GraduationCap}
@@ -1687,9 +2503,10 @@ const PoliciesPage: React.FC = () => {
                                                                     <div className="relative">
                                                                         <input
                                                                             type="number"
-                                                                            className="w-32 p-4 border-2 border-slate-200 rounded-2xl font-black text-slate-900 text-2xl text-center bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
+                                                                            className={`w-32 p-4 border-2 border-slate-200 rounded-2xl font-black text-slate-900 text-2xl text-center outline-none transition-all ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
                                                                             value={policies.probationaryDays}
-                                                                            onChange={(e) => updatePolicy('probationaryDays', Number(e.target.value))}
+                                                                            readOnly={govReadOnly}
+                                                                            onChange={govReadOnly ? undefined : (e) => updatePolicy('probationaryDays', Number(e.target.value))}
                                                                         />
                                                                         <div className="absolute -top-3 -right-3 bg-indigo-600 text-white text-[9px] px-2 py-1 rounded-lg font-black shadow-lg shadow-indigo-200">CODE Art 296</div>
                                                                     </div>
@@ -1711,19 +2528,20 @@ const PoliciesPage: React.FC = () => {
                                                             <ScaleIcon size={18} className="text-slate-400" />
                                                             <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Legal Exceptions & Scenarios</h5>
                                                         </div>
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                                             {/* Performance Extension */}
                                                             <div className={`p-5 rounded-[20px] border-2 transition-all group relative overflow-hidden ${policies.isProbationExtensionEnabled ? 'bg-indigo-50 border-indigo-200 shadow-md ring-4 ring-indigo-500/5' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
                                                                 <div className="flex items-center justify-between relative z-10 mb-4">
                                                                     <div className={`p-2 rounded-lg ${policies.isProbationExtensionEnabled ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
                                                                         <TrendingUp size={16} />
                                                                     </div>
-                                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                                    <label className={`relative inline-flex items-center ${govReadOnly ? 'cursor-default' : 'cursor-pointer'}`}>
                                                                         <input
                                                                             type="checkbox"
                                                                             className="sr-only peer"
                                                                             checked={policies.isProbationExtensionEnabled}
-                                                                            onChange={e => updatePolicy('isProbationExtensionEnabled', e.target.checked)}
+                                                                            disabled={govReadOnly}
+                                                                            onChange={govReadOnly ? undefined : e => updatePolicy('isProbationExtensionEnabled', e.target.checked)}
                                                                         />
                                                                         <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                                                                     </label>
@@ -1737,43 +2555,19 @@ const PoliciesPage: React.FC = () => {
                                                                 </div>
                                                             </div>
 
-                                                            {/* Apprenticeship */}
-                                                            <div className={`p-5 rounded-[20px] border-2 transition-all group relative overflow-hidden ${policies.isApprenticeshipEnabled ? 'bg-emerald-50 border-emerald-200 shadow-md ring-4 ring-emerald-500/5' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
-                                                                <div className="flex items-center justify-between relative z-10 mb-4">
-                                                                    <div className={`p-2 rounded-lg ${policies.isApprenticeshipEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                                                                        <GraduationCap size={16} />
-                                                                    </div>
-                                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            className="sr-only peer"
-                                                                            checked={policies.isApprenticeshipEnabled}
-                                                                            onChange={e => updatePolicy('isApprenticeshipEnabled', e.target.checked)}
-                                                                        />
-                                                                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-                                                                    </label>
-                                                                </div>
-                                                                <div className="relative z-10">
-                                                                    <h6 className={`text-xs font-black uppercase tracking-wider mb-2 ${policies.isApprenticeshipEnabled ? 'text-emerald-900' : 'text-slate-800'}`}>Apprentice Prog.</h6>
-                                                                    <p className="text-[10px] text-slate-500 leading-relaxed font-bold">Programs exceeding 6 months for specialized technical trades.</p>
-                                                                </div>
-                                                                <div className="mt-4 pt-3 border-t border-emerald-100/50 flex justify-between items-center relative z-10">
-                                                                    <span className="text-[9px] font-black text-emerald-400 uppercase tracking-tighter">Art. 61 / TESDA</span>
-                                                                </div>
-                                                            </div>
-
                                                             {/* Tolling */}
                                                             <div className={`p-5 rounded-[20px] border-2 transition-all group relative overflow-hidden ${policies.isTollingEnabled ? 'bg-amber-50 border-amber-200 shadow-md ring-4 ring-amber-500/5' : 'bg-white border-slate-100 hover:border-slate-300'}`}>
                                                                 <div className="flex items-center justify-between relative z-10 mb-4">
                                                                     <div className={`p-2 rounded-lg ${policies.isTollingEnabled ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
                                                                         <AlertCircle size={16} />
                                                                     </div>
-                                                                    <label className="relative inline-flex items-center cursor-pointer">
+                                                                    <label className={`relative inline-flex items-center ${govReadOnly ? 'cursor-default' : 'cursor-pointer'}`}>
                                                                         <input
                                                                             type="checkbox"
                                                                             className="sr-only peer"
                                                                             checked={policies.isTollingEnabled}
-                                                                            onChange={e => updatePolicy('isTollingEnabled', e.target.checked)}
+                                                                            disabled={govReadOnly}
+                                                                            onChange={govReadOnly ? undefined : e => updatePolicy('isTollingEnabled', e.target.checked)}
                                                                         />
                                                                         <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
                                                                     </label>
@@ -1827,26 +2621,12 @@ const PoliciesPage: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="p-6 border border-slate-200 rounded-2xl bg-white hover:border-indigo-200 transition-colors">
-                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Apprentice Wage</label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
-                                                    value={policies.apprenticeWagePercent}
-                                                    onChange={(e) => updatePolicy('apprenticeWagePercent', Number(e.target.value))}
-                                                />
-                                                <span className="text-sm font-bold text-slate-700">% of Minimum Wage</span>
-                                            </div>
-                                            <ComplianceBadge {...getComplianceStatus(policies.apprenticeWagePercent, LEGAL_STANDARDS.APPRENTICE_WAGE_PERCENT, 'min')} citation="Art. 61/75" />
-                                        </div>
                                     </div>
                                 </div>
                             )}
 
                             {/* --- BOOK IV & V: HEALTH & LABOR RELATIONS --- */}
-                            {primaryTab === 'Government' && activeTab === 'Book4_5' && (
+                            {isGovSection && govSubTab === 'Book4_5' && (
                                 <div className="space-y-8">
                                     <SectionTitle
                                         icon={Stethoscope}
@@ -1859,21 +2639,23 @@ const PoliciesPage: React.FC = () => {
                                         <div className="p-6 bg-white border border-slate-200 rounded-2xl">
                                             <h4 className="font-bold text-slate-900 mb-4">Medical Services (Art. 163)</h4>
                                             <div className="space-y-3">
-                                                <label className="flex items-center justify-between p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
+                                                <label className={`flex items-center justify-between p-3 border border-slate-200 rounded-xl ${govReadOnly ? 'cursor-default' : 'cursor-pointer hover:bg-slate-50'}`}>
                                                     <span className="text-sm font-medium text-slate-700">Provide Emergency Dental</span>
                                                     <input
                                                         type="checkbox"
                                                         checked={policies.provideDental}
-                                                        onChange={(e) => updatePolicy('provideDental', e.target.checked)}
+                                                        disabled={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('provideDental', e.target.checked)}
                                                         className="w-5 h-5 accent-indigo-600 bg-white"
                                                     />
                                                 </label>
-                                                <label className="flex items-center justify-between p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
+                                                <label className={`flex items-center justify-between p-3 border border-slate-200 rounded-xl ${govReadOnly ? 'cursor-default' : 'cursor-pointer hover:bg-slate-50'}`}>
                                                     <span className="text-sm font-medium text-slate-700">Provide Emergency Medical</span>
                                                     <input
                                                         type="checkbox"
                                                         checked={policies.provideMedical}
-                                                        onChange={(e) => updatePolicy('provideMedical', e.target.checked)}
+                                                        disabled={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('provideMedical', e.target.checked)}
                                                         className="w-5 h-5 accent-indigo-600 bg-white"
                                                     />
                                                 </label>
@@ -1888,9 +2670,10 @@ const PoliciesPage: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <input
                                                     type="number"
-                                                    className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                    className={`w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                     value={policies.grievanceResolutionDays}
-                                                    onChange={(e) => updatePolicy('grievanceResolutionDays', Number(e.target.value))}
+                                                    readOnly={govReadOnly}
+                                                    onChange={govReadOnly ? undefined : (e) => updatePolicy('grievanceResolutionDays', Number(e.target.value))}
                                                 />
                                                 <span className="text-sm font-bold text-slate-700">Days to Resolve</span>
                                             </div>
@@ -1901,7 +2684,7 @@ const PoliciesPage: React.FC = () => {
                             )}
 
                             {/* --- BOOK VI: POST-EMPLOYMENT --- */}
-                            {primaryTab === 'Government' && activeTab === 'Book6' && (
+                            {isGovSection && govSubTab === 'Book6' && (
                                 <div className="space-y-8">
                                     <SectionTitle
                                         icon={Briefcase}
@@ -1922,10 +2705,11 @@ const PoliciesPage: React.FC = () => {
                                                     <div className="flex items-center gap-2">
                                                         <input
                                                             type="number"
-                                                            className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                            className={`w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                             value={policies.separationPayRedundancy}
                                                             step="0.5"
-                                                            onChange={(e) => updatePolicy('separationPayRedundancy', Number(e.target.value))}
+                                                            readOnly={govReadOnly}
+                                                            onChange={govReadOnly ? undefined : (e) => updatePolicy('separationPayRedundancy', Number(e.target.value))}
                                                         />
                                                         <span className="text-sm font-bold text-slate-700">Month / Year of Service</span>
                                                     </div>
@@ -1937,10 +2721,11 @@ const PoliciesPage: React.FC = () => {
                                                     <div className="flex items-center gap-2">
                                                         <input
                                                             type="number"
-                                                            className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                            className={`w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                             value={policies.separationPayDisease}
                                                             step="0.5"
-                                                            onChange={(e) => updatePolicy('separationPayDisease', Number(e.target.value))}
+                                                            readOnly={govReadOnly}
+                                                            onChange={govReadOnly ? undefined : (e) => updatePolicy('separationPayDisease', Number(e.target.value))}
                                                         />
                                                         <span className="text-sm font-bold text-slate-700">Month / Year of Service</span>
                                                     </div>
@@ -1958,9 +2743,10 @@ const PoliciesPage: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
-                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        className={`w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                         value={policies.noticePeriodDays}
-                                                        onChange={(e) => updatePolicy('noticePeriodDays', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('noticePeriodDays', Number(e.target.value))}
                                                     />
                                                     <span className="text-sm font-bold text-slate-700">Days Before Termination</span>
                                                 </div>
@@ -1980,10 +2766,11 @@ const PoliciesPage: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
-                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        className={`w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                         value={policies.retirementPayMultiplier}
                                                         step="0.5"
-                                                        onChange={(e) => updatePolicy('retirementPayMultiplier', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('retirementPayMultiplier', Number(e.target.value))}
                                                     />
                                                     <span className="text-sm font-bold text-slate-700">Days / Year</span>
                                                 </div>
@@ -1994,9 +2781,10 @@ const PoliciesPage: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
-                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        className={`w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                         value={policies.retirementAgeMin}
-                                                        onChange={(e) => updatePolicy('retirementAgeMin', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('retirementAgeMin', Number(e.target.value))}
                                                     />
                                                     <span className="text-sm font-bold text-slate-700">Years Old</span>
                                                 </div>
@@ -2007,9 +2795,10 @@ const PoliciesPage: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <input
                                                         type="number"
-                                                        className="w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center bg-white"
+                                                        className={`w-20 p-2.5 border border-slate-300 rounded-lg font-bold text-slate-900 text-center ${govReadOnly ? 'bg-slate-50 cursor-default' : 'bg-white'}`}
                                                         value={policies.retirementAgeMax}
-                                                        onChange={(e) => updatePolicy('retirementAgeMax', Number(e.target.value))}
+                                                        readOnly={govReadOnly}
+                                                        onChange={govReadOnly ? undefined : (e) => updatePolicy('retirementAgeMax', Number(e.target.value))}
                                                     />
                                                     <span className="text-sm font-bold text-slate-700">Years Old</span>
                                                 </div>
@@ -2130,8 +2919,10 @@ const PoliciesPage: React.FC = () => {
                             )}
 
                             {/* --- MASTER LEAVE SETUP --- */}
-                            {primaryTab === 'Government' && activeTab === 'Special' && (
-                                <div className="space-y-8">
+                            {isGovSection && govSubTab === 'Special' && (
+                                <div className="space-y-8 relative">
+                                    {/* Overlay blocks all interaction in Government Standards read-only mode */}
+                                    {govReadOnly && <div className="absolute inset-0 z-10 cursor-default" />}
                                     <SectionTitle
                                         icon={BookMarked}
                                         title="Master Leave Setup"
@@ -2149,7 +2940,7 @@ const PoliciesPage: React.FC = () => {
                                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 relative z-10">Benefit Types</h4>
 
                                                 <div className="space-y-1 relative z-10">
-                                                    {LEAVE_TYPES_LIST.map(leave => {
+                                                    {LEAVE_TYPES_LIST.filter(l => l.isStatutory).map(leave => {
                                                         const isSelected = selectedLeaveId === leave.id;
                                                         const isEnabled = leaveSettings[leave.id]?.enabled ?? true;
                                                         return (
@@ -2613,7 +3404,7 @@ const PoliciesPage: React.FC = () => {
                                     {/* === RETIREMENT PAY TOGGLE === */}
                                     <div className="border-2 border-emerald-200 bg-emerald-50/50 rounded-2xl p-6">
                                         <div className="flex items-center gap-5">
-                                            <button 
+                                            <button
                                                 onClick={() => updatePolicy('retirementPayEnabled', !policies.retirementPayEnabled)}
                                                 className={`shrink-0 relative inline-flex h-10 w-20 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-200/50 cursor-pointer ${policies.retirementPayEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
                                                 aria-pressed={policies.retirementPayEnabled}
@@ -2627,8 +3418,8 @@ const PoliciesPage: React.FC = () => {
                                                     )}
                                                 </span>
                                             </button>
-                                            <div 
-                                                className="flex-1 cursor-pointer" 
+                                            <div
+                                                className="flex-1 cursor-pointer"
                                                 onClick={() => updatePolicy('retirementPayEnabled', !policies.retirementPayEnabled)}
                                                 role="switch"
                                                 aria-checked={policies.retirementPayEnabled}
@@ -2659,120 +3450,120 @@ const PoliciesPage: React.FC = () => {
                                         />
 
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        {/* Inputs */}
-                                        <div className="space-y-6">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Monthly Basic Salary</label>
-                                                    <div className="relative">
-                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₱</span>
+                                            {/* Inputs */}
+                                            <div className="space-y-6">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Monthly Basic Salary</label>
+                                                        <div className="relative">
+                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₱</span>
+                                                            <input
+                                                                type="number"
+                                                                min={0}
+                                                                className="w-full pl-7 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                                value={retCalcSalary}
+                                                                onChange={(e) => setRetCalcSalary(Number(e.target.value))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Years of Service</label>
                                                         <input
                                                             type="number"
-                                                            min={0}
-                                                            className="w-full pl-7 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-                                                            value={retCalcSalary}
-                                                            onChange={(e) => setRetCalcSalary(Number(e.target.value))}
+                                                            min={1}
+                                                            className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                                            value={retCalcYears}
+                                                            onChange={(e) => setRetCalcYears(Number(e.target.value))}
                                                         />
                                                     </div>
                                                 </div>
+
                                                 <div>
-                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Years of Service</label>
+                                                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Employee Age</label>
                                                     <input
                                                         type="number"
-                                                        min={1}
+                                                        min={0}
                                                         className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-                                                        value={retCalcYears}
-                                                        onChange={(e) => setRetCalcYears(Number(e.target.value))}
+                                                        value={retCalcAge}
+                                                        onChange={(e) => setRetCalcAge(Number(e.target.value))}
                                                     />
                                                 </div>
-                                            </div>
 
-                                            <div>
-                                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Employee Age</label>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
-                                                    value={retCalcAge}
-                                                    onChange={(e) => setRetCalcAge(Number(e.target.value))}
-                                                />
-                                            </div>
-
-                                            {/* Eligibility checks */}
-                                            <div className="space-y-2">
-                                                <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retCalcYears >= 5 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
-                                                    {retCalcYears >= 5 ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-                                                    {retCalcYears >= 5 ? `${retCalcYears} years — Service requirement met (min. 5)` : `${retCalcYears} yr(s) — Below minimum service (5 years required)`}
-                                                </div>
-                                                <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retEligible ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
-                                                    {retEligible ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-                                                    {retCompulsory
-                                                        ? `Age ${retCalcAge} — Compulsory Retirement (≥ ${policies.retirementAgeMax})`
-                                                        : retEligible
-                                                            ? `Age ${retCalcAge} — Optional Retirement (≥ ${policies.retirementAgeMin})`
-                                                            : `Age ${retCalcAge} — Below minimum retirement age (${policies.retirementAgeMin})`
-                                                    }
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                                    <Info size={11} /> Divisor Used
-                                                </div>
-                                                <div className="font-mono text-xs text-slate-700 font-bold">{divisors[0]?.name || '314 Days'}</div>
-                                                <div className="text-[10px] text-slate-400 mt-1">
-                                                    Daily Rate = (₱{retCalcSalary.toLocaleString()} × 12) ÷ {retDivisor} = ₱{retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / day
-                                                </div>
-                                            </div>
-
-                                            <LegalNote text="½ month salary = 15 days basic pay + 1/12 of 13th month (2.5 days) + 5 SIL days = 22.5 days. Fraction ≥ 6 months = 1 whole year (RA 7641)." />
-                                        </div>
-
-                                        {/* Result */}
-                                        <div className="flex flex-col gap-4">
-                                            <div className={`bg-gradient-to-br rounded-2xl p-6 text-white relative overflow-hidden flex-1 ${retEligible ? 'from-emerald-900 to-slate-900' : 'from-slate-700 to-slate-900'}`}>
-                                                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                                                    <Briefcase size={100} />
-                                                </div>
-                                                <div className="relative z-10 space-y-4">
-                                                    <div>
-                                                        <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Formula</div>
-                                                        <div className="font-mono text-xs text-emerald-100 bg-white/10 px-3 py-2 rounded-lg">
-                                                            (₱{retCalcSalary.toLocaleString()} × 12 ÷ {retDivisor}) × {policies.retirementPayMultiplier} days × {retCalcYears} yrs
-                                                        </div>
+                                                {/* Eligibility checks */}
+                                                <div className="space-y-2">
+                                                    <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retCalcYears >= 5 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                                                        {retCalcYears >= 5 ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                                        {retCalcYears >= 5 ? `${retCalcYears} years — Service requirement met (min. 5)` : `${retCalcYears} yr(s) — Below minimum service (5 years required)`}
                                                     </div>
-                                                    <div className="border-t border-white/10 pt-4 space-y-2">
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-slate-400">Daily rate</span>
-                                                            <span className="font-bold text-white">₱ {retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-slate-400">Pay/year ({policies.retirementPayMultiplier} days)</span>
-                                                            <span className="font-bold text-white">₱ {(retDailyRate * policies.retirementPayMultiplier).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                                        </div>
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-slate-400">× {retCalcYears} years</span>
-                                                            <span className="font-bold text-white">₱ {retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="border-t border-white/10 pt-4">
-                                                        <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Total Retirement Pay</div>
-                                                        <div className={`text-3xl font-black tracking-tight ${retEligible ? 'text-white' : 'text-slate-400'}`}>
-                                                            {retEligible
-                                                                ? `₱ ${retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                                                : 'Not Eligible'
-                                                            }
-                                                        </div>
-                                                        {!retEligible && <p className="text-xs text-slate-400 mt-1">Employee does not meet minimum service or age requirements.</p>}
+                                                    <div className={`flex items-center gap-3 p-3 rounded-xl border text-xs font-bold ${retEligible ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'}`}>
+                                                        {retEligible ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                                                        {retCompulsory
+                                                            ? `Age ${retCalcAge} — Compulsory Retirement (≥ ${policies.retirementAgeMax})`
+                                                            : retEligible
+                                                                ? `Age ${retCalcAge} — Optional Retirement (≥ ${policies.retirementAgeMin})`
+                                                                : `Age ${retCalcAge} — Below minimum retirement age (${policies.retirementAgeMin})`
+                                                        }
                                                     </div>
                                                 </div>
+
+                                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                        <Info size={11} /> Divisor Used
+                                                    </div>
+                                                    <div className="font-mono text-xs text-slate-700 font-bold">{divisors[0]?.name || '314 Days'}</div>
+                                                    <div className="text-[10px] text-slate-400 mt-1">
+                                                        Daily Rate = (₱{retCalcSalary.toLocaleString()} × 12) ÷ {retDivisor} = ₱{retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / day
+                                                    </div>
+                                                </div>
+
+                                                <LegalNote text="½ month salary = 15 days basic pay + 1/12 of 13th month (2.5 days) + 5 SIL days = 22.5 days. Fraction ≥ 6 months = 1 whole year (RA 7641)." />
                                             </div>
-                                            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-start gap-3">
-                                                <Info size={16} className="text-emerald-600 mt-0.5 shrink-0" />
-                                                <p className="text-[10px] text-emerald-800 leading-relaxed font-medium">
-                                                    Multiplier ({policies.retirementPayMultiplier} days) and age thresholds (optional: {policies.retirementAgeMin}, compulsory: {policies.retirementAgeMax}) are set in Government Standards › Book VI.
-                                                </p>
-                                            </div>
+
+                                            {/* Result */}
+                                            <div className="flex flex-col gap-4">
+                                                <div className={`bg-gradient-to-br rounded-2xl p-6 text-white relative overflow-hidden flex-1 ${retEligible ? 'from-emerald-900 to-slate-900' : 'from-slate-700 to-slate-900'}`}>
+                                                    <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                                                        <Briefcase size={100} />
+                                                    </div>
+                                                    <div className="relative z-10 space-y-4">
+                                                        <div>
+                                                            <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Formula</div>
+                                                            <div className="font-mono text-xs text-emerald-100 bg-white/10 px-3 py-2 rounded-lg">
+                                                                (₱{retCalcSalary.toLocaleString()} × 12 ÷ {retDivisor}) × {policies.retirementPayMultiplier} days × {retCalcYears} yrs
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-t border-white/10 pt-4 space-y-2">
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-slate-400">Daily rate</span>
+                                                                <span className="font-bold text-white">₱ {retDailyRate.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-slate-400">Pay/year ({policies.retirementPayMultiplier} days)</span>
+                                                                <span className="font-bold text-white">₱ {(retDailyRate * policies.retirementPayMultiplier).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-slate-400">× {retCalcYears} years</span>
+                                                                <span className="font-bold text-white">₱ {retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-t border-white/10 pt-4">
+                                                            <div className="text-xs text-emerald-300 font-bold uppercase tracking-widest mb-1">Total Retirement Pay</div>
+                                                            <div className={`text-3xl font-black tracking-tight ${retEligible ? 'text-white' : 'text-slate-400'}`}>
+                                                                {retEligible
+                                                                    ? `₱ ${retPayResult.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                    : 'Not Eligible'
+                                                                }
+                                                            </div>
+                                                            {!retEligible && <p className="text-xs text-slate-400 mt-1">Employee does not meet minimum service or age requirements.</p>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-start gap-3">
+                                                    <Info size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                                                    <p className="text-[10px] text-emerald-800 leading-relaxed font-medium">
+                                                        Multiplier ({policies.retirementPayMultiplier} days) and age thresholds (optional: {policies.retirementAgeMin}, compulsory: {policies.retirementAgeMax}) are set in Government Standards › Book VI.
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -2804,6 +3595,7 @@ const PoliciesPage: React.FC = () => {
                                                     <tr className="bg-slate-50 border-b border-slate-200">
                                                         <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Approval Setup Name</th>
                                                         <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-48">Auto-Rejection Policy (Days)</th>
+                                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-52">Expiration After Approval (Days)</th>
                                                         <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-32">Status</th>
                                                     </tr>
                                                 </thead>
@@ -2835,6 +3627,29 @@ const PoliciesPage: React.FC = () => {
                                                                 )}
                                                             </td>
                                                             <td className="px-6 py-4 text-center">
+                                                                {isApprovalsEditMode ? (
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <input
+                                                                            type="number"
+                                                                            min="0"
+                                                                            className="w-16 text-center py-1.5 px-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-900 focus:ring-2 focus:ring-indigo-100 outline-none"
+                                                                            value={setup.postApprovalExpiryDays}
+                                                                            onChange={(e) => {
+                                                                                const updated = approvalsSetups.map(s => s.id === setup.id ? { ...s, postApprovalExpiryDays: Number(e.target.value) } : s);
+                                                                                setApprovalsSetups(updated);
+                                                                                setHasChanges(true);
+                                                                            }}
+                                                                        />
+                                                                        <span className="text-[10px] text-slate-500">Days</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="font-bold text-slate-900">{setup.postApprovalExpiryDays}</span>
+                                                                        <span className="text-[10px] text-slate-500 ml-1">Days</span>
+                                                                    </>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
                                                                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md ${setup.autoRejectDays > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                                                                     {setup.autoRejectDays > 0 ? 'Active' : 'Disabled'}
                                                                 </span>
@@ -2853,23 +3668,6 @@ const PoliciesPage: React.FC = () => {
 
             </div >
 
-            {/* Sticky Footer */}
-            < div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 md:pl-72 z-20 flex justify-end items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" >
-                <div className="flex gap-4">
-                    <button
-                        onClick={() => setPolicies(INITIAL_STATE)}
-                        className="px-6 py-2.5 text-slate-500 hover:text-slate-700 font-bold text-sm transition-colors"
-                    >
-                        Reset to Standard
-                    </button>
-                    <button
-                        disabled={!hasChanges}
-                        className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                        <Save size={18} /> Save Policy
-                    </button>
-                </div>
-            </div >
         </div >
     );
 };

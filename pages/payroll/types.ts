@@ -15,6 +15,8 @@ export interface PayrollItem {
   accountNumber: string;
 }
 
+// typespayroll.ts (Verify this exists and is correct)
+// typespayroll.ts (Verify this exists and is correct)
 export interface YearEndSummary {
   id: string;
   name: string;
@@ -40,7 +42,12 @@ export interface YearEndSummary {
     philhealth: number;
     pagibig: number;
   };
-  status: 'Balanced' | 'Refund Due' | 'Tax Payable';
+  status: 'Balanced' | 'Refund Due' | 'Tax Payable'; // <-- This is correct
+  tin: string;
+  employerName: string;
+  employerTIN: string;
+  employerAddress: string;
+  exemptIncome: number;
 }
 
 export interface PeriodData {

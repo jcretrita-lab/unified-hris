@@ -129,7 +129,7 @@ export interface PayComponent {
   name: string;
   type: 'earning' | 'deduction';
   isTaxable: boolean;
-  valueType: 'fixed' | 'formula' | 'table';
+  valueType: 'fixed' | 'formula' | 'table' | 'installment';
   fixedValue?: number;
 
   // added to know loans exist
@@ -139,6 +139,8 @@ export interface PayComponent {
   loanRemainingBalance?: number;
   loanStartDate?: string;
   loanEndDate?: string;
+
+  installmentId?: string; // Added for installment reference
 
   formulaId?: string;
   tableId?: string;
@@ -183,6 +185,16 @@ export interface OrganizationStructureConfig {
   level4Label: string;
   level5Label?: string;
 }
+
+export interface RankStructureConfig {
+  rankLabel: string;
+  subRankLabel: string;
+}
+
+export const defaultRankStructureConfig: RankStructureConfig = {
+  rankLabel: "Rank",
+  subRankLabel: "Sub-Rank",
+};
 
 export const defaultOrgStructureConfig: OrganizationStructureConfig = {
   level1Label: "Division",

@@ -67,7 +67,8 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Jan 10, 2025 09:00',
     color: 'bg-orange-500',
     resetDate: '01-01',
-    resetFrequency: 'Yearly'
+    resetFrequency: 'Yearly',
+    isPaid: true
   },
   {
     id: '3',
@@ -131,7 +132,8 @@ const MOCK_LEAVES: LeaveType[] = [
     lastModified: 'Jan 10, 2025 09:00',
     color: 'bg-purple-500',
     resetDate: '01-01',
-    resetFrequency: 'Yearly'
+    resetFrequency: 'Yearly',
+    isPaid: false
   },
   {
     id: '7',

@@ -15,7 +15,11 @@ import {
   Plus,
   AlertCircle,
   Building2,
-  Briefcase
+  Briefcase,
+  Paperclip,
+  Upload,
+  Trash2,
+  X as CloseIcon
 } from 'lucide-react';
 import Modal from '../../components/Modal';
 
@@ -111,7 +115,8 @@ const JobHistoryTab: React.FC = () => {
         { name: 'Clothing Allowance', amount: '1,000.00', needsPAF: false, isNew: false as boolean | undefined },
         { name: 'Uniform Allowance', amount: '1,000.00', needsPAF: true, isNew: false as boolean | undefined }
       ]
-    }
+    },
+    attachments: [] as { name: string, size: string }[]
   });
 
   const currentDetails = {
@@ -580,7 +585,8 @@ const JobHistoryTab: React.FC = () => {
                         { name: 'Clothing Allowance', amount: '1,000.00', needsPAF: false, isNew: false },
                         { name: 'Uniform Allowance', amount: '1,000.00', needsPAF: true, isNew: false }
                       ]
-                    }
+                    },
+                    attachments: []
                   });
                 }}
                 className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm"
@@ -767,6 +773,63 @@ const JobHistoryTab: React.FC = () => {
                       });
                     }}
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Attachments */}
+            <div className="space-y-3">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Attach Documents / Requirements</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  className="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-50/50 group hover:border-indigo-300 hover:bg-indigo-50/10 transition-all cursor-pointer"
+                  onClick={() => {
+                    const mockFile = { name: 'Support_Doc.pdf', size: '1.2 MB' };
+                    setPafForm({ ...pafForm, attachments: [...pafForm.attachments, mockFile] });
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors mb-2">
+                    <Upload size={18} />
+                  </div>
+                  <p className="text-xs font-bold text-slate-500 group-hover:text-indigo-600 transition-colors">Click or drag to upload</p>
+                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-tight font-medium">PDF, JPG, PNG (Max 10MB)</p>
+                </div>
+
+                <div className="space-y-2">
+                  {pafForm.attachments.length === 0 ? (
+                    <div className="h-full border border-slate-100 rounded-2xl flex items-center justify-center bg-white p-6 border-dashed opacity-60">
+                      <div className="text-center">
+                        <Paperclip size={20} className="text-slate-200 mx-auto mb-2" />
+                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No documents attached</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="max-h-[140px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                      {pafForm.attachments.map((file, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl shadow-sm group">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                              <Paperclip size={14} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-900 truncate">{file.name}</p>
+                              <p className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">{file.size}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const newAtts = pafForm.attachments.filter((_, idx) => idx !== i);
+                              setPafForm({ ...pafForm, attachments: newAtts });
+                            }}
+                            className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

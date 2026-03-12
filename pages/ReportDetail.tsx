@@ -52,6 +52,17 @@ export const PAY_COLUMNS: string[] = [
   'Disbursement Status',
 ];
 
+export const ITR_COLUMNS: string[] = [
+  'Employee ID', 'Last Name', 'First Name', 'Department', 'TIN', 'Total Taxable Income', 'Total Tax Withheld', 'Action'
+];
+
+const ITR_DATA: Record<string, string>[] = [
+  { 'Employee ID': 'EMP-001', 'Last Name': 'Reyes', 'First Name': 'Maria', 'Department': 'HR', 'TIN': '100-200-300-000', 'Total Taxable Income': '1,440,000.00', 'Total Tax Withheld': '350,000.00', 'Action': 'Preview' },
+  { 'Employee ID': 'EMP-002', 'Last Name': 'Santos', 'First Name': 'Ricardo', 'Department': 'IT', 'TIN': '200-300-400-000', 'Total Taxable Income': '1,560,000.00', 'Total Tax Withheld': '380,000.00', 'Action': 'Preview' },
+  { 'Employee ID': 'EMP-003', 'Last Name': 'Cruz', 'First Name': 'Jennifer', 'Department': 'Finance', 'TIN': '300-400-500-000', 'Total Taxable Income': '900,000.00', 'Total Tax Withheld': '150,000.00', 'Action': 'Preview' },
+  { 'Employee ID': 'EMP-004', 'Last Name': 'Garcia', 'First Name': 'Mark Anthony', 'Department': 'IT', 'TIN': '400-500-600-000', 'Total Taxable Income': '780,000.00', 'Total Tax Withheld': '110,000.00', 'Action': 'Preview' },
+];
+
 // ─── Master Data (12–15 realistic rows each) ──────────────────────────────────
 
 const HR_DATA: Record<string, string>[] = [
@@ -115,11 +126,43 @@ const PAY_DATA: Record<string, string>[] = [
   { 'Pay Period': 'Feb 1–15, 2026', 'Employee ID': 'EMP-015', 'Last Name': 'Torres', 'First Name': 'Angela', 'Department': 'HR', 'Position': 'HR Generalist', 'Basic Pay': '18,000.00', 'Rice Subsidy': '1,000.00', 'Meal Allowance': '1,500.00', 'Transportation Allowance': '1,500.00', 'Medical / HMO Allowance': '750.00', 'Mobile Phone Allowance': '0.00', 'Gross Earnings': '22,750.00', 'SSS Contribution': '1,350.00', 'PhilHealth Premium': '900.00', 'Pag-IBIG (HDMF)': '200.00', 'Withholding Tax': '600.00', 'Total Deductions': '3,050.00', 'Net Pay': '19,700.00', 'Payment Method': 'UnionBank', 'Disbursement Status': 'Released' },
 ];
 
+// ─── Accounting Details Dailies ────────────────────────────────────────────────
+
+export const ACCT_DAILIES_COLUMNS: string[] = [
+  'ABNo', 'EmployeeID', 'Department', 'FullName',
+  'Basic Pay', 'OT', 'Absences', 'Tardiness', 'Taxable Adj', 'Gross Taxable',
+  'Transpo Allow', 'COLA', 'Carplan', 'Comm', 'Motorcycle', 'Non Taxable Adj', 'Gross Non Taxable',
+  'Gross Income',
+  'SSS Contribution', 'PhilHealth', 'Pag-Ibig', 'Net Taxable Income', 'W-Tax',
+  'HMO Premium', 'Insurance', 'SSS Salary Loan', 'MediCard Dep 2025',
+  'Total Deductions', 'Net Pay',
+];
+
+const ACCT_DAILIES_DATA: Record<string, string>[] = [
+  { 'ABNo': 'ACT-2026-03-001', 'EmployeeID': 'EMP-001', 'Department': 'HR',         'FullName': 'Reyes, Maria',           'Basic Pay': '30,000.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '30,000.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '3,000.00', 'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '5,500.00', 'Gross Income': '35,500.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '28,025.00', 'W-Tax': '4,200.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '500.00', 'Total Deductions': '7,425.00',  'Net Pay': '28,075.00' },
+  { 'ABNo': 'ACT-2026-03-002', 'EmployeeID': 'EMP-002', 'Department': 'IT',         'FullName': 'Santos, Ricardo',        'Basic Pay': '32,500.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '32,500.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '3,000.00', 'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '5,500.00', 'Gross Income': '38,000.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '30,525.00', 'W-Tax': '5,100.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '500.00', 'Total Deductions': '8,325.00',  'Net Pay': '29,675.00' },
+  { 'ABNo': 'ACT-2026-03-003', 'EmployeeID': 'EMP-003', 'Department': 'Finance',    'FullName': 'Cruz, Jennifer',         'Basic Pay': '37,500.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '37,500.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '3,000.00', 'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '5,500.00', 'Gross Income': '43,000.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '35,525.00', 'W-Tax': '7,500.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '250.00', 'Total Deductions': '10,475.00', 'Net Pay': '32,525.00' },
+  { 'ABNo': 'ACT-2026-03-004', 'EmployeeID': 'EMP-004', 'Department': 'IT',         'FullName': 'Garcia, Mark Anthony',   'Basic Pay': '32,500.00', 'OT': '1,250.00', 'Absences': '0.00',     'Tardiness': '100.00', 'Taxable Adj': '0.00',   'Gross Taxable': '33,650.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '2,500.00', 'Gross Income': '36,150.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '31,675.00', 'W-Tax': '5,400.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '500.00',  'MediCard Dep 2025': '0.00',   'Total Deductions': '8,625.00',  'Net Pay': '27,525.00' },
+  { 'ABNo': 'ACT-2026-03-005', 'EmployeeID': 'EMP-005', 'Department': 'IT',         'FullName': 'Panganiban, Louis',      'Basic Pay': '32,500.00', 'OT': '2,500.00', 'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '35,000.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '500.00', 'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '3,000.00', 'Gross Income': '38,000.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '33,025.00', 'W-Tax': '5,800.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '0.00',   'Total Deductions': '8,525.00',  'Net Pay': '29,475.00' },
+  { 'ABNo': 'ACT-2026-03-006', 'EmployeeID': 'EMP-006', 'Department': 'HR',         'FullName': 'Wilson, Sarah',          'Basic Pay': '27,500.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '350.00', 'Taxable Adj': '0.00',   'Gross Taxable': '27,150.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '2,500.00', 'Gross Income': '29,650.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '25,175.00', 'W-Tax': '3,450.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '1,000.00', 'MediCard Dep 2025': '250.00', 'Total Deductions': '7,425.00',  'Net Pay': '22,225.00' },
+  { 'ABNo': 'ACT-2026-03-007', 'EmployeeID': 'EMP-007', 'Department': 'Finance',    'FullName': 'Brown, Michael',         'Basic Pay': '21,000.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '21,000.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '2,500.00', 'Gross Income': '23,500.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '19,025.00', 'W-Tax': '1,400.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '0.00',   'Total Deductions': '4,125.00',  'Net Pay': '19,375.00' },
+  { 'ABNo': 'ACT-2026-03-008', 'EmployeeID': 'EMP-008', 'Department': 'IT',         'FullName': 'Gottenburg, Minato',     'Basic Pay': '17,500.00', 'OT': '1,500.00', 'Absences': '0.00',     'Tardiness': '500.00', 'Taxable Adj': '0.00',   'Gross Taxable': '18,500.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '500.00', 'Non Taxable Adj': '0.00', 'Gross Non Taxable': '3,000.00', 'Gross Income': '21,500.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '16,525.00', 'W-Tax': '600.00',   'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '0.00',   'Total Deductions': '3,325.00',  'Net Pay': '18,175.00' },
+  { 'ABNo': 'ACT-2026-03-009', 'EmployeeID': 'EMP-009', 'Department': 'IT',         'FullName': 'Cordon, James',          'Basic Pay': '14,000.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '1,200.00','Taxable Adj': '0.00',   'Gross Taxable': '12,800.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '2,500.00', 'Gross Income': '15,300.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '10,825.00', 'W-Tax': '0.00',     'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '0.00',   'Total Deductions': '2,725.00',  'Net Pay': '12,575.00' },
+  { 'ABNo': 'ACT-2026-03-010', 'EmployeeID': 'EMP-010', 'Department': 'HR',         'FullName': 'Lim, Patricia',          'Basic Pay': '16,000.00', 'OT': '0.00',     'Absences': '1,600.00', 'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '14,400.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '2,500.00', 'Gross Income': '16,900.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '12,425.00', 'W-Tax': '0.00',     'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '500.00',  'MediCard Dep 2025': '0.00',   'Total Deductions': '3,225.00',  'Net Pay': '13,675.00' },
+  { 'ABNo': 'ACT-2026-03-011', 'EmployeeID': 'EMP-011', 'Department': 'Operations', 'FullName': 'Navarro, Paolo',         'Basic Pay': '25,000.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '25,000.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '1,000.00','Non Taxable Adj': '0.00', 'Gross Non Taxable': '3,500.00', 'Gross Income': '28,500.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '23,025.00', 'W-Tax': '2,800.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '1,000.00', 'MediCard Dep 2025': '500.00', 'Total Deductions': '7,025.00',  'Net Pay': '21,475.00' },
+  { 'ABNo': 'ACT-2026-03-012', 'EmployeeID': 'EMP-012', 'Department': 'Finance',    'FullName': 'Dela Cruz, Andrea',      'Basic Pay': '19,000.00', 'OT': '750.00',   'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '19,750.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '2,500.00', 'Gross Income': '22,250.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '17,775.00', 'W-Tax': '1,050.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '250.00', 'Total Deductions': '4,025.00',  'Net Pay': '18,225.00' },
+  { 'ABNo': 'ACT-2026-03-013', 'EmployeeID': 'EMP-013', 'Department': 'Operations', 'FullName': 'Bautista, Kristine',     'Basic Pay': '15,000.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '200.00', 'Taxable Adj': '0.00',   'Gross Taxable': '14,800.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '2,500.00', 'Gross Income': '17,300.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '12,825.00', 'W-Tax': '0.00',     'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '0.00',   'Total Deductions': '2,725.00',  'Net Pay': '14,575.00' },
+  { 'ABNo': 'ACT-2026-03-014', 'EmployeeID': 'EMP-014', 'Department': 'IT',         'FullName': 'Mendoza, Carlos',        'Basic Pay': '20,000.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '500.00', 'Gross Taxable': '20,500.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '500.00', 'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '3,000.00', 'Gross Income': '23,500.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '18,525.00', 'W-Tax': '1,200.00', 'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '0.00',   'Total Deductions': '3,925.00',  'Net Pay': '19,575.00' },
+  { 'ABNo': 'ACT-2026-03-015', 'EmployeeID': 'EMP-015', 'Department': 'HR',         'FullName': 'Torres, Angela',         'Basic Pay': '18,000.00', 'OT': '0.00',     'Absences': '0.00',     'Tardiness': '0.00',   'Taxable Adj': '0.00',   'Gross Taxable': '18,000.00', 'Transpo Allow': '1,500.00', 'COLA': '1,000.00', 'Carplan': '0.00',     'Comm': '0.00',   'Motorcycle': '0.00',   'Non Taxable Adj': '0.00', 'Gross Non Taxable': '2,500.00', 'Gross Income': '20,500.00', 'SSS Contribution': '1,125.00', 'PhilHealth': '750.00', 'Pag-Ibig': '100.00', 'Net Taxable Income': '16,025.00', 'W-Tax': '750.00',   'HMO Premium': '500.00', 'Insurance': '250.00', 'SSS Salary Loan': '0.00',   'MediCard Dep 2025': '250.00', 'Total Deductions': '3,725.00',  'Net Pay': '16,775.00' },
+];
+
 // ─── Master Schemas (exported for use in ReportsPage column picker) ────────────
 export const MASTER_SCHEMAS = {
   'rep-hr-1':  { label: 'Masterlist ALL',                       columns: HR_COLUMNS,  data: HR_DATA  },
   'rep-ta-1':  { label: 'Time and Attendance Summary Report',   columns: TA_COLUMNS,  data: TA_DATA  },
   'rep-pay-1': { label: 'Payslip',                              columns: PAY_COLUMNS, data: PAY_DATA },
+  'rep-pay-itr-2316': { label: 'BIR Form 2316 (ITR)',           columns: ITR_COLUMNS, data: ITR_DATA },
+  'rep-acct-d':  { label: 'Accounting Details Dailies',           columns: ACCT_DAILIES_COLUMNS, data: ACCT_DAILIES_DATA },
 } as const;
 
 type MasterSourceId = keyof typeof MASTER_SCHEMAS;
@@ -139,6 +182,7 @@ const REPORT_DEFINITIONS: Record<string, ReportDefinition> = {
   'rep-hr-1':  { id: 'rep-hr-1',  title: 'Masterlist ALL',                          category: 'Employee Masterlist', type: 'Standard', sourceId: 'rep-hr-1',  visibleColumns: HR_COLUMNS },
   'rep-ta-1':  { id: 'rep-ta-1',  title: 'Time and Attendance Summary Report',      category: 'Time & Attendance',   type: 'Standard', sourceId: 'rep-ta-1',  visibleColumns: TA_COLUMNS },
   'rep-pay-1': { id: 'rep-pay-1', title: 'Payslip',                                 category: 'Payroll',             type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: PAY_COLUMNS },
+  'rep-pay-itr-2316': { id: 'rep-pay-itr-2316', title: 'BIR Form 2316 (ITR)',       category: 'Payroll',             type: 'Standard', sourceId: 'rep-pay-itr-2316', visibleColumns: ITR_COLUMNS },
 
   // ── Employee Masterlist Sub-Reports ───────────────────────────────────────────
   'rep-em-01': { id: 'rep-em-01', title: 'Masterlist of Level 5 And Up',            category: 'Employee Masterlist', type: 'Standard', sourceId: 'rep-hr-1',  visibleColumns: ['Employee ID', 'Last Name', 'First Name', 'Department', 'Position', 'Rank / Job Level', 'Employment Status', 'Monthly Basic Pay', 'Salary Grade', 'Date Hired'] },
@@ -204,7 +248,7 @@ const REPORT_DEFINITIONS: Record<string, ReportDefinition> = {
   'rep-ap-fbat':      { id: 'rep-ap-fbat',      title: 'FBAT',                         category: 'Payroll', type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: ['Pay Period', 'Employee ID', 'Last Name', 'First Name', 'Department', 'Net Pay', 'Payment Method', 'Disbursement Status'] },
   'rep-ap-income-d':  { id: 'rep-ap-income-d',  title: 'Income Dailies',               category: 'Payroll', type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: ['Pay Period', 'Employee ID', 'Last Name', 'First Name', 'Department', 'Basic Pay', 'Gross Earnings'] },
   'rep-ap-ded-d':     { id: 'rep-ap-ded-d',     title: 'Deduction Dailies',            category: 'Payroll', type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: ['Pay Period', 'Employee ID', 'Last Name', 'First Name', 'Department', 'SSS Contribution', 'PhilHealth Premium', 'Pag-IBIG (HDMF)', 'Withholding Tax', 'Total Deductions'] },
-  'rep-ap-acct-d':    { id: 'rep-ap-acct-d',    title: 'Accounting Details Dailies',   category: 'Payroll', type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: ['Pay Period', 'Employee ID', 'Last Name', 'First Name', 'Department', 'Basic Pay', 'Gross Earnings', 'Total Deductions', 'Net Pay', 'Disbursement Status'] },
+  'rep-ap-acct-d':    { id: 'rep-ap-acct-d',    title: 'Accounting Details Dailies',   category: 'Payroll', type: 'Standard', sourceId: 'rep-acct-d', visibleColumns: ACCT_DAILIES_COLUMNS },
   'rep-ap-acct-sd':   { id: 'rep-ap-acct-sd',   title: 'Accounting Summary Dailies',   category: 'Payroll', type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: ['Pay Period', 'Employee ID', 'Last Name', 'First Name', 'Department', 'Gross Earnings', 'Total Deductions', 'Net Pay'] },
   'rep-ap-income-m':  { id: 'rep-ap-income-m',  title: 'Income Monthly',               category: 'Payroll', type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: ['Pay Period', 'Employee ID', 'Last Name', 'First Name', 'Department', 'Basic Pay', 'Gross Earnings'] },
   'rep-ap-ded-m':     { id: 'rep-ap-ded-m',     title: 'Deduction Monthly',            category: 'Payroll', type: 'Standard', sourceId: 'rep-pay-1', visibleColumns: ['Pay Period', 'Employee ID', 'Last Name', 'First Name', 'Department', 'SSS Contribution', 'PhilHealth Premium', 'Pag-IBIG (HDMF)', 'Withholding Tax', 'Total Deductions'] },
@@ -228,6 +272,8 @@ const ReportDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filterDept, setFilterDept] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [itrModalEmpId, setItrModalEmpId] = useState<string | null>(null);
 
   // Source-specific filter state
   const [filterStatus, setFilterStatus]       = useState('All'); // HR: Employment Status  |  Pay: Disbursement Status
@@ -381,8 +427,54 @@ const ReportDetail: React.FC = () => {
   };
 
   const handleExport = (format: 'csv' | 'pdf') => {
-    console.log(`Exporting ${reportConfig?.title} as ${format.toUpperCase()}`);
+    if (!reportConfig) return;
     setIsDownloadMenuOpen(false);
+
+    const cols = reportConfig.visibleColumns;
+    const rows = displayedData;
+    const filename = reportConfig.title.replace(/[^a-z0-9]/gi, '_');
+
+    if (format === 'csv') {
+      const escape = (v: string) => `"${(v || '').replace(/"/g, '""')}"`;
+      const header = cols.map(escape).join(',');
+      const body = rows.map(row => cols.map(c => escape(row[c] || '')).join(',')).join('\n');
+      const blob = new Blob([`${header}\n${body}`], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const tableRows = rows.map(row =>
+        `<tr>${cols.map(c => `<td>${row[c] || ''}</td>`).join('')}</tr>`
+      ).join('');
+      const generatedDate = new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+      const html = `<!DOCTYPE html><html><head><title>${reportConfig.title}</title><style>
+        body{font-family:Arial,sans-serif;font-size:10px;margin:20px}
+        h2{font-size:14px;margin-bottom:4px}
+        p{font-size:10px;color:#666;margin-bottom:12px}
+        table{border-collapse:collapse;width:100%}
+        th{background:#1e293b;color:#fff;padding:6px 8px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.05em}
+        td{padding:5px 8px;border-bottom:1px solid #e2e8f0;font-size:9px}
+        tr:nth-child(even) td{background:#f8fafc}
+        @media print{body{margin:0}}
+      </style></head><body>
+        <h2>${reportConfig.title}</h2>
+        <p>${reportConfig.category} &mdash; ${rows.length} record(s) &mdash; Generated ${generatedDate}</p>
+        <table>
+          <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </body></html>`;
+      const w = window.open('', '_blank');
+      if (w) {
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        w.print();
+      }
+    }
   };
 
   if (!reportConfig && !isLoading) return (
@@ -670,20 +762,29 @@ const ReportDetail: React.FC = () => {
                       <tr key={rIdx} className="hover:bg-slate-50/70 transition-colors">
                         {reportConfig?.allSourceColumns
                           .filter(col => reportConfig.visibleColumns.includes(col))
-                          .map(col => (
-                            <td key={col} className="px-5 py-3.5 font-medium text-slate-700 whitespace-nowrap text-sm">
-                              {row[col] || '—'}
-                            </td>
-                          ))}
+                          .map(col => {
+                            // --- ADD THIS CONDITION ---
+                            if (col === 'Action') {
+                              return (
+                                <td key={col} className="px-5 py-3.5 font-medium text-slate-700 whitespace-nowrap text-sm">
+                                  <button
+                                    onClick={() => setItrModalEmpId(row['Employee ID'])}
+                                    className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 border border-indigo-600 rounded-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                                  >
+                                    <FileText size={14} /> View ITR Form
+                                  </button>
+                                </td>
+                              );
+                            }
+
+                            return (
+                              <td key={col} className="px-5 py-3.5 font-medium text-slate-700 whitespace-nowrap text-sm">
+                                {row[col] || '—'}
+                              </td>
+                            );
+                          })}
                       </tr>
                     ))}
-                    {displayedData.length === 0 && (
-                      <tr>
-                        <td colSpan={reportConfig?.visibleColumns.length || 1} className="px-5 py-12 text-center text-slate-400 italic text-sm">
-                          No records match the current filters.
-                        </td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
@@ -787,6 +888,57 @@ const ReportDetail: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </Modal>
+    <Modal isOpen={!!itrModalEmpId} onClose={() => setItrModalEmpId(null)} className="max-w-3xl">
+        <div className="flex flex-col max-h-[85vh] overflow-hidden bg-white">
+          {/* Header */}
+          <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">BIR Form 2316 (ITR)</h3>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">
+                  Employee ID: {itrModalEmpId}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setItrModalEmpId(null)}
+              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-slate-100">
+            <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm max-w-full text-center">
+              <img 
+                src="https://d2v55crl1k4v3v.cloudfront.net/uploads/files/39d4b5f71d6eb6f96b206419a705c5fa.jpg" 
+                alt="Sample ITR"
+                className="max-w-full h-auto rounded-lg mx-auto border border-slate-100"
+              />
+              <p className="mt-4 text-sm font-bold text-slate-500">Official 2316 Form Preview for {itrModalEmpId}</p>
+            </div>
+          </div>
+
+          {/* Footer with Download Button */}
+          <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3 shrink-0">
+            <button 
+              onClick={() => setItrModalEmpId(null)} 
+              className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all"
+            >
+              Close Preview
+            </button>
+            <button 
+              onClick={() => alert(`Downloading official ITR file for ${itrModalEmpId}...`)}
+              className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"
+            >
+              <Download size={16} /> Download Official ITR
+            </button>
           </div>
         </div>
       </Modal>

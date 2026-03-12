@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Wallet,
     Layers,
@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { MOCK_YEAR_END_DATA, generate13thMonthHistory } from '../payroll/mockData';
 import Modal from '../../components/Modal';
 import YearEndPrepLayout from '../../components/year-end/YearEndPrepLayout';
+import { INITIAL_SCHEDULES, getActiveRanges } from '../PaySchedule';
 
 const YearEnd13thPrepPage: React.FC = () => {
     const navigate = useNavigate();
@@ -25,6 +26,41 @@ const YearEnd13thPrepPage: React.FC = () => {
 
     const selectedEmployeeData = MOCK_YEAR_END_DATA.find(d => d.id === selectedEmpId);
     const monthlyHistory = selectedEmployeeData ? generate13thMonthHistory(selectedEmployeeData.ytdGross, selectedEmployeeData.id, detailStage === 'assumed') : [];
+
+    // Derive cutoff details from default pay schedule (ps-001)
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = Number(selectedYear) || new Date().getFullYear();
+    const defaultSchedule = INITIAL_SCHEDULES[0];
+
+    // Hard-coded policy config: assumed = Nov Cutoff 2, actual = Jan (next year) Cutoff 1
+    // In a real app this would be read from the saved policy state
+    const assumedMonth = 10; // November (0-indexed)
+    const assumedCutoffIdx = 1; // 2nd cutoff
+    const actualMonth = 0; // January
+    const actualYear = currentYear + 1;
+    const actualCutoffIdx = 0; // 1st cutoff
+
+    const assumedCutoffDetail = useMemo(() => {
+        const ranges = getActiveRanges(defaultSchedule, assumedMonth, currentYear);
+        const range = ranges[assumedCutoffIdx] || ranges[0];
+        if (!range) return null;
+        let rangeText = `Day ${range.startDay} – ${range.endDay}`;
+        if (range.endDayNextMonth) rangeText = `Day ${range.startDay} – ${range.endDay} (Next Mo)`;
+        let payText = `Day ${range.payDay}`;
+        if (range.payDayNextMonth) payText = `Day ${range.payDay} (Next Mo)`;
+        return { month: monthNames[assumedMonth], year: currentYear, cutoff: assumedCutoffIdx + 1, range: rangeText, payDate: payText };
+    }, [defaultSchedule, currentYear]);
+
+    const actualCutoffDetail = useMemo(() => {
+        const ranges = getActiveRanges(defaultSchedule, actualMonth, actualYear);
+        const range = ranges[actualCutoffIdx] || ranges[0];
+        if (!range) return null;
+        let rangeText = `Day ${range.startDay} – ${range.endDay}`;
+        if (range.endDayNextMonth) rangeText = `Day ${range.startDay} – ${range.endDay} (Next Mo)`;
+        let payText = `Day ${range.payDay}`;
+        if (range.payDayNextMonth) payText = `Day ${range.payDay} (Next Mo)`;
+        return { month: monthNames[actualMonth], year: actualYear, cutoff: actualCutoffIdx + 1, range: rangeText, payDate: payText };
+    }, [defaultSchedule, actualYear]);
 
     const formatCurrency = (amount: number) => {
         const val = amount || 0;
@@ -64,6 +100,10 @@ const YearEnd13thPrepPage: React.FC = () => {
     ];
 
     const monthsLong = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const isPartial = selectedYear === '2025';
+    const partialCount = 2;
+    const partialHeaders = ['Dec 1', 'Dec 15'];
 
     return (
         <YearEndPrepLayout
@@ -117,15 +157,46 @@ const YearEnd13thPrepPage: React.FC = () => {
                     <thead className="bg-slate-50/80 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                         <tr className="border-b border-slate-200">
                             <th rowSpan={2} className="px-8 py-5 border-r border-slate-100">Employee</th>
-                            <th colSpan={3} className="px-6 py-3 text-center border-r border-slate-100 bg-slate-100/50 text-slate-600">13th Month Assumed (Dec)</th>
-                            <th colSpan={3} className="px-6 py-3 text-center border-r border-slate-100 bg-indigo-50/30 text-indigo-600">13th Month Actual (Jan)</th>
+                            <th colSpan={isPartial ? 2 + partialCount : 3} className="px-6 py-3 text-center border-r border-slate-100 bg-slate-100/50 text-slate-600">
+                                <div>13th Month Assumed</div>
+                                {assumedCutoffDetail && (
+                                    <div className="text-[9px] font-medium text-slate-400 mt-0.5 normal-case tracking-normal">
+                                        {assumedCutoffDetail.month} {assumedCutoffDetail.year} · Cutoff {assumedCutoffDetail.cutoff} ({assumedCutoffDetail.range}) · Pay: {assumedCutoffDetail.payDate}
+                                    </div>
+                                )}
+                            </th>
+                            <th colSpan={isPartial ? 2 + partialCount : 3} className="px-6 py-3 text-center border-r border-slate-100 bg-indigo-50/30 text-indigo-600">
+                                <div>13th Month Actual</div>
+                                {actualCutoffDetail && (
+                                    <div className="text-[9px] font-medium text-indigo-400 mt-0.5 normal-case tracking-normal">
+                                        {actualCutoffDetail.month} {actualCutoffDetail.year} · Cutoff {actualCutoffDetail.cutoff} ({actualCutoffDetail.range}) · Pay: {actualCutoffDetail.payDate}
+                                    </div>
+                                )}
+                            </th>
                             <th rowSpan={2} className="px-6 py-5 text-right bg-slate-50 italic">Adjustment</th>
                         </tr>
                         <tr>
-                            <th className="px-4 py-3 text-right font-black border-r border-slate-100">Amount</th>
+                            {isPartial ? (
+                                <>
+                                    {partialHeaders.map((h, i) => (
+                                        <th key={`assumed-${i}`} className="px-4 py-3 text-center font-black border-r border-slate-100 text-[9px] text-slate-500">{h}</th>
+                                    ))}
+                                </>
+                            ) : (
+                                <th className="px-4 py-3 text-right font-black border-r border-slate-100">Amount</th>
+                            )}
                             <th className="px-4 py-3 text-center font-black border-r border-slate-100">Status</th>
                             <th className="px-4 py-3 text-center border-r border-slate-100"></th>
-                            <th className="px-4 py-3 text-right font-black border-r border-slate-100">Amount</th>
+
+                            {isPartial ? (
+                                <>
+                                    {partialHeaders.map((h, i) => (
+                                        <th key={`actual-${i}`} className="px-4 py-3 text-center font-black border-r border-slate-100 text-[9px] text-indigo-500/70">{h}</th>
+                                    ))}
+                                </>
+                            ) : (
+                                <th className="px-4 py-3 text-right font-black border-r border-slate-100">Amount</th>
+                            )}
                             <th className="px-4 py-3 text-center font-black border-r border-slate-100">Status</th>
                             <th className="px-4 py-3 text-center border-r border-slate-100"></th>
                         </tr>
@@ -147,9 +218,19 @@ const YearEnd13thPrepPage: React.FC = () => {
                                         </div>
                                     </td>
                                     {/* Assumed Section */}
-                                    <td className="px-4 py-4 text-right font-mono text-sm text-slate-600 font-bold border-r border-slate-50 bg-slate-50/20">
-                                        {formatCurrency(item.assumedThirteenthMonth)}
-                                    </td>
+                                    {isPartial ? (
+                                        <>
+                                            {Array.from({ length: partialCount }).map((_, i) => (
+                                                <td key={`assumed-val-${i}`} className="px-4 py-4 text-right font-mono text-[11px] text-slate-500 font-bold border-r border-slate-50 bg-slate-50/20">
+                                                    {formatCurrency(item.assumedThirteenthMonth / partialCount)}
+                                                </td>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <td className="px-4 py-4 text-right font-mono text-sm text-slate-600 font-bold border-r border-slate-50 bg-slate-50/20">
+                                            {formatCurrency(item.assumedThirteenthMonth)}
+                                        </td>
+                                    )}
                                     <td className="px-4 py-4 text-center border-r border-slate-50 bg-slate-50/20">
                                         <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight ${item.assumedStatus === 'Finalized' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
                                             {item.assumedStatus}
@@ -161,9 +242,19 @@ const YearEnd13thPrepPage: React.FC = () => {
                                         </button>
                                     </td>
                                     {/* Actual Section */}
-                                    <td className="px-4 py-4 text-right font-mono text-sm text-indigo-700 font-black border-r border-slate-50 bg-indigo-50/10">
-                                        {formatCurrency(item.actualThirteenthMonth)}
-                                    </td>
+                                    {isPartial ? (
+                                        <>
+                                            {Array.from({ length: partialCount }).map((_, i) => (
+                                                <td key={`actual-val-${i}`} className="px-4 py-4 text-right font-mono text-[11px] text-indigo-400 font-bold border-r border-slate-50 bg-indigo-50/10">
+                                                    {formatCurrency(item.actualThirteenthMonth / partialCount)}
+                                                </td>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <td className="px-4 py-4 text-right font-mono text-sm text-indigo-700 font-black border-r border-slate-50 bg-indigo-50/10">
+                                            {formatCurrency(item.actualThirteenthMonth)}
+                                        </td>
+                                    )}
                                     <td className="px-4 py-4 text-center border-r border-slate-50 bg-indigo-50/10">
                                         <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tight ${item.actualStatus === 'Finalized' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-500'}`}>
                                             {item.actualStatus}

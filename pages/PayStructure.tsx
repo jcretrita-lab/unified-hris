@@ -380,7 +380,6 @@ export const PayStructure: React.FC = () => {
           formulas={formulas}
           setFormulas={setFormulas}
           lookupTables={lookupTables}
-          setLookupTables={setLookupTables}
         />
       )}
 

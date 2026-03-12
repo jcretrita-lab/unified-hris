@@ -22,7 +22,7 @@ const MOCK_DIVISORS = [
     { id: 'div-2', name: '288 Days - Compressed', days: 288 }
 ];
 
-const INITIAL_SCHEDULES: PaySchedule[] = [
+export const INITIAL_SCHEDULES: PaySchedule[] = [
     {
         id: 'ps-001',
         name: 'Corporate Employees — Semi-Monthly',
@@ -79,7 +79,7 @@ const INITIAL_SCHEDULES: PaySchedule[] = [
 ];
 
 // --- Helper: get active ranges for a specific month ---
-const getActiveRanges = (schedule: PaySchedule, month: number, year: number): CutoffRange[] => {
+export const getActiveRanges = (schedule: PaySchedule, month: number, year: number): CutoffRange[] => {
     const override = schedule.monthOverrides?.find(o => o.month === month && o.year === year);
     if (override && override.cutoffs.length > 0) {
         return override.cutoffs;

@@ -278,14 +278,6 @@ const OrgStructurePage: React.FC = () => {
             Design the company hierarchy, departments, and position map.
           </p>
         </div>
-
-        <button
-          onClick={() => setIsLabelsModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-300"
-        >
-          <Cog size={16} />
-          Edit Labels
-        </button>
       </div>
 
       <OrgStructure
