@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     User,
@@ -69,19 +69,6 @@ const AVAILABLE_PAY_COMPONENTS: GlobalPayComponent[] = [
     },
     // --- EARNINGS ---
     {
-        id: 'pc-rice',
-        name: 'Rice Subsidy',
-        type: 'earning',
-        isTaxable: false,
-        valueType: 'fixed',
-        fixedValue: 2000,
-        includeIn13thMonth: false,
-        archiveAfterDays: 0,
-        isArchived: false,
-        currentVersion: '1.0.0',
-        frequency: 'Monthly'
-    },
-    {
         id: 'pc-transport',
         name: 'Transportation Allowance',
         type: 'earning',
@@ -121,7 +108,7 @@ const AVAILABLE_PAY_COMPONENTS: GlobalPayComponent[] = [
     },
     {
         id: 'pc-medical',
-        name: 'Medical / HMO Allowance',
+        name: 'HMO/Insurance',
         type: 'earning',
         isTaxable: false,
         valueType: 'fixed',
@@ -183,6 +170,7 @@ const AVAILABLE_PAY_COMPONENTS: GlobalPayComponent[] = [
         type: 'deduction',
         isTaxable: false,
         valueType: 'formula',
+        fixedValue: 0,
         archiveAfterDays: 0,
         isArchived: false,
         currentVersion: '1.0.0'
@@ -191,40 +179,13 @@ const AVAILABLE_PAY_COMPONENTS: GlobalPayComponent[] = [
 
 const PAY_TEMPLATES: (GlobalPayTemplate & { basePay: number })[] = [
     {
-        id: 'pt-001',
-        name: 'Standard Rank-and-File Package',
+        id: 'pt-009',
+        name: 'Minimum Wage Compliant Package',
         targetType: 'Global',
         targetId: null,
-        isTaxExempt: false,
-        basePay: 25000,
-        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
-    },
-    {
-        id: 'pt-002',
-        name: 'Probationary Employee Package',
-        targetType: 'Global',
-        targetId: null,
-        isTaxExempt: false,
-        basePay: 22000,
-        components: ['pc-basic', 'pc-rice', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
-    },
-    {
-        id: 'pt-003',
-        name: 'IT Department Professional',
-        targetType: 'Department',
-        targetId: 'dept-1',
-        isTaxExempt: false,
-        basePay: 45000,
-        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
-    },
-    {
-        id: 'pt-004',
-        name: 'HR Department Standard',
-        targetType: 'Department',
-        targetId: 'dept-2',
-        isTaxExempt: false,
-        basePay: 35000,
-        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+        isTaxExempt: true,
+        basePay: 18000,
+        components: ['pc-basic', 'pc-meal', 'pc-sss', 'pc-phic', 'pc-hdmf']
     },
     {
         id: 'pt-005',
@@ -233,43 +194,34 @@ const PAY_TEMPLATES: (GlobalPayTemplate & { basePay: number })[] = [
         targetId: 'rank-1',
         isTaxExempt: false,
         basePay: 20000,
-        components: ['pc-basic', 'pc-rice', 'pc-transport', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+        components: ['pc-basic', 'pc-transport', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
     },
     {
-        id: 'pt-006',
-        name: 'Senior Professional Bundle',
-        targetType: 'Rank',
-        targetId: 'rank-2',
-        isTaxExempt: false,
-        basePay: 55000,
-        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
-    },
-    {
-        id: 'pt-007',
-        name: 'Manager Executive Package',
-        targetType: 'Rank',
-        targetId: 'rank-3',
-        isTaxExempt: false,
-        basePay: 75000,
-        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
-    },
-    {
-        id: 'pt-008',
-        name: 'Senior Developer Compensation',
-        targetType: 'Position',
-        targetId: 'pos-2',
-        isTaxExempt: false,
-        basePay: 65000,
-        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
-    },
-    {
-        id: 'pt-009',
-        name: 'Minimum Wage Compliant Package',
+        id: 'pt-002',
+        name: 'Probationary Employee Package',
         targetType: 'Global',
         targetId: null,
-        isTaxExempt: true,
-        basePay: 18000,
-        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-sss', 'pc-phic', 'pc-hdmf']
+        isTaxExempt: false,
+        basePay: 22000,
+        components: ['pc-basic', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-001',
+        name: 'Standard Rank-and-File Package',
+        targetType: 'Global',
+        targetId: null,
+        isTaxExempt: false,
+        basePay: 25000,
+        components: ['pc-basic', 'pc-meal', 'pc-transport', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-004',
+        name: 'HR Department Standard',
+        targetType: 'Department',
+        targetId: 'dept-2',
+        isTaxExempt: false,
+        basePay: 35000,
+        components: ['pc-basic', 'pc-meal', 'pc-transport', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
     },
     {
         id: 'pt-010',
@@ -278,7 +230,43 @@ const PAY_TEMPLATES: (GlobalPayTemplate & { basePay: number })[] = [
         targetId: null,
         isTaxExempt: false,
         basePay: 40000,
-        components: ['pc-basic', 'pc-rice', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+        components: ['pc-basic', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-003',
+        name: 'IT Department Professional',
+        targetType: 'Department',
+        targetId: 'dept-1',
+        isTaxExempt: false,
+        basePay: 45000,
+        components: ['pc-basic', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-006',
+        name: 'Senior Professional Bundle',
+        targetType: 'Rank',
+        targetId: 'rank-2',
+        isTaxExempt: false,
+        basePay: 55000,
+        components: ['pc-basic', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-008',
+        name: 'Senior Developer Compensation',
+        targetType: 'Position',
+        targetId: 'pos-2',
+        isTaxExempt: false,
+        basePay: 65000,
+        components: ['pc-basic', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
+    },
+    {
+        id: 'pt-007',
+        name: 'Manager Executive Package',
+        targetType: 'Rank',
+        targetId: 'rank-3',
+        isTaxExempt: false,
+        basePay: 75000,
+        components: ['pc-basic', 'pc-meal', 'pc-transport', 'pc-phone', 'pc-clothing', 'pc-medical', 'pc-sss', 'pc-phic', 'pc-hdmf', 'pc-wtax']
     }
 ];
 
@@ -360,6 +348,11 @@ const NewEmployee: React.FC = () => {
     const [viewDate, setViewDate] = useState(new Date());
     const [showAddComponentModal, setShowAddComponentModal] = useState(false);
     const [pendingComponentIds, setPendingComponentIds] = useState<string[]>([]);
+    const compensationBreakdownRef = useRef<HTMLDivElement>(null);
+
+    const scrollToCompensation = () => {
+        compensationBreakdownRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
     // Form State
     const [formData, setFormData] = useState({
@@ -520,6 +513,22 @@ const NewEmployee: React.FC = () => {
             })
             .filter(Boolean) as LocalPayComponent[];
 
+    /** Builds ALL components (earnings + deductions) for customized mode. */
+    const buildAllComponents = (template: GlobalPayTemplate & { basePay: number }): LocalPayComponent[] =>
+        template.components
+            .map(compId => {
+                const fullComp = AVAILABLE_PAY_COMPONENTS.find(c => c.id === compId);
+                if (!fullComp) return null;
+                if (fullComp.isSystem) return null;          // Basic Pay shown separately
+                return {
+                    ...fullComp,
+                    value: fullComp.fixedValue || 0,
+                    isFixed: fullComp.valueType === 'fixed',
+                    isEnabled: false
+                } as LocalPayComponent;
+            })
+            .filter(Boolean) as LocalPayComponent[];
+
     const handleTemplateChange = (templateId: string) => {
         const template = PAY_TEMPLATES.find(t => t.id === templateId);
         if (template) {
@@ -545,11 +554,12 @@ const NewEmployee: React.FC = () => {
             setFormData({
                 ...formData,
                 payTemplateId: templateId,
+                customizePay: false,
                 customBasePay: template.basePay || 0,
-                // In customized mode keep a clean slate; in default mode load earnings
-                customComponents: formData.customizePay ? [] : templateComponents,
+                customComponents: templateComponents,
                 ...orgUpdates
             });
+            scrollToCompensation();
         } else {
             setFormData({
                 ...formData,
@@ -558,11 +568,6 @@ const NewEmployee: React.FC = () => {
                 customComponents: []
             });
         }
-    };
-
-    const handleComponentChange = (id: string, value: number) => {
-        const updated = formData.customComponents.map(c => c.id === id ? { ...c, value } : c);
-        setFormData({ ...formData, customComponents: updated });
     };
 
     const handleToggleComponent = (id: string) => {
@@ -850,14 +855,16 @@ const NewEmployee: React.FC = () => {
                             </div>
 
                             {formData.payTemplateId && (
-                                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                                <div ref={compensationBreakdownRef} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                                     <div className="flex justify-between items-center mb-6">
                                         <h4 className="text-sm font-bold text-slate-900">Compensation Breakdown</h4>
                                         <button
                                             onClick={() => {
                                                 if (!formData.customizePay) {
-                                                    // Switching to customized: clear components for a clean slate
-                                                    setFormData({ ...formData, customizePay: true, customComponents: [] });
+                                                    // Switching to customized: clone ALL template components (earnings + deductions)
+                                                    const template = PAY_TEMPLATES.find(t => t.id === formData.payTemplateId);
+                                                    const allComponents = template ? buildAllComponents(template) : [];
+                                                    setFormData({ ...formData, customizePay: true, customComponents: allComponents });
                                                 } else {
                                                     // Switching back to default: reload the template's default earnings
                                                     const template = PAY_TEMPLATES.find(t => t.id === formData.payTemplateId);
@@ -876,7 +883,7 @@ const NewEmployee: React.FC = () => {
                                         <div className="mb-6 p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 items-start">
                                             <Info size={16} className="text-amber-600 mt-0.5 shrink-0" />
                                             <p className="text-xs text-amber-700 leading-relaxed">
-                                                <strong>Note:</strong> Click "Add" to add earnings/allowances and deductions. Toggle ON/OFF to enable or disable components.
+                                                <strong>Note:</strong> All template components are shown. Toggle ON/OFF to enable or disable components.
                                             </p>
                                         </div>
                                     )}
@@ -899,30 +906,18 @@ const NewEmployee: React.FC = () => {
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Components</label>
-                                                {formData.customizePay && (
-                                                    <button
-                                                        onClick={() => { setPendingComponentIds([]); setShowAddComponentModal(true); }}
-                                                        className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
-                                                    >
-                                                        <Plus size={12} />
-                                                        Add
-                                                    </button>
-                                                )}
                                             </div>
-                                            {formData.customComponents.length === 0 && (
+                                            {!formData.customizePay && formData.customComponents.length === 0 && (
                                                 <p className="text-xs text-slate-400 italic py-2">No components added.</p>
                                             )}
                                             {formData.customComponents.map(comp => (
-                                                <div key={comp.id} className={`flex items-center gap-2 text-sm py-2 border-b border-dashed border-slate-100 ${!comp.isEnabled ? 'opacity-40' : ''}`}>
-                                                    <span className={`flex-1 ${comp.type === 'earning' ? 'text-emerald-700' : 'text-rose-700'}`}>{comp.name}</span>
+                                                <div key={comp.id} className={`flex items-center gap-3 text-sm py-2 border-b border-dashed border-slate-100 ${!comp.isEnabled ? 'opacity-40' : ''}`}>
+                                                    <span className={`flex-1 font-semibold ${comp.type === 'earning' ? 'text-emerald-700' : 'text-rose-700'}`}>{comp.name}</span>
                                                     {formData.customizePay ? (
                                                         <div className="flex items-center gap-2">
-                                                            <input
-                                                                type="number"
-                                                                className="w-24 text-right bg-slate-50 rounded px-2 py-1 font-mono text-xs font-bold outline-none focus:ring-1 ring-indigo-500"
-                                                                value={comp.value}
-                                                                onChange={e => handleComponentChange(comp.id, parseFloat(e.target.value) || 0)}
-                                                            />
+                                                            <span className={`font-mono text-sm font-bold px-2 py-1 rounded ${comp.type === 'earning' ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'}`}>
+                                                                ₱{comp.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                            </span>
                                                             <button
                                                                 onClick={() => handleToggleComponent(comp.id)}
                                                                 title={comp.isEnabled ? 'Disable' : 'Enable'}
