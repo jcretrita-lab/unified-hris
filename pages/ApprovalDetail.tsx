@@ -127,7 +127,7 @@ const ApprovalDetail: React.FC = () => {
 
     const ShiftComparison = () => {
         return (
-            <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-8">
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-8 text-left">
                 <div className="flex items-center justify-between gap-12">
                     <div className="flex-1 space-y-2">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Shift</label>
@@ -158,6 +158,102 @@ const ApprovalDetail: React.FC = () => {
             </div>
         );
     };
+
+    const OdtrTable = () => (
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm text-left">
+            <table className="w-full text-sm">
+                <thead className="bg-slate-50 text-slate-500 font-bold text-[10px] uppercase tracking-widest border-b border-slate-100">
+                    <tr>
+                        <th className="px-6 py-4">Date</th>
+                        <th className="px-6 py-4">Shift</th>
+                        <th className="px-6 py-4 text-center">In</th>
+                        <th className="px-6 py-4 text-center">Out</th>
+                        <th className="px-6 py-4">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                    {data.odtrEntries?.map((entry, i) => (
+                        <tr key={i} className="hover:bg-slate-50/50">
+                            <td className="px-6 py-4 font-bold text-slate-700">
+                                {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </td>
+                            <td className="px-6 py-4 text-slate-600">{entry.shift}</td>
+                            <td className="px-6 py-4 text-center">
+                                <span className="text-[10px] font-mono font-bold px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg">{entry.timeIn}</span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                                <span className="text-[10px] font-mono font-bold px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg">{entry.timeOut}</span>
+                            </td>
+                            <td className="px-6 py-4 text-slate-500 italic text-xs">{entry.remarks || '--'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    const AarDetail = () => (
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-8 text-left">
+            <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Original Record</label>
+                    <div className="p-5 border border-slate-100 rounded-2xl bg-slate-50 space-y-2 opacity-60">
+                         <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500">Log In:</span>
+                            <span className="font-mono font-bold line-through">{data.originalIn || '--:--'}</span>
+                         </div>
+                         <div className="flex justify-between items-center text-xs">
+                            <span className="text-slate-500">Log Out:</span>
+                            <span className="font-mono font-bold line-through">{data.originalOut || '--:--'}</span>
+                         </div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Adjusted Record</label>
+                    <div className="p-5 border border-amber-100 rounded-2xl bg-amber-50/30 space-y-2">
+                         <div className="flex justify-between items-center text-xs">
+                            <span className="text-amber-700">Log In:</span>
+                            <span className="font-mono font-bold text-amber-900">{data.timeIn}</span>
+                         </div>
+                         <div className="flex justify-between items-center text-xs">
+                            <span className="text-amber-700">Log Out:</span>
+                            <span className="font-mono font-bold text-amber-900">{data.timeOut}</span>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-900">Reason for Adjustment</h4>
+                <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-2">
+                    <span className="text-[10px] font-bold px-2 py-1 bg-slate-200 text-slate-700 rounded w-fit uppercase tracking-wider">{data.adjustmentReason}</span>
+                    <p className="italic text-slate-600 text-sm leading-relaxed">"{data.remarks}"</p>
+                </div>
+            </div>
+        </div>
+    );
+
+    const OvertimeDetail = () => (
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-8 text-left">
+            <div className="flex items-center gap-6">
+                <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-100 flex flex-col items-center justify-center min-w-[140px]">
+                    <span className="text-3xl font-black text-indigo-600">{data.overtimeHours}</span>
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Hours</span>
+                </div>
+                <div className="space-y-1">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Schedule Reference</p>
+                    <p className="text-lg font-extrabold text-slate-900">{new Date(data.date!).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                    <p className="text-xs text-slate-500">Regular Shift (08:00 AM - 05:00 PM)</p>
+                </div>
+            </div>
+            <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-900">OT Justification</h4>
+                <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl space-y-2">
+                    <p className="font-bold text-slate-700 text-sm">{data.overtimeReason}</p>
+                    <p className="italic text-slate-600 text-xs leading-relaxed">"{data.remarks}"</p>
+                </div>
+            </div>
+        </div>
+    );
 
     const ComparisonTable = () => {
         // Keep placeholder for non-HRIS direct pay changes if needed, but not primarily used by this flow
@@ -226,15 +322,15 @@ const ApprovalDetail: React.FC = () => {
                         {/* Left Panel: Dynamic based on Type */}
                         <div className="w-full lg:w-1/3 space-y-6">
                             <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                {data.type === 'Leave Request' ? <CalendarDays size={20} className="text-indigo-600" /> : <TrendingUp size={20} className="text-indigo-600" />}
-                                {data.type === 'Leave Request' ? 'Leave Dates' : 'Summary'}
+                                {(data.type === 'Leave Request' || data.type === 'ODTR' || data.type === 'Overtime' || data.type === 'AAR') ? <CalendarDays size={20} className="text-indigo-600" /> : <TrendingUp size={20} className="text-indigo-600" />}
+                                {(data.type === 'Leave Request' || data.type === 'ODTR') ? 'Dates' : (data.type === 'Overtime' || data.type === 'AAR') ? 'Schedule info' : 'Summary'}
                             </h3>
 
                             {data.type === 'Leave Request' && <LeaveCalendar />}
-                            {data.type === 'Shift Change' && (
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                            {(data.type === 'ODTR' || data.type === 'AAR' || data.type === 'Overtime' || data.type === 'Shift Change') && (
+                                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-left">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm">
+                                        <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
                                             {data.employeeAvatar}
                                         </div>
                                         <div>
@@ -247,6 +343,12 @@ const ApprovalDetail: React.FC = () => {
                                         <span>Department</span>
                                         <span className="text-slate-700">{data.departmentName}</span>
                                     </div>
+                                    {data.date && (
+                                         <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase">
+                                            <span>Request Date</span>
+                                            <span className="text-slate-700">{new Date(data.date).toLocaleDateString()}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -281,8 +383,13 @@ const ApprovalDetail: React.FC = () => {
                             )}
 
                             {/* Dynamic Content */}
-                            {data.type === 'Shift Change' ? <ShiftComparison /> : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                            {data.type === 'Shift Change' && <ShiftComparison />}
+                            {data.type === 'ODTR' && <OdtrTable />}
+                            {data.type === 'AAR' && <AarDetail />}
+                            {data.type === 'Overtime' && <OvertimeDetail />}
+
+                            {data.type === 'Leave Request' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-left">
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Name</label>
                                         <div className="p-3 bg-slate-50 rounded-xl text-sm font-bold text-slate-700">{data.employeeName}</div>

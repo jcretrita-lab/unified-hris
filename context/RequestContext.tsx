@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 // --- Types ---
 export type RequestStatus = 'Submitted' | 'Approved' | 'Rejected';
-export type RequestType = 'Leave Request' | 'Shift Change';
+export type RequestType = 'Leave Request' | 'Shift Change' | 'ODTR' | 'AAR' | 'Overtime';
 
 export interface AppRequest {
     id: string;
@@ -19,6 +19,27 @@ export interface AppRequest {
     lastModifiedBy: string;
     dateModified: string;
     setupName: string;
+    // Common for Timekeeping
+    timeIn?: string;
+    timeOut?: string;
+    shift?: string;
+    date?: string;
+    remarks?: string;
+    // AAR specific
+    originalIn?: string;
+    originalOut?: string;
+    adjustmentReason?: string;
+    // Overtime specific
+    overtimeHours?: number;
+    overtimeReason?: string;
+    // ODTR specific (can be multiples)
+    odtrEntries?: {
+        date: string;
+        shift: string;
+        timeIn: string;
+        timeOut: string;
+        remarks?: string;
+    }[];
     // Leave-specific
     leaveType?: string;
     leaveDates?: string[]; // formatted date strings
@@ -188,6 +209,78 @@ const SEED_REQUESTS: AppRequest[] = [
             { id: 2, title: '2. Department Approval', description: 'Approved by Elena Torres', timestamp: 'March 7, 2026 10:30:00 AM', status: 'completed' },
             { id: 3, title: '3. HR Approval', description: 'Approved by Sarah Wilson', timestamp: 'March 7, 2026 11:00:00 AM', status: 'completed' },
             { id: 4, title: '4. Application Result', description: 'Shift assignment will be updated upon employee action', timestamp: '', status: 'current' },
+        ],
+    },
+    {
+        id: 'req-seed-006',
+        type: 'ODTR',
+        status: 'Submitted',
+        employeeId: 'emp-006',
+        employeeName: 'Michael Chen',
+        employeeRole: 'Backend Engineer',
+        employeeAvatar: 'MC',
+        departmentName: 'Engineering',
+        managerName: 'Alex Thompson',
+        submittedAt: '2026-03-10T14:30:00',
+        lastModifiedBy: 'System',
+        dateModified: '3/10/2026 2:30:00 PM',
+        setupName: 'Online Daily Time Record',
+        odtrEntries: [
+            { date: '2026-03-08', shift: 'Regular Shift', timeIn: '08:00 AM', timeOut: '05:00 PM', remarks: 'Work from home' },
+            { date: '2026-03-09', shift: 'Regular Shift', timeIn: '08:15 AM', timeOut: '05:30 PM', remarks: 'Client meeting' },
+        ],
+        timeline: [
+            { id: 1, title: '1. Submit ODTR', description: 'Employee submitted DTR logs', timestamp: 'March 10, 2026 2:30:00 PM', status: 'completed' },
+            { id: 2, title: '2. Review', description: 'Pending manager review', timestamp: '', status: 'current' },
+        ],
+    },
+    {
+        id: 'req-seed-007',
+        type: 'AAR',
+        status: 'Submitted',
+        employeeId: 'emp-007',
+        employeeName: 'David Miller',
+        employeeRole: 'Finance Analyst',
+        employeeAvatar: 'DM',
+        departmentName: 'Finance',
+        managerName: 'Alex Thompson',
+        submittedAt: '2026-03-11T09:00:00',
+        lastModifiedBy: 'System',
+        dateModified: '3/11/2026 9:00:00 AM',
+        setupName: 'Attendance Adjustment Record',
+        date: '2026-03-10',
+        adjustmentReason: 'Forgot to clock out',
+        originalIn: '08:55 AM',
+        originalOut: '--:--',
+        timeIn: '08:55 AM',
+        timeOut: '06:00 PM',
+        remarks: 'Confirmed with supervisor via email.',
+        timeline: [
+            { id: 1, title: '1. File Adjustment', description: 'Adjustment request filed', timestamp: 'March 11, 2026 9:00:00 AM', status: 'completed' },
+            { id: 2, title: '2. Verification', description: 'Awaiting manager sign-off', timestamp: '', status: 'current' },
+        ],
+    },
+    {
+        id: 'req-seed-008',
+        type: 'Overtime',
+        status: 'Submitted',
+        employeeId: 'emp-008',
+        employeeName: 'Isabella Lee',
+        employeeRole: 'Content Strategist',
+        employeeAvatar: 'IL',
+        departmentName: 'Marketing',
+        managerName: 'Alex Thompson',
+        submittedAt: '2026-03-12T10:00:00',
+        lastModifiedBy: 'System',
+        dateModified: '3/12/2026 10:00:00 AM',
+        setupName: 'Overtime Pay Request',
+        date: '2026-03-11',
+        overtimeHours: 3.5,
+        overtimeReason: 'Year-end campaign launch preparation.',
+        remarks: 'Extra hours required for copy review.',
+        timeline: [
+            { id: 1, title: '1. OT Filing', description: 'Overtime request submitted', timestamp: 'March 12, 2026 10:00:00 AM', status: 'completed' },
+            { id: 2, title: '2. Approval', description: 'Manager review in progress', timestamp: '', status: 'current' },
         ],
     },
 ];

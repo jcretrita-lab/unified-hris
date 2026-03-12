@@ -3,12 +3,21 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Calendar, FileText, Clock, User, Fingerprint,
     MonitorSmartphone, Settings2, Search, Filter, AlertCircle,
-    CheckCircle2, Plus, PenSquare, LayoutGrid, X, Check
+    CheckCircle2, Plus, PenSquare, LayoutGrid, X, Check,
+    ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBreadcrumb } from '../context/BreadcrumbContext';
 
 // Mock Data Models specific to single-employee details
+const MOCK_EMPLOYEES = [
+    { id: 'EMP1001', name: 'Louis Panganiban', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&auto=format&fit=crop' },
+    { id: 'EMP1002', name: 'Maria Santos', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&auto=format&fit=crop' },
+    { id: 'EMP1003', name: 'Juan Dela Cruz', avatar: 'https://images.unsplash.com/photo-1542343633-ce3256525ee7?w=100&h=100&auto=format&fit=crop' },
+    { id: 'EMP1004', name: 'Sarah Wilson', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&auto=format&fit=crop' },
+    { id: 'EMP1005', name: 'Michael Chen', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&auto=format&fit=crop' }
+];
+
 const CUTOFFS = [
     { id: 'current', range: 'Aug 06 - Aug 20, 2025', status: 'Present' },
     { id: 'past-1', range: 'Jul 21 - Aug 05, 2025', status: 'Past' },
@@ -136,6 +145,26 @@ const AttendanceDetail: React.FC = () => {
     const [expandedSource, setExpandedSource] = useState<string | null>('tcd');
     const [selectedDocument, setSelectedDocument] = useState<{title: string, date: string, source: string} | null>(null);
 
+    // Find current employee in list
+    const currentEmployeeIndex = MOCK_EMPLOYEES.findIndex(e => e.id === id) !== -1 
+    ? MOCK_EMPLOYEES.findIndex(e => e.id === id) 
+    : 0;
+
+    const currentEmployee = MOCK_EMPLOYEES[currentEmployeeIndex];
+
+    // Navigation handlers
+    const handlePrev = () => {
+    if (currentEmployeeIndex > 0) {
+        navigate(`/monitor/attendance/logs/${MOCK_EMPLOYEES[currentEmployeeIndex - 1].id}`);
+    }
+    };
+
+    const handleNext = () => {
+    if (currentEmployeeIndex < MOCK_EMPLOYEES.length - 1) {
+        navigate(`/monitor/attendance/logs/${MOCK_EMPLOYEES[currentEmployeeIndex + 1].id}`);
+    }
+    };
+
     React.useEffect(() => {
         setPageTitle('Employee Log Details');
     }, [setPageTitle]);
@@ -148,20 +177,44 @@ const AttendanceDetail: React.FC = () => {
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 mb-20 max-w-full mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/monitor/attendance')} className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm">
-                        <ArrowLeft size={18} />
+            {/* Back Header */}
+            <div className="p-4 rounded-xl flex items-center justify-between shadow-lg transition-colors duration-500 border border-white/10 bg-slate-900 border-slate-100 mb-8">
+                <div className="flex items-center gap-8">
+                    <button
+                        onClick={() => navigate('/monitor/attendance')}
+                        className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-white/60 hover:text-white transition-colors group"
+                    >
+                        <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" />
+                        Back to Summary
                     </button>
-                    <div>
-                        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Daily Time Record</h1>
-                        <p className="text-sm font-medium text-slate-500">Attendance logs and documents for {id}</p>
+
+                    <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/60 border border-white/5">
+                        Cutoff Log Details
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="px-4 py-2 border border-slate-200 rounded-xl bg-white flex items-center gap-2 text-sm font-bold text-slate-700 shadow-sm">
-                        <Calendar size={16} className="text-slate-400" />
-                        Aug 06 - Aug 20, 2025
+
+                <div className="flex items-center gap-6">
+                    <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest hidden md:block">
+                        Employee {currentEmployee.id}
+                    </div>
+                    
+                    <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl border border-white/5">
+                        <button 
+                            onClick={handlePrev}
+                            disabled={currentEmployeeIndex === 0}
+                            className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all active:scale-95 group ${currentEmployeeIndex === 0 ? 'opacity-20 cursor-not-allowed text-white/30' : 'hover:bg-white/10 text-white'}`}
+                        >
+                            <ChevronLeft size={16} />
+                        </button>
+                        <div className="h-4 w-px bg-white/10 mx-1"></div>
+                        <button 
+                            onClick={handleNext}
+                            disabled={currentEmployeeIndex === MOCK_EMPLOYEES.length - 1}
+                            className={`flex items-center gap-2 pl-3 pr-2 h-9 rounded-lg transition-all active:scale-95 group ${currentEmployeeIndex === MOCK_EMPLOYEES.length - 1 ? 'opacity-20 cursor-not-allowed text-white/30' : 'hover:bg-white/10 text-white'}`}
+                        >
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Next</span>
+                            <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                        </button>
                     </div>
                 </div>
             </div>
@@ -169,10 +222,10 @@ const AttendanceDetail: React.FC = () => {
             {/* Employee Profile Widget */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col md:flex-row items-center gap-6">
                 <div className="w-20 h-20 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center relative shadow-inner overflow-hidden shrink-0">
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&auto=format&fit=crop" alt="avatar" className="w-full h-full object-cover" />
+                    <img src={currentEmployee.avatar} alt="avatar" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-xl font-bold text-slate-900">{id}</h2>
+                    <h2 className="text-xl font-bold text-slate-900">{currentEmployee.name}</h2>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2">
                         <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200"><User size={12} /> Frontend Developer</span>
                         <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200"><LayoutGrid size={12} /> Development Dept</span>

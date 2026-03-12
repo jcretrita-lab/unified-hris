@@ -40,8 +40,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
   },
   {
     id: 'n-bio-1',
-    title: 'Attendance Records Updated',
-    message: 'Latest biometric records have been successfully uploaded. You can now view your updated attendance history.',
+    title: 'Biometric Records Uploaded',
+    message: 'HR Administrator has uploaded the latest biometric records. These will now be applied to your attendance history.',
     timestamp: '10 minutes ago',
     type: 'Success',
     isRead: false,

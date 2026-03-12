@@ -94,9 +94,9 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
     id: 'n-bio-1',
     type: 'Success',
     category: 'Timekeeping',
-    title: 'Biometric Synchronization Complete',
+    title: 'Biometric Records Uploaded by Admin',
     timestamp: '10 minutes ago',
-    sender: { name: 'Device Bridge', role: 'Security & Synchronization', isSystem: true },
+    sender: { name: 'HR Administrator', role: 'Timekeeping & Payroll', isSystem: false, avatar: 'HR' },
     body: (
       <div className="space-y-6">
         <div className="flex items-center gap-4 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl">
@@ -104,26 +104,26 @@ const MOCK_DETAILS: Record<string, NotificationDetailData> = {
             <Shield size={24} />
           </div>
           <div>
-            <h4 className="font-bold text-emerald-900">Sync Successful</h4>
-            <p className="text-xs text-emerald-700">All attendance terminals are now up to date.</p>
+            <h4 className="font-bold text-emerald-900">Upload Successful</h4>
+            <p className="text-xs text-emerald-700">Attendance records are being updated across all profiles.</p>
           </div>
         </div>
         <p className="text-sm text-slate-600 leading-relaxed">
-          The latest biometric logs from all office terminals have been successfully synchronized with the central cloud server. Your **Daily Time Records (DTR)** have been recalculated based on these logs.
+          The <strong>HR Administrator</strong> has manually uploaded and synchronized the latest biometric logs from the office terminals. These records are now being applied to your **Daily Time Records (DTR)** and will reflect any recent clock-in/out activity.
         </p>
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Last Log Synced</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Upload Timestamp</p>
             <p className="text-sm font-bold text-slate-900">Today, 2:45 PM</p>
           </div>
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Source Devices</p>
-            <p className="text-sm font-bold text-slate-900">4 Active Terminals</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data Source</p>
+            <p className="text-sm font-bold text-slate-900">Main Office Terminals</p>
           </div>
         </div>
       </div>
     ),
-    actionLink: { label: 'Check Updated DTR', url: '/my-profile/attendance' }
+    actionLink: { label: 'Review My Attendance', url: '/my-profile/attendance' }
   },
   'n0': {
     id: 'n0',

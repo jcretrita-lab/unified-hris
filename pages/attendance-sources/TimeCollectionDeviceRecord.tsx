@@ -211,40 +211,6 @@ const DEVICE_TEMPLATES = [
             ['IT Department', 'EMP-001', 'James', 'Cordon', '2025-08-15', 'Friday', '07:50:00 AM', '06:30:00 PM', 'Overtime'],
             ['IT Department', 'EMP-001', 'James', 'Cordon', '2025-08-16', 'Saturday', '08:15:00 AM', '05:00:00 PM', 'Late'],
         ]
-    },
-    {
-        id: 'proximity-proximity',
-        name: 'Standard Proximity Badge Export',
-        description: 'CSV export format for RFID and proximity card reader security systems.',
-        icon: <CreditCard size={16} />,
-        type: 'Badge Reader',
-        columns: ['Card Number', 'Site Code', 'Access Time', 'Door Name', 'Access Granted'],
-        rows: [
-            ['67823412', '112', '2025-08-09 07:15:22', 'MAIN-EXIT', 'TRUE'],
-            ['12938445', '112', '2025-08-09 07:18:00', 'SERVER-ROOM-4', 'TRUE'],
-        ]
-    },
-    {
-        id: 'pos-log',
-        name: 'Point-of-Sale Login Sync',
-        description: 'Attendance records extracted from POS terminal login/logout activities.',
-        icon: <Cpu size={16} />,
-        type: 'POS Terminal',
-        columns: ['Terminal ID', 'Staff ID', 'Session Start', 'Session End', 'Total Hours'],
-        rows: [
-            ['TERM-01', 'STAFF001', '2025-08-09 09:00:00', '2025-08-09 18:00:00', '9.0'],
-        ]
-    },
-    {
-        id: 'mobile-gps',
-        name: 'Mobile App GPS Punch',
-        description: 'Log format for remote/field employees using the unified mobile app with geofencing.',
-        icon: <Smartphone size={16} />,
-        type: 'Mobile GPS',
-        columns: ['User ID', 'Log Type', 'GPS Lat', 'GPS Long', 'Accuracy (m)', 'Timestamp'],
-        rows: [
-            ['REMOTE-01', 'PUNCH_IN', '14.5995', '120.9842', '5', '2025-08-09 07:45:00'],
-        ]
     }
 ];
 
@@ -318,6 +284,22 @@ export const TimeCollectionDeviceRecord: React.FC<{
                 setUploadStatus('success');
             }
         }, 1500);
+    };
+
+    const handleDownloadTemplate = () => {
+        if (!selectedTemplate) return;
+        
+        // CSV Content: Header only as per user request
+        const csvContent = selectedTemplate.columns.join(',');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${selectedTemplate.name.toLowerCase().replace(/\s+/g, '_')}_template.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
@@ -678,7 +660,10 @@ export const TimeCollectionDeviceRecord: React.FC<{
                                     </div>
 
                                     <div className="p-6 border-t border-slate-50 bg-slate-50/30 flex justify-end">
-                                        <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                                        <button
+                                            onClick={handleDownloadTemplate}
+                                            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                                        >
                                             <Download size={16} /> Download CSV Template
                                         </button>
                                     </div>
